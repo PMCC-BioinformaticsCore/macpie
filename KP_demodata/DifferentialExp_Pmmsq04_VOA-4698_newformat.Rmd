@@ -1,0 +1,461 @@
+---
+title: "<img src=\"Cropped_VCFG_Logo2019.png\" style=\"float:right;height:77.1429px;width:152px\"/>`r params$client_name`<br>`r params$project_code` Differential expression analysis for cell line `r params$cell_line` new format"
+params:
+  client_name: "Kathleen_Pishas"
+  project_code: "PMMsq04"
+  cell_line: "VOA-4698"
+  
+output: 
+  html_document:
+    keep_md: true
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    code_folding: hide
+    df_print: kable
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, tidy = TRUE)
+```
+
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 16px;
+  }
+td {  /* Table  */
+  font-size: 14px;
+  white-space: nowrap;
+}
+h1.title {
+  font-size: 32px;
+  color: Black;
+}
+h1 { /* Header 1 */
+  font-size: 24px;
+  color: Black;
+}
+h2 { /* Header 2 */
+    font-size: 18px;
+  color: Black;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  color: Black;
+}
+h4 { /* Header 4 */
+  font-size: 18px;
+  color: Black;
+}
+h5 { /* Normal  */
+  font-size: 16px;
+  color: Black;
+  class = "author"
+}
+h6 { /* Normal  */
+  font-size: 16px;
+  color: Black;
+  class = "data"
+}
+a, a:hover {
+  color: #7d2b8b
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+
+<style type="text/css">
+#TOC { /* Normal  */
+  color: Black; 
+  border-color: #7d2b8b
+}
+a {
+color: Black;
+}
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+    background-color: #7d2b8b;
+    border-color: #7d2b8b;
+}
+</style>
+
+<style>
+div.a {
+  text-indent: 50px;
+}
+</style>
+
+<style>
+.nav-pills>li>a {
+    position: relative;
+    display: block;
+    color: #3c2372;
+    border: 1px solid #7d2b8b;
+    background-color: #ffffff;
+
+    }
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
+    color: #ffffff;
+    background-color: #7d2b8b;
+    border: 1px solid #ffffff;
+
+    }
+</style>
+<style>
+
+.tabset-dropdown > .nav-tabs {
+	display: inline-block;
+	max-height: 500px;
+	min-height: 44px;
+	overflow-y: auto;
+	background: white;
+	border: 1px solid #7d2b8b;
+	border-radius: 4px;
+	color:#7d2b8b;
+}
+</style>
+
+
+```{r}
+library(tidyverse)
+library(Seurat)
+library(SeuratObject)
+library(gtools)
+library(tidyseurat)
+library(reshape2)
+library(gridExtra)
+library(rlang)
+library(knitr)
+library(edgeR)
+library(RColorBrewer)
+library(ggrepel)
+library(variancePartition)
+suppressMessages(library(DT))
+suppressMessages(library(factoextra))
+suppressMessages(library(rlang))
+library(datasets)
+#Functions of DE
+source(here::here("code/DEFunctions.R"))
+```
+
+
+
+
+
+```{r}
+options(digits=3)
+```
+
+
+```{r}
+
+#from cluster
+dir<-"/Volumes/bioinf/team_folders/MGC_VCFG/macseq"
+metadata<-read.csv(paste0(dir,"/metadata/",params$client_name,"/",params$project_code,"/","corrected_",params$project_code,".csv"), sep = ",")
+
+#change metadata order
+metadata<-metadata[order(metadata$Column),]
+
+
+
+#import data
+nextflow_dir<-paste0(dir,"/results/",params$project_code)
+
+plateIDs<-unique(metadata$Plate_ID)
+
+#find out which nextflow directory to use: probably the latest with the finished analysis
+countmatrix_dirs<-list.files(nextflow_dir,recursive = TRUE,full.names=T,pattern="matrix.mtx.gz")
+countmatrix_dirs<-countmatrix_dirs[grep(plateIDs,countmatrix_dirs)]
+most_recent_countmatrix_folder <- countmatrix_dirs[which.max(file.info(countmatrix_dirs)$mtime)] %>%
+  str_replace_all("/matrix.mtx.gz","")
+# #change back to raw
+most_recent_countmatrix_folder<-str_replace(most_recent_countmatrix_folder,"filtered","raw")
+raw_counts<-Read10X(data.dir=most_recent_countmatrix_folder)
+
+keep <- rowSums(cpm(raw_counts)>10) >= 2
+raw_counts <- raw_counts[keep,]
+# dim(raw_counts)
+
+#filter for the minimum number of reads per gene per sample, as per edgeR 
+mac <- CreateSeuratObject(counts = raw_counts, 
+                          project = params$project_code, 
+                          min.cells = 1, 
+                          min.features = 1) 
+
+#add location metadata
+mac<- mac %>%
+  inner_join(metadata,by=c(".cell"="Barcode")) 
+
+#exclude edges 
+#Row A, P
+#Column 1, 24
+
+mac_noedge<-subset(mac, subset=Row!="A" & Row!="P" & Column!="1" & Column!="24")
+# dim(mac_noedge)
+
+```
+
+
+```{r}
+# output_dir<-paste0("/Users/liuxin/Documents/MACseq/Projects/", params$project_name, "/output/DEGs/", params$project_code,"/")
+# system(paste0("mkdir -p ",output_dir))
+```
+
+
+
+
+```{r}
+cellline<-subset(mac_noedge, subset=Cell_type==params$cell_line)
+```
+
+
+```{r, results='asis'}
+cat("\n")
+cat("\n# ",params$cell_line, "\n")
+cat("\n")
+```
+
+
+## Before batch correction {.tabset .tabset-fade .tabset-pills}
+
+### Variance partition
+
+```{r}
+counts<-cellline@assays$RNA$counts
+colnames(counts)<-cellline$Well_ID
+well_id<-cellline$Well_ID
+#factor
+col<-as.factor(cellline$Column)
+
+
+counts <- as.matrix(counts)
+keep <- rowSums(cpm(counts) > 30 )>= 2
+raw_counts <- counts[keep, ]
+
+treatment_conc <- make.names(as.factor(paste0(cellline$Treatment_1,".", cellline$Concentration_1)))
+treatment <- make.names(as.factor(cellline$Treatment_1))
+columns<-cellline$Column
+rows<-cellline$Row
+#before limma voom
+#################################################################
+#variance partition
+meta_vp<-cellline@meta.data
+meta_vp$treatment_conc<-treatment_conc
+
+meta_vp$nFeature_RNA_scale<-scale(meta_vp$nFeature_RNA)
+meta_vp$nCount_RNA_scale<-scale(meta_vp$nCount_RNA)
+pheno <- ~ nFeature_RNA_scale + nCount_RNA_scale+(1|Treatment_1)+ Concentration_1 + (1|Treatment_1:Concentration_1) + (1 | Row) + (1 | Column) 
+meta_vp$Column<-as.factor(meta_vp$Column)
+
+param <- SnowParam(workers = 3, type = "SOCK")
+varPart <- fitExtractVarPartModel(counts, pheno,meta_vp, BPPARAM=param)
+plotVarPart(varPart)
+
+
+
+set<-newSeqExpressionSet(as.matrix(counts),
+                         phenoData = data.frame(treatment_conc, row.names=colnames(counts)))
+design<-model.matrix(~treatment, data=pData(set))
+
+
+
+
+
+```
+### RLE
+
+```{r, fig.height=7, fig.width=10}
+
+RLEplot(raw_counts, well_id, feature = columns)
+
+```
+
+### PCA plot
+
+```{r, fig.height=7, fig.width=10}
+
+PCAplot(raw_counts, feature = columns, treatment = treatment)+ggtitle("Columns vs treatments")
+PCAplot(raw_counts, feature = rows, treatment = treatment)+ggtitle("Rows vs treatments")
+
+```
+
+
+## Batch factor: columns only {.tabset .tabset-fade .tabset-pills}
+
+```{r}
+treatment <- make.names(cellline$Treatment_1)
+design.matrix<-model.matrix(~treatment)
+
+log_counts <- apply(log(raw_counts + 1), 1, function(y) scale(y, center = TRUE, scale = FALSE))
+cellline_batchremove<-t(removeBatchEffect(t(log_counts), batch = columns, 
+                                    design = design.matrix))
+
+```
+
+
+### Variance partition 
+
+```{r}
+varPart <- fitExtractVarPartModel(t(cellline_batchremove), pheno,meta_vp, BPPARAM=param)
+plotVarPart(varPart)
+```
+
+### RLE plot
+
+```{r, fig.height=7, fig.width=10}
+RLEplot(t(cellline_batchremove),well_id, columns)
+```
+
+### PCA plot
+
+```{r, fig.height=7, fig.width=10}
+PCAplot(cellline_batchremove, columns, treatment)
+PCAplot(cellline_batchremove, rows, treatment)
+```
+
+
+## Differential expression analysis
+
+Limma voom method is used. 
+
+```{r}
+treatment_conc <- make.names(as.factor(paste0(cellline$Treatment_1,".", cellline$Concentration_1)))
+design.matrix<-model.matrix(~0+treatment_conc+columns, set$samples)
+
+
+colnames(design.matrix)<-str_replace(colnames(design.matrix), "treatment_conc","")
+# colnames(design.matrix)
+
+#exclude control vs control
+contrast<-colnames(design.matrix)[grep("DMSO.0", colnames(design.matrix), invert = TRUE)]
+
+contrast<-paste0(contrast[1:48],"-DMSO.0")
+# contrast
+
+contrast.matrix<-makeContrasts(contrasts = contrast, levels = design.matrix)
+
+
+```
+
+
+
+```{r}
+full_treatments_DEGs<-lapply(1:length(colnames(contrast.matrix)), limma_voom, cellline, design.matrix = design.matrix, contrast.matrix = contrast.matrix)
+
+names(full_treatments_DEGs)<-colnames(contrast.matrix)
+```
+
+### Number of DEGs
+
+```{r}
+sig_DEGs_full<-lapply(full_treatments_DEGs, function(x) x[x$adj.P.Val<=0.05,])
+sig_DEGs_num<-lapply(sig_DEGs_full, function(x) dim(x)[1])
+```
+
+
+```{r}
+names(sig_DEGs_num)<-colnames(contrast.matrix)
+sig_DEGs_num<-t(as.data.frame(sig_DEGs_num))
+colnames(sig_DEGs_num)<-"DEGs_Num"
+datatable(sig_DEGs_num)
+```
+
+
+
+
+
+
+### Differential expresion results for all drugs {.tabset .tabset-dropdown}
+
+```{r, include=FALSE}
+datatable(cars)
+```
+
+
+```{r}
+comparisons<-colnames(contrast.matrix)
+```
+
+```{r, echo=FALSE, include=FALSE}
+g<-lapply(seq_along(full_treatments_DEGs), function(x) plot_volcano_lv_new(full_treatments_DEGs[[x]], title = paste0(names(full_treatments_DEGs)[[x]])))
+```
+
+
+
+```{r, echo=FALSE, include=FALSE}
+g<-lapply(seq_along(full_treatments_DEGs), function(x) plot_volcano_lv_new(full_treatments_DEGs[[x]], title = paste0(names(full_treatments_DEGs)[[x]])))
+```
+
+
+
+
+```{r, results='asis'}
+for( i in 1:length(comparisons)) {
+  
+  cat("#### ", comparisons[i], "\n")
+  print(g[i])
+  cat("\n\n")
+  df<-format(as.data.frame(sig_DEGs_full[i]))
+  colnames(df)<-c("logFC","AveEpr","t","P.Value","adj.P.Val","B")
+  print(htmltools::tagList(datatable(df, extensions = 'Buttons', options = list(dom = 'Bfrtip',buttons = c('copy', 'csv','excel')))))
+
+  # print(htmltools::tagList(g[i]))
+  
+  cat("\n\n")
+}
+```
+
+### P value histogram {.tabset .tabset-dropdown}
+
+```{r, echo=FALSE, include=FALSE}
+g<-lapply(seq_along(full_treatments_DEGs), function(x) ggplot(full_treatments_DEGs[[x]], aes(x=P.Value))+geom_histogram()+
+            ggtitle(label=paste0(names(full_treatments_DEGs)[[x]]))+theme_bw())
+```
+
+
+```{r, results='asis'}
+for (i in seq_along(g)){
+  cat("\n")
+  cat("#### ", names(full_treatments_DEGs)[[{{i}}]],"\n")
+
+  plot(g[[{{i}}]])
+  cat("\n")
+}
+
+```
+
+
+
+
+
+
+
+
+<br>
+
+<br>
+
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/v4-shims.css">
+
+  &nbsp;
+<hr />
+<p style="text-align: center;"><a href="https://www.petermac.org/research/core-facilities/victorian-centre-functional-genomics"><span style="color: #7d2b8b;">Victorian Centre for Functional Genomics</span></a></p>
+
+
+  <!-- Needs the "fab" prefix, V5 <i class="fab fa-twitter"></i> -->
+<p style="text-align: center;">  
+  <a href="https://twitter.com/VCFGconnect"> <i class="fa fa-twitter"></i></a>
+</p>
+
+&nbsp;
