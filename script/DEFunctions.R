@@ -11,7 +11,7 @@ library(ggrepel)
 
 ####################### limma voom ######################
 
-limma_voom<-function(coef=1,seurat_obj,min_cpm=10, design.matrix, contrast.matrix){
+limma_voom<-function(coef=1,seurat_obj,min_cpm=10, design.matrix, contrast.matrix, voom_plot=T, treatment_conc=treatment_conc){
   counts<-seurat_obj@assays$RNA$counts
   colnames(counts)<-seurat_obj$Well_ID
   #factor
@@ -19,7 +19,9 @@ limma_voom<-function(coef=1,seurat_obj,min_cpm=10, design.matrix, contrast.matri
   rows<-as.factor(seurat_obj$Row)
   
   counts <- as.matrix(counts)
-  keep <- rowSums(cpm(counts) > min_cpm )>= unique(table(treatment_conc))
+  keep <- rowSums(cpm(counts) > min_cpm )>= min(unique(table(treatment_conc)))
+  #over-write keep
+  # keep<-filterByExpr(counts,design.matrix)
   raw_counts <- counts[keep, ]
   
   
@@ -28,10 +30,10 @@ limma_voom<-function(coef=1,seurat_obj,min_cpm=10, design.matrix, contrast.matri
   set$samples$columns<-columns
   set$samples$rows<-rows
   
-  set<-calcNormFactors(set)
+  set<-calcNormFactors(set, method = "TMM")
   
-  
-  set_voom<-voom(set, design.matrix, plot=FALSE)
+  # plotMDS(cpm(raw_counts, log=TRUE), labels = set$samples$treatment_conc)
+  set_voom<-voom(set, design.matrix, plot=voom_plot)
   
   fit<-lmFit(set_voom, design = design.matrix)
   
@@ -47,16 +49,16 @@ limma_voom<-function(coef=1,seurat_obj,min_cpm=10, design.matrix, contrast.matri
 
 ####################### PCA ######################
 
-PCAplot<-function(count_matrix, feature, treatment, center=TRUE ,scale=FALSE){
+PCAplot<-function(count_matrix, feature, treatment, center=TRUE ,scale=FALSE, extraPC=FALSE){
   if (any(count_matrix<0)){
-    
+
     sv<-svd(as.matrix(count_matrix))
     
     treatment <- as.factor(treatment)
     feature<-as.factor(feature)
     
     p<-ggplot(data = as.data.frame(sv$u), aes(x = sv$u[,1], y = sv$u[,2], colour = feature, 
-                                              shape = treatment))+scale_shape_manual(values = c(0:20,35:38)) +
+                                              shape = treatment))+scale_shape_manual(values = c(0:nlevels(as.factor(treatment)))) +
       geom_point() + xlab(paste0("PC1: ", round(sv$d[1]^2/sum(sv$d^2)*100, digits = 3), "%")) +
       ylab(paste0("PC2: ", round(as.numeric(sv$d[2]^2/sum(sv$d^2)*100), digits = 3), "%")) +
       scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(as.factor(feature)))) +
@@ -73,15 +75,41 @@ PCAplot<-function(count_matrix, feature, treatment, center=TRUE ,scale=FALSE){
     feature<-as.factor(feature)
     
     p<-ggplot(data = as.data.frame(sv$u), aes(x = sv$u[,1], y = sv$u[,2], colour = feature, 
+                                               shape = treatment))+scale_shape_manual(values = c(0:20,35:38)) +
+      geom_point() + xlab(paste0("PC1: ", round(sv$d[1]^2/sum(sv$d^2)*100, digits = 3), "%")) +
+      ylab(paste0("PC2: ", round(as.numeric(sv$d[2]^2/sum(sv$d^2)*100), digits = 3), "%")) +
+      scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(as.factor(feature)))) +
+      # scale_color_gradient(low="blue", high="red")+ 
+      # for showing gradient for read counts?
+      theme_bw()
+    
+    
+
+    p1<-ggplot(data = as.data.frame(sv$u), aes(x = sv$u[,1], y = sv$u[,2], colour = feature, 
                                               shape = treatment))+scale_shape_manual(values = c(0:20,35:38)) +
       geom_point() + xlab(paste0("PC1: ", round(sv$d[1]^2/sum(sv$d^2)*100, digits = 3), "%")) +
       ylab(paste0("PC2: ", round(as.numeric(sv$d[2]^2/sum(sv$d^2)*100), digits = 3), "%")) +
       scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(as.factor(feature)))) +
       # scale_color_gradient(low="blue", high="red")+ 
       # for showing gradient for read counts?
+      theme_bw()+NoLegend()
+    
+    p2<-ggplot(data = as.data.frame(sv$u), aes(x = sv$u[,3], y = sv$u[,4], colour = feature, 
+                                              shape = treatment))+scale_shape_manual(values = c(0:20,35:38)) +
+      geom_point() + xlab(paste0("PC3: ", round(sv$d[3]^2/sum(sv$d^2)*100, digits = 3), "%")) +
+      ylab(paste0("PC4: ", round(as.numeric(sv$d[4]^2/sum(sv$d^2)*100), digits = 3), "%")) +
+      scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(as.factor(feature)))) +
+      # scale_color_gradient(low="blue", high="red")+ 
+      # for showing gradient for read counts?
       theme_bw() + 
       labs(colour = "Feature", shape = "Treatment")
-    p
+    
+    if (extraPC==TRUE){
+      p1+p2
+    }else{
+      p
+    }
+ 
     
   }
   
@@ -91,6 +119,7 @@ PCAplot<-function(count_matrix, feature, treatment, center=TRUE ,scale=FALSE){
 
 
 RLEplot<-function(count_matrix,ID,feature){
+  count_matrix<-log2(count_matrix+1)
   count_matrix<-as.matrix(count_matrix)
   colnames(count_matrix)<-as.factor(ID)
   rle<-count_matrix-Biobase::rowMedians(count_matrix)
@@ -101,14 +130,13 @@ RLEplot<-function(count_matrix,ID,feature){
   colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
   rledf$feature<-as.factor(feature[sort.list(feature)])
   rledf$sample<-rownames(rledf)
-  rledf$sample<-reorder(as.factor(rledf$sample))
+  rledf$sample<-reorder(as.factor(rledf$sample), unique(rledf$sample))#updated
   
   p<-ggplot(rledf, aes(x=sample, fill=feature))+geom_boxplot(aes(ymin=ymin, lower=lower, middle=middle, upper=upper, ymax=ymax), stat="identity")+theme_bw()+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+scale_x_discrete(limits=rledf$sample)+
     scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(as.factor(feature))))+
-    geom_hline(yintercept = 0, linetype="dotted", col="red", size=1)+ylab("RLE plot")
+    geom_hline(yintercept = 0, linetype="dotted", col="red", size=1)+ylab("RLE")
   p
 }
-
 
 
 
@@ -116,24 +144,24 @@ RLEplot<-function(count_matrix,ID,feature){
 #################### Volcano plots ####################
 
 
-# plot_volcano<-function(top, FDR_cutoff=0.05){
-#   top$diffexpressed<-"NO"
-#   top[top$logFC>=1 & top$FDR<=FDR_cutoff,]$diffexpressed<-"UP"
-#   top[top$logFC<=-1 & top$FDR<=FDR_cutoff,]$diffexpressed<-"DOWN"
-#   
-#   top$labelgenes<-""
-#   top[top$diffexpressed!="NO",]$labelgenes<-rownames(top[top$diffexpressed!="NO",])  
-#   
-#   ggplot(top, aes(x=logFC, y=-log10(FDR), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-#     geom_text_repel(min.segment.length=5)+scale_color_manual(values=c("blue", "black", "red"))+
-#     geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(0.05), col="red")
-# }
-# 
-# 
+plot_volcano<-function(top, FDR_cutoff=0.05){
+  top$diffexpressed<-"NO"
+  top[top$logFC>=1 & top$FDR<=FDR_cutoff,]$diffexpressed<-"UP"
+  top[top$logFC<=-1 & top$FDR<=FDR_cutoff,]$diffexpressed<-"DOWN"
+
+  top$labelgenes<-""
+  top[top$diffexpressed!="NO",]$labelgenes<-rownames(top[top$diffexpressed!="NO",])
+
+  ggplot(top, aes(x=logFC, y=-log10(FDR), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
+    geom_text_repel(min.segment.length=5)+scale_color_manual(values=c("blue", "black", "red"))+
+    geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(0.05), col="red")
+}
 
 
 
-plot_volcano_lv_new<-function(top, FDR_cutoff=0.05, title=""){
+
+
+plot_volcano_lv_new<-function(top, FDR_cutoff=0.05, title="", min.segment.length=5, size=5){
   top$diffexpressed<-"NO"
   if(dim(top[top$logFC>=1 & top$adj.P.Val<=FDR_cutoff,])[1]>0){
     top[top$logFC>=1 & top$adj.P.Val<=FDR_cutoff,]$diffexpressed<-"UP"
@@ -149,33 +177,33 @@ plot_volcano_lv_new<-function(top, FDR_cutoff=0.05, title=""){
   
   if(length(unique(top$diffexpressed))==3){
     plot(ggplot(top, aes(x=logFC, y=-log10(adj.P.Val), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-           geom_text_repel(min.segment.length=5, show.legend = F)+scale_color_manual(values=c("blue", "black", "red"))+
+           geom_text_repel(min.segment.length=min.segment.length, show.legend = F, size=size)+scale_color_manual(values=c("blue", "black", "red"))+
            geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(FDR_cutoff), col="red")+ggtitle(title))
   }
   
   else if(length(unique(top$diffexpressed))==2 & length(intersect(unique(top$diffexpressed), c("UP","NO")))==2){
     plot(ggplot(top, aes(x=logFC, y=-log10(adj.P.Val), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-           geom_text_repel(min.segment.length=5, show.legend = F)+scale_color_manual(values=c("black", "red"))+
+           geom_text_repel(min.segment.length=min.segment.length, show.legend = F, size=size)+scale_color_manual(values=c("black", "red"))+
            geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(FDR_cutoff), col="red")+ggtitle(title))
     
   }
   
   else if(length(unique(top$diffexpressed))==2 & length(intersect(unique(top$diffexpressed), c("DOWN","NO")))==2){
     plot(ggplot(top, aes(x=logFC, y=-log10(adj.P.Val), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-           geom_text_repel(min.segment.length=5, show.legend = F)+scale_color_manual(values=c("blue","black"))+
+           geom_text_repel(min.segment.length=min.segment.length, show.legend = F, size=size)+scale_color_manual(values=c("blue","black"))+
            geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(FDR_cutoff), col="red")+ggtitle(title))
   }
   
   else if(length(unique(top$diffexpressed))==2 & length(intersect(unique(top$diffexpressed), c("DOWN","UP")))==2){
     plot(ggplot(top, aes(x=logFC, y=-log10(adj.P.Val), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-           geom_text_repel(min.segment.length=5, show.legend = F)+scale_color_manual(values=c("blue","red"))+
+           geom_text_repel(min.segment.length=min.segment.length, show.legend = F, size=size)+scale_color_manual(values=c("blue","red"))+
            geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(FDR_cutoff), col="red")+ggtitle(title))
   }  
   
   
   else{
     plot(ggplot(top, aes(x=logFC, y=-log10(adj.P.Val), col=diffexpressed, label=labelgenes))+geom_point()+theme_classic()+
-           geom_text_repel(min.segment.length=5, show.legend = F)+scale_color_manual(values=c("black"))+
+           geom_text_repel(min.segment.length=min.segment.length, show.legend = F, size=size)+scale_color_manual(values=c("black"))+
            geom_vline(xintercept=c(-1, 1), col="red") + geom_hline(yintercept=-log10(FDR_cutoff), col="red")+ggtitle(title))
   }
   
