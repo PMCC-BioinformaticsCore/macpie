@@ -22,6 +22,8 @@ to allow reading in the metadata label matching to the Macseq
 plate with minimum confusion.
 Next version will consider integration of other modalities.}
 
+\item{label_file}{File containing the matching metadata in csv format.}
+
 \item{gene_column}{Specify which column of genes.tsv or features.tsv
 to use for gene names; default is 2}
 
@@ -31,8 +33,6 @@ to use for cell names; default is 1}
 \item{unique_features}{Make feature names unique (default TRUE)}
 
 \item{strip_suffix}{Remove trailing "-1" if present in all cell barcodes.}
-
-\item{label_dir}{Directory containing the matching metadata file in csv format.}
 }
 \value{
 If features.csv indicates the data has multiple data types, a list
