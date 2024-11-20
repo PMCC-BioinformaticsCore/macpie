@@ -2,8 +2,10 @@ Package: macpie
 Title: Analysis and visualisation of MAC-seq data
 Version: 0.0.0.9000
 Authors@R: 
-    person("Peter", "Mac", , "peter.mac@petermac.org", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-2144-1887"))
+    c(person("Peter", "Mac", , "peter.mac@petermac.org", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-2144-1887")),
+    person(given = "Mark", family = "Li", email = "limarkxiang@gmail.com", role = c("aut"),
+           comment = c(ORCID = "0000-0001-6222-4446"))))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -14,6 +16,11 @@ Suggests:
 Config/testthat/edition: 3
 Imports:
     data.table,
+    dplyr,
+    DT,
+    httr2,
     Matrix,
     R.utils,
+    readr,
+    readxl,
     Seurat
