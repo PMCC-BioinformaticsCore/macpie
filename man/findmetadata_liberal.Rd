@@ -33,7 +33,6 @@ ML can also modify the matching process to use a number vector
 User should ideally have 14 matched columns
 }
 \examples{
-ML is too lazy to write
 testmetadata <- findmetadata_liberal()
 }
 \author{

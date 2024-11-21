@@ -7,8 +7,12 @@
 #' @return link for enrichR database
 #' @export
 
-#' @import dyplyr htt2 ggplot2 DT
+#' @import dplyr httr2 ggplot2 DT
 enrichr_url<-function(dbs="enrichr"){
+  # Check if the input matches "enrichr"
+  if (!dbs %in% c("enrichr")) {
+    stop("Error: The specified database is not supported. Only 'enrichr' is allowed.")
+  }
   dbs<-match.arg(dbs)
   switch(dbs,
          "enrichr"="https://maayanlab.cloud/Enrichr/")
@@ -25,6 +29,7 @@ enrichr_url<-function(dbs="enrichr"){
 #' @return data frame of all available data sets from the enrichR link user provided
 #' @export
 GS_summary<-function(url){
+
   resp<-request(paste0(url,"datasetStatistics"))|> req_perform()
   if(!resp_status_desc(resp)=="OK"){
     stop(resp_status_desc(resp))
@@ -74,6 +79,8 @@ geneset_download<-function(url, geneset){
 #' @param genesets selected pathway datasets like KEGG from enrichR
 #' @param background number of genes that considered as background, options as "human": number of human genes
 #' or "geneset" genes in the previously selected pathway dataset
+#' @importFrom methods is
+#' @importFrom stats p.adjust
 #' @export
 #' @return a data frame of enrichment analysis results with all the statistics
 
@@ -82,6 +89,7 @@ hyper_enrich_bg<-function(deg, #list of DEGs
                           background="human" #define the number of genes in your experiment (interger), or "human" to use human genome or
                           #"geneset" to use number genes in the gene set collection
 ){
+
   #checking input
   if(!is(deg,"vector")){
     stop("DEGs expected to be a vector of gene symbols\n")
@@ -90,10 +98,10 @@ hyper_enrich_bg<-function(deg, #list of DEGs
     stop("Genesets expected to be a list of non-null names\n")
   }
 
-  if(typeof(background)!="integer"){
+  if(!is.numeric(background)){
     #set background/universe gene number
     background<-switch(background,
-                       "human"=as.character(20000),#as enrichr set
+                       "human"=20000,#as enrichr set
                        "geneset"=length(unique(unlist(genesets))),
     )
     background<-as.numeric(background)
@@ -110,16 +118,21 @@ hyper_enrich_bg<-function(deg, #list of DEGs
   genesets<-genesets[n_hits_updatebg]#updating background
   n_hits<-n_hits[n_hits>0]#exlude 0 overlapping terms
 
+  # Check if there are valid genesets left
+  if (length(genesets) == 0 || length(n_hits) == 0) {
+    stop("No overlapping genes found between DEGs and genesets. Cannot compute enrichment.\n")
+  }
+
 
   n_genesets<-sapply(genesets,length)#m
-  n_minus<-background-n_genesets#n
+  n_minus<-as.numeric(background) - as.numeric(n_genesets) # n
   n_deg<-length(deg)#k
 
   #hyper-geometric
   pvals<-stats::phyper(q=n_hits-1,
-                       m=n_genesets,
-                       n=n_minus,
-                       k=n_deg,
+                       m = as.numeric(n_genesets),
+                       n = as.numeric(n_minus),
+                       k = as.numeric(n_deg),
                        lower.tail = FALSE)
 
 
@@ -139,9 +152,12 @@ hyper_enrich_bg<-function(deg, #list of DEGs
 
 #' generate a basic bar plot
 #' @param df output data frame from enrichment analysis
+#' @importFrom stats reorder
+#' @import ggplot2
 #' @export
 #' @return bar plot showing top 10 enriched pathways
 plot_enrich<-function(df, numTerms=10){
+
   map<-as.numeric(sub("/.*","", df$Overlap))
   gsn<-as.numeric(sub(".*/","", df$Overlap))
   generatio<-map/gsn
@@ -160,3 +176,6 @@ plot_enrich<-function(df, numTerms=10){
   return(p)
 
 }
+
+utils::globalVariables(c("Hits", "Term", "AdjP.value","P.value","geneCoverage", "genesPerTerm", "libraryName",
+                         "link", "numTerms"))

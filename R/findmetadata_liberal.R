@@ -12,7 +12,6 @@
 #' @param predefined_columns this is the most important and rigid input for the entire package
 #' @return it returns a dataframe of metadafile
 #'
-#' @examples ML is too lazy to write
 #' @examples testmetadata <- findmetadata_liberal()
 
 

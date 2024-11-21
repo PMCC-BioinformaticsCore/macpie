@@ -8,7 +8,6 @@
 #' @param metadata this is the output from findmetadata function
 #' @return it prints out a summary
 #'
-#' @examples ML is too lazy to write
 #' @examples metadt_qc <- validate_metadata(meta_dt)
 #'
 validate_metadata <- function(metadata) {

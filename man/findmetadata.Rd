@@ -30,7 +30,6 @@ It will also provide a quick summary of matched columns identified
 User should ideally have 14 matched columns
 }
 \examples{
-ML is too lazy to write
 meta_dt <- findmetadata()
 }
 \author{

@@ -12,7 +12,6 @@
 #' @param predefined_columns for findmetadata function, we are string matching the 14 columns from user input metadatafile
 #' @return it returns a dataframe of metadafile
 #'
-#' @examples ML is too lazy to write
 #' @examples meta_dt <- findmetadata()
 
 

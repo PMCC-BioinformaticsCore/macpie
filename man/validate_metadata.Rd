@@ -22,7 +22,6 @@ It replaces special characters such as spaces and comma with underscore
 It generates a quick summary of the different treatment and sample groups in the metadata
 }
 \examples{
-ML is too lazy to write
 metadt_qc <- validate_metadata(meta_dt)
 
 }
