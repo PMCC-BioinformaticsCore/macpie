@@ -36,3 +36,15 @@ plate_layout(mac)
 
 ```
 
+This is a basic example which shows you how to import user defined metadata and basic QC of metadata.
+2024 Nov findmetadata() function remains user interactive
+
+``` r
+library(macpie)
+## basic example code
+metadata <- findmetadata("path_to_metadata_file")
+
+## summary of metadata QC
+validate_metadata(metadata)
+
+```
