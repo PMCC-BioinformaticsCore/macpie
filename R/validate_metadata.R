@@ -1,16 +1,18 @@
 
 #' Check and clean the metadata file generated from findmetadata function
 #' @author Mark Li
+#' @description 2024 Nov 26 fix the function name
+#' @description 2024 Nov 26 update the code to report more than a summary but also the location of issues by Well_ID
 #' @description As said in title
 #' @description It checks the column completeness and removes special characters such as spaces and comma except from Treatment_1
 #' @description It replaces special characters such as spaces and comma with underscore
 #' @description It generates a quick summary of the different treatment and sample groups in the metadata
-#' @param metadata this is the output from findmetadata function
-#' @return it prints out a summary
-#'
-#' @examples ML is too lazy to write
-#' @examples metadt_qc <- validate_metadata(meta_dt)
-#'
+#' @import dplyr
+#' @param metadata this is the output from find_metadata function
+#' @return a summary list of issues
+#' @examples validate_metadata(meta_dt)
+
+
 validate_metadata <- function(metadata) {
   if (is.null(metadata)) {
     stop("Error: Input metadata is NULL. Ensure the metadata is correctly provided.")
@@ -52,27 +54,53 @@ validate_metadata <- function(metadata) {
 
   # Check Row: Should be A to P
   if (any(!metadata$Row %in% LETTERS[1:16])) {
-    issues[["Row"]] <- "Contains values outside A to P."
+    invalid_indices <- which(!metadata$Row %in% LETTERS[1:16])
+    issues[["Row"]] <- data.frame(
+      Row = invalid_indices,
+      Well_ID = metadata$Well_ID[invalid_indices],
+      Issue = "Invalid Row (not A to P)"
+    )
   }
 
   # Check Column: Should be 1 to 24
   if (any(!grepl("^([1-9]|1[0-9]|2[0-4])$", metadata$Column))) {
-    issues[["Column"]] <- "Contains values outside 1 to 24."
+    invalid_indices <- which(!grepl("^([1-9]|1[0-9]|2[0-4])$", metadata$Column))
+    issues[["Column"]] <- data.frame(
+      Row = invalid_indices,
+      Well_ID = metadata$Well_ID[invalid_indices],
+      Issue = "Invalid Column (not 1 to 24)"
+    )
   }
 
   # Check Well_ID: Should follow A01, A02, ..., P24
-  if (any(!check_well_id(metadata$Well_ID))) {
-    issues[["Well_ID"]] <- "Contains invalid Well_ID values."
+  well_id_valid <- check_well_id(metadata$Well_ID)
+  if (any(!well_id_valid)) {
+    invalid_indices <- which(!well_id_valid)
+    issues[["Well_ID"]] <- data.frame(
+      Row = invalid_indices,
+      Well_ID = metadata$Well_ID[invalid_indices],
+      Issue = "Invalid Well_ID format"
+    )
   }
 
   # Check Time: Should be numeric
   if (any(!grepl("^\\d+(\\.\\d+)?$", metadata$Time))) {
-    issues[["Time"]] <- "Contains non-numeric values."
+    invalid_indices <- which(!grepl("^\\d+(\\.\\d+)?$", metadata$Time))
+    issues[["Time"]] <- data.frame(
+      Row = invalid_indices,
+      Well_ID = metadata$Well_ID[invalid_indices],
+      Issue = "Non-numeric Time value"
+    )
   }
 
   # Check Concentration_1: Should be numeric
   if (any(!grepl("^\\d+(\\.\\d+)?$", metadata$Concentration_1))) {
-    issues[["Concentration_1"]] <- "Contains non-numeric values."
+    invalid_indices <- which(!grepl("^\\d+(\\.\\d+)?$", metadata$Concentration_1))
+    issues[["Concentration_1"]] <- data.frame(
+      Row = invalid_indices,
+      Well_ID = metadata$Well_ID[invalid_indices],
+      Issue = "Non-numeric Concentration_1 value"
+    )
   }
 
   # Check all other columns: Should be character strings without special characters
@@ -80,10 +108,13 @@ validate_metadata <- function(metadata) {
                            c("Plate_ID", "Row", "Column", "Well_ID", "Time", "Concentration_1", "Treatment_1"))
   for (col_name in other_columns) {
     if (any(grepl("[^[:alnum:]_ ]", metadata[[col_name]]))) {
-      issues[[col_name]] <- "Contains special characters."
+      invalid_indices <- which(grepl("[^[:alnum:]_ ]", metadata[[col_name]]))
+      issues[[col_name]] <- data.frame(
+        Row = invalid_indices,
+        Well_ID = metadata$Well_ID[invalid_indices],
+        Issue = paste0("Special characters in ", col_name)
+      )
     }
-    # Remove spaces in all other columns
-    metadata[[col_name]] <- gsub("\\s", "", metadata[[col_name]])
   }
 
   # Special handling for Treatment_1
@@ -95,7 +126,8 @@ validate_metadata <- function(metadata) {
   if (length(issues) > 0) {
     cat("\nValidation Issues:\n")
     for (issue_col in names(issues)) {
-      cat(issue_col, ": ", issues[[issue_col]], "\n", sep = "")
+      cat(issue_col, ":\n")
+      print(issues[[issue_col]])
     }
   } else {
     cat("\nNo validation issues found. Metadata is clean.\n")
@@ -114,9 +146,8 @@ validate_metadata <- function(metadata) {
 
   print(summary_table)
 
-  # Return cleaned metadata and summary table
-  return(list(cleaned_metadata = metadata, summary_table = summary_table))
+  # Return detailed issues and summary table
+  return(list(validation_issues = issues, summary_table = summary_table))
 }
-
 
 
