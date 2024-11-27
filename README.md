@@ -41,8 +41,12 @@ This is a basic example which shows you how to import user defined metadata and 
 
 ``` r
 library(macpie)
-## basic example code
-metadata <- findmetadata("path_to_metadata_file")
+## basic example of using find_metadata()
+## user should provide a dir path
+metadata <- find_metadata("path_to_metadata_file")
+
+##if no dir path is provided, it will trigger a file.choose() for user to find file
+metadata <- find_metadata()
 
 ## summary of metadata QC
 validate_metadata(metadata)
