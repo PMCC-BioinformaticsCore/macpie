@@ -19,10 +19,8 @@ Imports:
     dplyr,
     DT,
     httr2,
-    Matrix,
-    R.utils,
-    readr,
-    readxl,
-    Seurat,
     ggplot2,
-    methods
+    methods,
+    Biobase,
+    RColorBrewer,
+    tidyseurat

@@ -10,7 +10,8 @@ enrichR contains both human and mouse}
 enrichr_url(dbs = "enrichr")
 }
 \arguments{
-\item{dbs}{name of database in encirhR such as main enrichR or fish/fly/yeastenrichR}
+\item{dbs}{name of database in encirhR such as main enrichR or
+fish/fly/yeastenrichR}
 }
 \value{
 link for enrichR database

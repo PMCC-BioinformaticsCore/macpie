@@ -4,10 +4,12 @@
 \alias{plot_enrich}
 \title{generate a basic bar plot}
 \usage{
-plot_enrich(df, numTerms = 10)
+plot_enrich(df, num_terms = 10)
 }
 \arguments{
 \item{df}{output data frame from enrichment analysis}
+
+\item{num_terms}{number of pathway terms to be plotted}
 }
 \value{
 bar plot showing top 10 enriched pathways
