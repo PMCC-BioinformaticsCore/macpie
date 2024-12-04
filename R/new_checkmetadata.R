@@ -1,12 +1,18 @@
 
 #' Check and clean the metadata file generated from findmetadata function
+#'
+#' This function validates a metadata dataset, cleans specific fields, checks for issues,
+#' and generates a summary table grouped by \code{Plate_ID}.
 #' @author Mark Li
-#' @description As said in title
 #' @description It checks the column completeness and removes special characters such as spaces and comma except from Treatment_1
 #' @description It replaces special characters such as spaces and comma with underscore
 #' @description It generates a quick summary of the different treatment and sample groups in the metadata
 #' @param metadata this is the output from findmetadata function
-#' @return it prints out a summary
+#' @import dplyr
+#' @return A list containing:
+#' \item{cleaned_metadata}{The cleaned metadata data frame after validation and modifications.}
+#' \item{summary_table}{A summary table grouped by \code{Plate_ID}, showing the count of unique values
+#' in selected columns.}
 #'
 #'@examples
 #' \dontrun{
@@ -16,6 +22,7 @@
 #' metadt_qc <- validate_metadata(metadata)
 #' }
 #'
+#'@export
 validate_metadata <- function(metadata) {
   if (is.null(metadata)) {
     stop("Error: Input metadata is NULL. Ensure the metadata is correctly provided.")
