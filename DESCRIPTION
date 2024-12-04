@@ -25,4 +25,7 @@ Imports:
     readxl,
     Seurat,
     ggplot2,
-    methods
+    methods,
+    tidyverse,
+    patchwork,
+    viridis

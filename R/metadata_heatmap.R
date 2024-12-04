@@ -1,5 +1,20 @@
-
-
+#' Generate Heatmaps of Metadata Function
+#'
+#' This function generates heatmaps from metadata, either from an existing
+#' `cleaned_metadata` object in the global environment or from a CSV file.
+#'
+#' @param metadata_file Either the existing 'cleaned_metadata' file or a metadata CSV file path.
+#' @param legend A character value ("show" or "none") to control whether to display legends.
+#' @param output_file A file path and name to save the heatmaps as a graph (png, pdf, or jpg).
+#'
+#' @return Displays the plot as a ggplot object or saves it as a file (jpg, png, or pdf).
+#' @export
+#'
+#' @examples
+#' generate_heatmaps("~/Documents/metadata_test.csv")
+#' generate_heatmaps("~/Documents/metadata_test.csv", legend = "none")
+#' generate_heatmaps("~/Documents/metadata_test.csv",output_file = "~/Documents/metadata_graph.png")
+#'
 generate_heatmaps <- function(metadata_file = NULL, legend = "show", output_file = NULL) {
   # Check if 'cleaned_metadata' exists in the global environment
   if (exists("cleaned_metadata", where = .GlobalEnv)) {
