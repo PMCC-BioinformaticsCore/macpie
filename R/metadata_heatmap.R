@@ -61,10 +61,7 @@ metadata_heatmap <- function(metadata_file = NULL, legend = "show", output_file 
     stop("The metadata is missing a 'Plate_ID' column.")
   }
 
-  # List of all annotation columns excluding 'Well_ID', 'row', 'Row', 'Column', and 'col'
   annotation_cols <- setdiff(names(metadata), c("Well_ID", "row", "col", "Row", "Column", "Plate_ID"))
-
-  # Check if annotation_cols is empty
   if (length(annotation_cols) == 0) {
     stop("No annotation columns found to generate heatmaps. Please check your input data.")
   }
@@ -108,7 +105,6 @@ metadata_heatmap <- function(metadata_file = NULL, legend = "show", output_file 
         )
     })
 
-    # Check if heatmaps is empty
     if (length(heatmaps) == 0) {
       stop("No heatmaps were generated. Please check the input metadata and annotation columns.")
     }
@@ -122,11 +118,21 @@ metadata_heatmap <- function(metadata_file = NULL, legend = "show", output_file 
       )
 
     if (!is.null(output_file)) {
-      file_name <- paste0(sub(".(png|jpg|pdf)$", "", output_file), "_Plate_", plate_id, ".", tools::file_ext(output_file))
+      dir_name <- dirname(output_file)
+      if (!dir.exists(dir_name)) {
+        stop("The directory for the output file does not exist: ", dir_name)
+      }
+
+      file_name <- normalizePath(paste0(
+        sub(".(png|jpg|pdf)$", "", output_file),
+        "_Plate_", plate_id, ".", tools::file_ext(output_file)
+      ), mustWork = FALSE)
+
+      message("Saving plot to: ", file_name)
       ggsave(file_name, combined_plot, width = 10, height = 6 * ceiling(length(heatmaps) / 3), units = "in")
       message("Saved plot for Plate ID: ", plate_id, " to ", file_name)
     } else {
-      print(combined_plot)
+      return(combined_plot)
     }
   }
 }
