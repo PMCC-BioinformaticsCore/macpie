@@ -15,7 +15,7 @@ this high-throughput transcriptomic platform.
 You can install the development version of macpie like so:
 
 ``` r
-remotes::install_github("https://github.com/qoiopipq/macpie")
+remotes::install_github("https://github.com/PMCC-BioinformaticsCore/macpie")
 ```
 
 ## Example
@@ -24,6 +24,7 @@ This is a basic example which shows you how to import data and perform basic QC.
 
 ``` r
 library(macpie)
+
 ## basic example code
 mac<-read_macseq("directory_of_filtered_gene_matrix","path_to_metadata_file")
 
