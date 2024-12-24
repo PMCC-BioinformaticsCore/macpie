@@ -15,18 +15,12 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports:
-    data.table,
     dplyr,
-    DT,
-    httr2,
-    Matrix,
-    R.utils,
-    readr,
-    readxl,
-    Seurat,
     ggplot2,
-    methods,
     forcats,
     gtools,
     rlang,
-    tidyseurat
+    tidyseurat,
+    edgeR,
+    ggrepel,
+    limma
