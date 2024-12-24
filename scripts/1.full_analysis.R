@@ -78,17 +78,32 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ri
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
-##1. create a function
+#1. open terminal and pull from github
+#git pull origin main
+
+#2. create a branch in the format: function_author
+#git checkout -b function_author
+
+#3. in the console: create a function
 #use_r(functionX)
-## edit script
+#4. edit script
 #load_all()
-##check if the function exists in the global environment
+#5. check if the function exists in the global environment
 #exists("plot_plate_layout", where = globalenv(), inherits = FALSE)
+#6. check and document
 #check()
+#7. click inside the function and
+#Code > Insert roxygen skeleton.
 #document()
 #check()
 #lint(filename="R/functionX.R",linters = custom_linters)
+#8. make the test
 #use_test("functionX")
+#test()
+#9. terminal: git
+#git add .
+#git commit -m "message"
+#git push origin function_author
 
 
 
