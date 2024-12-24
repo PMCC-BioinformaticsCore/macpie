@@ -104,6 +104,8 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ri
 #git add .
 #git commit -m "message"
 #git push origin function_author
+#git checkout main
+#git branch -d function_author
 
 
 
