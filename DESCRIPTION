@@ -25,4 +25,8 @@ Imports:
     readxl,
     Seurat,
     ggplot2,
-    methods
+    methods,
+    forcats,
+    gtools,
+    rlang,
+    tidyseurat
