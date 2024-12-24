@@ -23,4 +23,7 @@ Imports:
     tidyseurat,
     edgeR,
     ggrepel,
-    limma
+    limma,
+    Biobase,
+    RColorBrewer
+    

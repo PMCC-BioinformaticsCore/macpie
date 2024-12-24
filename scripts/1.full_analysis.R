@@ -74,6 +74,14 @@ mac<- mac %>%
 
 #QC plots
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ribo"), ncol = 4)
+
+plate_layout(mac,"nCount_RNA","Treatment_1")
+
+plot_mds(mac,"Treatment_1")
+
+count_matrix<-as.matrix(mac@assays$RNA$counts)
+rle_plot(count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
+
 #TO-DO: verify that different plates would be plotted side-by-side
 
 
