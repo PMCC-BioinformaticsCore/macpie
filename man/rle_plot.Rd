@@ -4,16 +4,16 @@
 \alias{rle_plot}
 \title{Create an RLE Plot}
 \usage{
-rle_plot(data, barcodes = NULL, labels = NULL, label_column = NULL, log = TRUE)
+rle_plot(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column".}
 
 \item{barcodes}{A vector of sample barcodes corresponding to Cells(seurat_object).}
 
-\item{labels}{A vector of labels of the same length as 'barcodes" to group the barcodes.}
-
 \item{label_column}{A metadata column name to group the barcodes.}
+
+\item{labels}{A vector of labels of the same length as 'barcodes" to group the barcodes.}
 
 \item{log}{A logical value indicating whether data should be log-transformed.
 Defaults to \code{TRUE}.}
@@ -39,6 +39,5 @@ The function performs the following steps:
 rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)
 rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
-
 
 }

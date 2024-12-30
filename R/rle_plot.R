@@ -25,120 +25,127 @@
 #' mac<-readRDS(rds_file)
 #' rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
 #'
-#'
 #' @importFrom Biobase rowMedians
 #' @importFrom grDevices boxplot.stats
 #' @importFrom grDevices colorRampPalette
 #' @importFrom dplyr pull select
 #' @import Seurat ggplot2 tidyseurat
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom colorspace darken
 #' @export
-#'
 
-rle_plot <- function(data, barcodes=NULL, labels=NULL, label_column=NULL, log = TRUE) {
+# Main function
+rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE) {
 
-  # Check if mac is of the right format
-  if (!inherits(data,"Seurat")) {
-    stop("Error: 'data' must be a Seurat or TidySeurat object.")
+  # Helper function to validate input data
+  validate_inputs <- function(data, barcodes, label_column, labels, log) {
+    if (!inherits(data, "Seurat")) {
+      stop("Error: 'data' must be a Seurat or TidySeurat object.")
+    }
+    if (is.null(barcodes)) {
+      barcodes <- Seurat::Cells(data)
+    }
+    if (!is.null(label_column) && inherits(label_column, "character") && length(label_column) == 1) {
+      labels <- data %>%
+        select({{label_column}}) %>%
+        pull()
+    } else if (is.null(labels)) {
+      stop("The format of `label_column` should be a single character value.")
+    }
+    if (is.null(labels)) {
+      stop("Either `labels` or `label_column` must be provided.")
+    }
+    if (length(labels) != ncol(data)) {
+      stop("Labels must have the same length as the number of columns in the dataset.")
+    }
+    list(barcodes = as.factor(barcodes), labels = as.factor(labels), log = ifelse(inherits(log, "function"), TRUE, log))
   }
 
-  # If there are no barcodes, use the whole set
-  if (is.null(barcodes)) {
-    barcodes <- Seurat::Cells(data)
+  # Helper function to fetch and log-transform count matrix
+  fetch_count_matrix <- function(data, log) {
+    count_matrix <- as.matrix(data@assays$RNA$counts)
+    if (log) {
+      count_matrix <- log1p(count_matrix)
+    }
+    return(count_matrix)
   }
 
-  if (!is.null(label_column) && inherits(label_column,"character") && length(label_column) == 1) {
-    labels <- data %>%
-      select({{label_column}}) %>%
-      pull()
-  } else if(is.null(labels)) {
-    stop("The format of `label_column` should be a single character value.")
+  # Helper function to compute RLE
+  compute_rle <- function(count_matrix, labels) {
+    rle <- count_matrix - Biobase::rowMedians(count_matrix)
+    sort_index <- sort.list(labels)
+    rle <- rle[, sort_index]
+    return(list(rle = rle, sort_index = sort_index))
   }
 
-  if (is.null(labels)) {
-    stop("Either `labels` or `label_column` must be provided.")
+  # Helper function to create RLE data frame
+  create_rle_dataframe <- function(rle, labels, sort_index) {
+    rledf <- t(apply(rle, 2, function(x) {
+      grDevices::boxplot.stats(x)$stats
+    }))
+    rledf <- as.data.frame(rledf)
+    colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
+    rledf$feature <- labels[sort_index]
+    rledf$sample <- colnames(rle)
+    rledf$sample <- factor(rledf$sample, levels = unique(rledf$sample))
+    rledf
   }
 
-  # Ensure alignment
-  if (length(labels) != ncol(data)) {
-    stop("Labels must have the same length as the number of columns in the dataset")
-  }
+  # Helper function to create the plot
+  create_rle_plot <- function(rledf) {
+    tryCatch({
+      # Generate a color palette for fill
+      fill_palette <- colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
 
-  # Ensure log is by default TRUE
-  if (inherits(log,"function")) {
-    log = TRUE
-  }
+      # Darken the palette for outlines
+      outline_palette <- darken(fill_palette, amount = 0.1)
 
-  #fetch the count_matrix
-  count_matrix<-as.matrix(data@assays$RNA$counts)
-
-  # Validate id
-  if (length(barcodes) != ncol(count_matrix)) {
-    stop("Error: Length of 'id' must match the number of columns in 'count_matrix'.")
-  }
-
-  # Convert id to a factor
-  barcodes <- as.factor(barcodes)
-
-  # Validate feature
-  if (length(labels) != ncol(count_matrix)) {
-    stop("Error: Length of 'labels' must match the number of columns in 'count_matrix'.")
-  }
-
-  # Convert labels to a factor
-  labels <- as.factor(labels)
-
-  # Add 1 to count_matrix and apply log transformation
-  # Check if count_matrix is logged
-  if (log) {
-    count_matrix <- log1p(count_matrix)
-  }
-
-  # Compute RLE
-  rle <- count_matrix - Biobase::rowMedians(count_matrix)
-
-  # Sort RLE based on feature
-  sort_index <- sort.list(labels)
-  rle <- rle[, sort_index]
-
-  # Create a data frame for RLE boxplot stats
-  rledf <- t(apply(rle, 2, function(x) {
-    grDevices::boxplot.stats(x)$stats
-  }))
-  rledf <- as.data.frame(rledf)
-  colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
-
-  # Add feature and sample information
-  rledf$feature <- labels[sort_index]
-  rledf$sample <- colnames(rle)
-
-  # Reorder samples for plotting
-  rledf$sample <- factor(rledf$sample, levels = unique(rledf$sample))
-
-  # Plot the RLE
-  tryCatch({
-    p <- ggplot(rledf, aes(x = .data$sample, fill = .data$feature)) +
-      geom_boxplot(
-        aes(
+      ggplot(rledf, aes(x = .data$sample, fill = .data$feature, color = .data$feature)) +
+        geom_boxplot(
+          aes(
             ymin = .data$ymin,
             lower = .data$lower,
             middle = .data$middle,
             upper = .data$upper,
-            ymax = .data$ymax),
-        stat = "identity"
-      ) +
-      theme_bw() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 4)) +
-      scale_x_discrete(limits = rledf$sample) +
-      scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))) +
-      geom_hline(yintercept = 0,
-                 linetype = "dotted",
-                 col = "red",
-                 linewidth = 1) +
-      ylab("log_expression_deviation")
+            ymax = .data$ymax
+          ),
+          stat = "identity"
+        ) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 4)) +
+        scale_x_discrete(limits = rledf$sample) +
+        scale_fill_manual(values = fill_palette) +
+        scale_color_manual(values = outline_palette) +
+        geom_hline(yintercept = 0, linetype = "dotted", col = "red", linewidth = 1) +
+        ylab("Log expression deviation")
+    }, error = function(e) {
+      stop("Error in plotting: ", e$message)
+    })
+  }
 
-    return(p)
-  }, error = function(e) {
-    stop("Error in plotting: ", e$message)
-  })
+  # Validate inputs
+  validated <- validate_inputs(data, barcodes, label_column, labels, log)
+  barcodes <- validated$barcodes
+  labels <- validated$labels
+  log <- validated$log
+
+  # Fetch and transform count matrix
+  count_matrix <- fetch_count_matrix(data, log)
+
+  # Ensure alignment
+  if (length(barcodes) != ncol(count_matrix)) {
+    stop("Error: Length of 'barcodes' must match the number of columns in 'count_matrix'.")
+  }
+  if (length(labels) != ncol(count_matrix)) {
+    stop("Error: Length of 'labels' must match the number of columns in 'count_matrix'.")
+  }
+
+  # Compute RLE and sort
+  rle_data <- compute_rle(count_matrix, labels)
+
+  # Create RLE data frame
+  rledf <- create_rle_dataframe(rle_data$rle, labels, rle_data$sort_index)
+
+  # Create and return plot
+  create_rle_plot(rledf)
 }
