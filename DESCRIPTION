@@ -26,5 +26,6 @@ Imports:
     limma,
     Biobase,
     RColorBrewer,
-    Seurat
+    Seurat,
+    colorspace
     
