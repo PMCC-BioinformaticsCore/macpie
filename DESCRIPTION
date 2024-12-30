@@ -25,5 +25,6 @@ Imports:
     ggrepel,
     limma,
     Biobase,
-    RColorBrewer
+    RColorBrewer,
+    Seurat
     

@@ -1,8 +1,9 @@
 test_that("ggplot is produced", {
   rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-  mac<-readRDS(rds_file)
-  count_matrix<-as.matrix(mac@assays$RNA$counts)
-  colnames(count_matrix)<-mac$Well_ID
-  p<-rle_plot(count_matrix = count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
+  expect_true(file.exists(rds_file)) # Check if the file exists
+  test_data<-readRDS(rds_file)
+  rows<-test_data[["Row"]] %>%
+    pull()
+  p<-rle_plot(data = test_data, labels = rows, log = TRUE)
   expect_equal(class(p),c("gg","ggplot"))
 })

@@ -33,6 +33,7 @@ project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 #metadata<-read_metadata()
 #TO-DO: fix the function so that it doesn't open a window and can be used from the command line
 #TO-DO: check for importing cell count & FACS data
+#TO-DO: fix metadata from the other project
 
 metadata<-read.csv(project_metadata,header=T) %>%
   arrange("Barcode") %>%
@@ -72,13 +73,16 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[sl][[:digit:]]
 mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode"))
 
-#QC plots
+#QC plot plate layout (all metadata columns can be used):
+plate_layout(mac,"nCount_RNA","Sample_type")
+
+#example of Seurat function being used
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ribo"), ncol = 4)
 
-plate_layout(mac,"nCount_RNA","Treatment_1")
-
+#example of MDS function, using limma
 plot_mds(mac,"Treatment_1")
 
+#RLE function
 count_matrix<-as.matrix(mac@assays$RNA$counts)
 rle_plot(count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
 

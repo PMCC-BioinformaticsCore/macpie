@@ -3,17 +3,17 @@
 #' This function generates a Relative Log Expression (RLE) plot for visualizing
 #' the distribution of expression data after normalization or log transformation.
 #'
-#' @param count_matrix A numeric matrix or data frame containing the expression data.
-#' Each column represents a sample, and each row represents a feature.
-#' @param id A vector of sample identifiers corresponding to the columns of `count_matrix`.
-#' @param feature A vector of feature labels corresponding to the columns of `count_matrix`.
-#' @param logged A logical value indicating whether `count_matrix` is already log-transformed.
-#' Defaults to `FALSE`.
+#' @param data A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column".
+#' @param barcodes A vector of sample barcodes corresponding to Cells(seurat_object).
+#' @param labels A vector of labels of the same length as 'barcodes" to group the barcodes.
+#' @param label_column A metadata column name to group the barcodes.
+#' @param log A logical value indicating whether data should be log-transformed.
+#' Defaults to `TRUE`.
 #'
 #' @details
 #' The function performs the following steps:
-#' - Ensures input data is numeric and matches dimensions.
-#' - Optionally log-transforms the data if `logged = FALSE`.
+#' - Ensures integrity of input data
+#' - Log-transforms the data
 #' - Computes the RLE by subtracting the row medians from each value.
 #' - Creates a boxplot using ggplot2 to visualize the distribution of RLE values.
 #'
@@ -23,60 +23,82 @@
 #' # Example Data
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' count_matrix<-as.matrix(mac@assays$RNA$counts)
-#' colnames(count_matrix)<-mac$Well_ID
-#' rle_plot(count_matrix = count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
+#' rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
 #'
 #'
 #' @importFrom Biobase rowMedians
 #' @importFrom grDevices boxplot.stats
 #' @importFrom grDevices colorRampPalette
-#' @import ggplot2 tidyseurat
+#' @importFrom dplyr pull select
+#' @import Seurat ggplot2 tidyseurat
 #' @importFrom RColorBrewer brewer.pal
 #' @export
 #'
 
-rle_plot <- function(count_matrix, id, feature, logged = FALSE) {
-  # Check if count_matrix is a numeric matrix or data frame
-  if (!is.matrix(count_matrix) && !is.data.frame(count_matrix)) {
-    stop("Error: 'count_matrix' must be a matrix or data frame.")
+rle_plot <- function(data, barcodes=NULL, labels=NULL, label_column=NULL, log = TRUE) {
+
+  # Check if mac is of the right format
+  if (!inherits(data,"Seurat")) {
+    stop("Error: 'data' must be a Seurat or TidySeurat object.")
   }
 
-  # Ensure count_matrix is numeric
-  if (!all(sapply(count_matrix, is.numeric))) {
-    stop("Error: 'count_matrix' must contain only numeric values.")
+  # If there are no barcodes, use the whole set
+  if (is.null(barcodes)) {
+    barcodes <- Seurat::Cells(data)
   }
 
-  # Convert to matrix if data frame
-  count_matrix <- as.matrix(count_matrix)
+  if (!is.null(label_column) && inherits(label_column,"character") && length(label_column) == 1) {
+    labels <- data %>%
+      select({{label_column}}) %>%
+      pull()
+  } else if(is.null(labels)) {
+    stop("The format of `label_column` should be a single character value.")
+  }
+
+  if (is.null(labels)) {
+    stop("Either `labels` or `label_column` must be provided.")
+  }
+
+  # Ensure alignment
+  if (length(labels) != ncol(data)) {
+    stop("Labels must have the same length as the number of columns in the dataset")
+  }
+
+  # Ensure log is by default TRUE
+  if (inherits(log,"function")) {
+    log = TRUE
+  }
+
+  #fetch the count_matrix
+  count_matrix<-as.matrix(data@assays$RNA$counts)
 
   # Validate id
-  if (length(id) != ncol(count_matrix)) {
+  if (length(barcodes) != ncol(count_matrix)) {
     stop("Error: Length of 'id' must match the number of columns in 'count_matrix'.")
   }
 
   # Convert id to a factor
-  id <- as.factor(id)
+  barcodes <- as.factor(barcodes)
 
   # Validate feature
-  if (length(feature) != ncol(count_matrix)) {
-    stop("Error: Length of 'feature' must match the number of columns in 'count_matrix'.")
+  if (length(labels) != ncol(count_matrix)) {
+    stop("Error: Length of 'labels' must match the number of columns in 'count_matrix'.")
   }
 
-  # Convert feature to a factor
-  feature <- as.factor(feature)
+  # Convert labels to a factor
+  labels <- as.factor(labels)
 
-  # Add 1 to count_matrix and apply log2 transformation
+  # Add 1 to count_matrix and apply log transformation
   # Check if count_matrix is logged
-  if (!logged) {
-    count_matrix <- log2(count_matrix + 1)
+  if (log) {
+    count_matrix <- log1p(count_matrix)
   }
 
   # Compute RLE
   rle <- count_matrix - Biobase::rowMedians(count_matrix)
 
   # Sort RLE based on feature
-  sort_index <- sort.list(feature)
+  sort_index <- sort.list(labels)
   rle <- rle[, sort_index]
 
   # Create a data frame for RLE boxplot stats
@@ -87,7 +109,7 @@ rle_plot <- function(count_matrix, id, feature, logged = FALSE) {
   colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
 
   # Add feature and sample information
-  rledf$feature <- feature[sort_index]
+  rledf$feature <- labels[sort_index]
   rledf$sample <- colnames(rle)
 
   # Reorder samples for plotting
@@ -106,14 +128,14 @@ rle_plot <- function(count_matrix, id, feature, logged = FALSE) {
         stat = "identity"
       ) +
       theme_bw() +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 4)) +
       scale_x_discrete(limits = rledf$sample) +
-      scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(feature))) +
+      scale_color_manual(values = colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))) +
       geom_hline(yintercept = 0,
                  linetype = "dotted",
                  col = "red",
                  linewidth = 1) +
-      ylab("log2_expression_deviation")
+      ylab("log_expression_deviation")
 
     return(p)
   }, error = function(e) {

@@ -4,18 +4,19 @@
 \alias{rle_plot}
 \title{Create an RLE Plot}
 \usage{
-rle_plot(count_matrix, id, feature, logged = FALSE)
+rle_plot(data, barcodes = NULL, labels = NULL, label_column = NULL, log = TRUE)
 }
 \arguments{
-\item{count_matrix}{A numeric matrix or data frame containing the expression data.
-Each column represents a sample, and each row represents a feature.}
+\item{data}{A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column".}
 
-\item{id}{A vector of sample identifiers corresponding to the columns of \code{count_matrix}.}
+\item{barcodes}{A vector of sample barcodes corresponding to Cells(seurat_object).}
 
-\item{feature}{A vector of feature labels corresponding to the columns of \code{count_matrix}.}
+\item{labels}{A vector of labels of the same length as 'barcodes" to group the barcodes.}
 
-\item{logged}{A logical value indicating whether \code{count_matrix} is already log-transformed.
-Defaults to \code{FALSE}.}
+\item{label_column}{A metadata column name to group the barcodes.}
+
+\item{log}{A logical value indicating whether data should be log-transformed.
+Defaults to \code{TRUE}.}
 }
 \value{
 A ggplot object representing the RLE plot.
@@ -27,8 +28,8 @@ the distribution of expression data after normalization or log transformation.
 \details{
 The function performs the following steps:
 \itemize{
-\item Ensures input data is numeric and matches dimensions.
-\item Optionally log-transforms the data if \code{logged = FALSE}.
+\item Ensures integrity of input data
+\item Log-transforms the data
 \item Computes the RLE by subtracting the row medians from each value.
 \item Creates a boxplot using ggplot2 to visualize the distribution of RLE values.
 }
@@ -37,9 +38,7 @@ The function performs the following steps:
 # Example Data
 rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)
-count_matrix<-as.matrix(mac@assays$RNA$counts)
-colnames(count_matrix)<-mac$Well_ID
-rle_plot(count_matrix = count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
+rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
 
 
 }
