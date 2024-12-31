@@ -29,21 +29,9 @@ project_metadata<-paste0(data_dir,project_name,"/",project_name,"_metadata.csv")
 project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 
 #load metadata
-######## 1. Mark's function
-#metadata<-read_metadata()
-#TO-DO: fix the function so that it doesn't open a window and can be used from the command line
-#TO-DO: check for importing cell count & FACS data
-#TO-DO: fix metadata from the other project
-
-metadata<-read.csv(project_metadata,header=T) %>%
-  arrange("Barcode") %>%
-  mutate(Treatment_1=gsub("-","_",Treatment_1)) %>%
-  mutate(Treatment_conc=paste0(Treatment_1,"_",Concentration_1))
-
-
+metadata<-read_metadata(project_metadata)
 
 #only create an id if there are multiple plates
-#TO-DO: test a project with multiple plates
 if(length(project_metadata)>1){
   metadata<-metadata %>%
     mutate(id=gsub("Plate","",Plate_ID)) %>%
@@ -53,9 +41,7 @@ if(length(project_metadata)>1){
 ######## 2. Mark's function
 #validate_metadata(metadata)
 
-
 ######## 3. Susi's function: heatmap visualisation of metadata
-
 metadata_heatmap(project_metadata)
 
 #import reads

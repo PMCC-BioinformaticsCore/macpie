@@ -30,5 +30,6 @@ Imports:
     colorspace,
     patchwork,
     readr,
-    stringr
+    stringr,
+    readxl
     
