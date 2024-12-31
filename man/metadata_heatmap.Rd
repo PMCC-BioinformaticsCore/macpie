@@ -28,17 +28,8 @@ This function generates heatmaps from metadata, either from an existing
 object or from a CSV file.
 }
 \examples{
-#Example 1.
-temp_file <- tempfile(fileext = ".csv")
-write.csv(
-  data.frame(Well_ID = c("A01", "A02", "B01", "B02"),
-  Plate_ID = c("P1", "P1","P1", "P1"),
-  Compound_ID = c("C1", "C2", "C3", "C4")),
-  temp_file, row.names = FALSE
-)
-metadata_heatmap(metadata_file=temp_file)
-
-#Example 2.
+#Example
 metadata_file_path <- system.file("extdata", "PMMSq033/PMMSq033_metadata.csv", package = "macpie")
-metadata_heatmap(metadata_file=metadata_file_path)
+metadata<-read_metadata(metadata_file_path)
+metadata_heatmap(metadata=metadata)
 }
