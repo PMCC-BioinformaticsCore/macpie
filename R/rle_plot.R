@@ -24,8 +24,7 @@
 #' # Example Data
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
-#' }
+#' rle_plot(data = mac, label_column = "Row", log=TRUE)
 #'
 #' @importFrom Biobase rowMedians
 #' @importFrom grDevices boxplot.stats
@@ -73,24 +72,27 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   }
 
   # Helper function to compute RLE
-  compute_rle <- function(count_matrix, labels) {
+  compute_rle_df <- function(count_matrix, labels) {
+    # Compute RLE
     rle <- count_matrix - Biobase::rowMedians(count_matrix)
     sort_index <- sort.list(labels)
     rle <- rle[, sort_index]
-    return(list(rle = rle, sort_index = sort_index))
-  }
 
-  # Helper function to create RLE data frame
-  create_rle_dataframe <- function(rle, labels, sort_index) {
+    # Create RLE data frame
     rledf <- t(apply(rle, 2, function(x) {
       grDevices::boxplot.stats(x)$stats
     }))
     rledf <- as.data.frame(rledf)
     colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
+
+    # Add feature and sample information
     rledf$feature <- labels[sort_index]
     rledf$sample <- colnames(rle)
+
+    # Reorder samples for plotting
     rledf$sample <- factor(rledf$sample, levels = unique(rledf$sample))
-    rledf
+
+    return(rledf)
   }
 
   # Helper function to create the plot
@@ -142,11 +144,8 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
     stop("Error: Length of 'labels' must match the number of columns in 'count_matrix'.")
   }
 
-  # Compute RLE and sort
-  rle_data <- compute_rle(count_matrix, labels)
-
   # Create RLE data frame
-  rledf <- create_rle_dataframe(rle_data$rle, labels, rle_data$sort_index)
+  rledf <- compute_rle_df(count_matrix, labels)
 
   # Create and return plot
   create_rle_plot(rledf)
