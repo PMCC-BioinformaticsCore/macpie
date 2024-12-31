@@ -20,10 +20,12 @@
 #' @return A ggplot object representing the RLE plot.
 #'
 #' @examples
+#' \dontrun{
 #' # Example Data
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' rle_plot(data = mac, barcodes = Seurat::Cells(mac), label_column = "Row", log=TRUE)
+#' }
 #'
 #' @importFrom Biobase rowMedians
 #' @importFrom grDevices boxplot.stats

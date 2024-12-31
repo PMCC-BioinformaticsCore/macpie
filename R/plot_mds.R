@@ -6,12 +6,14 @@
 #' @import edgeR
 #' @import ggrepel
 #' @return ggplot object
-#' @export
 #'
 #' @examples
+#' \dontrun{
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_mds(mac, "Treatment_1")
+#' plot_mds(mac[,1:50], "Treatment_1")
+#' }
+#' @export
 plot_mds <- function(data, annotation) {
 
   dge <- edgeR::DGEList(counts = data@assays$RNA$counts)

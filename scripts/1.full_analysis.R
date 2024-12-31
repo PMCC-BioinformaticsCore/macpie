@@ -40,6 +40,8 @@ metadata<-read.csv(project_metadata,header=T) %>%
   mutate(Treatment_1=gsub("-","_",Treatment_1)) %>%
   mutate(Treatment_conc=paste0(Treatment_1,"_",Concentration_1))
 
+
+
 #only create an id if there are multiple plates
 #TO-DO: test a project with multiple plates
 if(length(project_metadata)>1){
@@ -50,6 +52,11 @@ if(length(project_metadata)>1){
 
 ######## 2. Mark's function
 #validate_metadata(metadata)
+
+
+######## 3. Susi's function: heatmap visualisation of metadata
+
+metadata_heatmap(project_metadata)
 
 #import reads
 # TO-DO: check for multiple folders of data that should be imported at the same time
@@ -83,8 +90,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ri
 plot_mds(mac,"Treatment_1")
 
 #RLE function
-count_matrix<-as.matrix(mac@assays$RNA$counts)
-rle_plot(count_matrix, id = mac$Well_ID, feature = mac$Row, logged=FALSE)
+rle_plot(mac, label_column = "Row")
 
 #TO-DO: verify that different plates would be plotted side-by-side
 
