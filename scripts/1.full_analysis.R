@@ -40,6 +40,8 @@ metadata<-read.csv(project_metadata,header=T) %>%
   mutate(Treatment_1=gsub("-","_",Treatment_1)) %>%
   mutate(Treatment_conc=paste0(Treatment_1,"_",Concentration_1))
 
+
+
 #only create an id if there are multiple plates
 #TO-DO: test a project with multiple plates
 if(length(project_metadata)>1){
@@ -50,6 +52,11 @@ if(length(project_metadata)>1){
 
 ######## 2. Mark's function
 #validate_metadata(metadata)
+
+
+######## 3. Susi's function: heatmap visualisation of metadata
+
+metadata_heatmap(project_metadata)
 
 #import reads
 # TO-DO: check for multiple folders of data that should be imported at the same time

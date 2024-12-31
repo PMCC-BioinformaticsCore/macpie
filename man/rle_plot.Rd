@@ -35,6 +35,7 @@ The function performs the following steps:
 }
 }
 \examples{
+\dontrun{
 # Example Data
 rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)

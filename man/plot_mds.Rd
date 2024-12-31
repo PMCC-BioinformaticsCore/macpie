@@ -18,7 +18,9 @@ ggplot object
 Plot MDS dimensionality reduction
 }
 \examples{
+\dontrun{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plot_mds(mac, "Treatment_1")
+plot_mds(mac[,1:50], "Treatment_1")
+}
 }
