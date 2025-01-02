@@ -1,35 +1,36 @@
 #' Read Metadata from a File
 #'
-#' This function reads metadata from a specified file, validates the file format,
-#' and extracts columns that match a predefined set of column names.
+#' This function reads metadata from a specified file, validates the file
+#' format, and extracts columns that match a predefined set of column names.
 #'
 #' @param file_path A character string specifying the path to the metadata file.
 #'   The file must be in CSV or Excel format.
-#' @param header Logical. If `TRUE`, the first row of the file is used as column names. Defaults to `TRUE`.
-#' @param sep A character string specifying the column separator for CSV files. Defaults to `","`.
-#' @param string_as_factors Logical. If `TRUE`, character columns in the data frame are converted to factors.
-#' Defaults to `FALSE`.
-#' @param predefined_columns A character vector of column names to match in the file. Defaults to a
-#' predefined set of column names:
+#' @param header Logical. If `TRUE`, the first row of the file is used as column
+#'   names. Defaults to `TRUE`.
+#' @param sep A character string specifying the column separator for CSV files.
+#'   Defaults to `","`.
+#' @param string_as_factors Logical. If `TRUE`, character columns in the data
+#'   frame are converted to factors. Defaults to `FALSE`.
+#' @param predefined_columns A character vector of column names to match in the
+#'   file. Defaults to a predefined set of column names:
 #'   \code{c("Plate_ID", "Well_ID", "Row", "Column", "Species", "Cell_type", "Model_type",
 #'   "Time", "Unit", "Treatment_1", "Concentration_1", "Unit_1", "Sample_type", "Barcode")}.
-#'@import readxl
-#'@importFrom utils read.csv
-#' @return A data frame containing only the matched columns if at least one predefined column is found.
-#'   Returns `NULL` and prints an error message if no predefined columns are found.
+#' @import readxl
+#' @importFrom utils read.csv
+#' @return A data frame containing only the matched columns if at least one
+#'   predefined column is found. Returns `NULL` and prints an error message if
+#'   no predefined columns are found.
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' # Example CSV file
 #' file_path <- system.file("/extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
 #' result <- read_metadata(file_path)
-#' }
 #'
-#' @details
-#' The function first checks if the file exists and validates its format (CSV or Excel).
-#' It then attempts to read the file and match its column names to a predefined set of column names.
-#' Supported file formats include:
+#' @details The function first checks if the file exists and validates its
+#'   format (CSV or Excel). It then attempts to read the file and match its
+#'   column names to a predefined set of column names. Supported file formats
+#'   include:
 #' \itemize{
 #'   \item CSV files with `.csv` extension.
 #'   \item Excel files with `.xls` or `.xlsx` extensions (requires the \code{readxl} package).
