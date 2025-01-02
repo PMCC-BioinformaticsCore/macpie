@@ -31,6 +31,9 @@ project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 #load metadata
 metadata<-read_metadata(project_metadata)
 
+######## 3. Susi's function: heatmap visualisation of metadata
+metadata_heatmap(metadata)
+
 #only create an id if there are multiple plates
 if(length(project_metadata)>1){
   metadata<-metadata %>%
@@ -40,9 +43,6 @@ if(length(project_metadata)>1){
 
 ######## 2. Mark's function
 #validate_metadata(metadata)
-
-######## 3. Susi's function: heatmap visualisation of metadata
-metadata_heatmap(project_metadata)
 
 #import reads
 # TO-DO: check for multiple folders of data that should be imported at the same time
