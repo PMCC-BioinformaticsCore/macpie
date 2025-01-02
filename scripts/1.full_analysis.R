@@ -35,6 +35,7 @@ metadata<-read_metadata(project_metadata)
 metadata_heatmap(metadata)
 
 #only create an id if there are multiple plates
+#to-do: push this to read_metadata
 if(length(project_metadata)>1){
   metadata<-metadata %>%
     mutate(id=gsub("Plate","",Plate_ID)) %>%
@@ -73,7 +74,7 @@ plate_layout(mac,"nCount_RNA","Sample_type")
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ribo"), ncol = 4)
 
 #example of MDS function, using limma
-plot_mds(mac,"Treatment_1")
+plot_mds(mac,"Sample_type")
 
 #RLE function
 rle_plot(mac, label_column = "Row")

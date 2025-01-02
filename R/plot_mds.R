@@ -8,8 +8,10 @@
 #' @param annotation A string specifying which column in data will be used to
 #'   label a sample.
 #' @importFrom limma plotMDS
+#' @importFrom utils head
 #' @import edgeR
 #' @import ggrepel
+
 #' @return ggplot object
 #'
 #' @examples
@@ -61,7 +63,7 @@ plot_mds <- function(data = NULL, annotation = NULL) {
                       max.overlaps = 100) +        # Add sample labels
       theme_minimal() +                             # Minimal theme
       labs(
-        title = "PCA Plot using limma Voom",
+        title = "MDS plot",
         x = "Dimension 1",
         y = "Dimension 2"
       )
