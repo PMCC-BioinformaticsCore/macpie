@@ -4,23 +4,25 @@
 \alias{plot_mds}
 \title{Plot MDS dimensionality reduction}
 \usage{
-plot_mds(data, annotation)
+plot_mds(data = NULL, annotation = NULL)
 }
 \arguments{
-\item{data}{A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column"}
+\item{data}{A tidyseurat object merged with metadata. Must contain columns
+"Well_ID", "Row", "Column"}
 
-\item{annotation}{A string specifying which column in data will be used to label a sample.}
+\item{annotation}{A string specifying which column in data will be used to
+label a sample.}
 }
 \value{
 ggplot object
 }
 \description{
-Plot MDS dimensionality reduction
+This function uses limma's plot MDS to visualise groupoing of the data
+points. The function is used with gene.selection = "common" to increase the
+speed.
 }
 \examples{
-\dontrun{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plot_mds(mac[,1:50], "Treatment_1")
-}
+plot_mds(mac, "Treatment_1")
 }
