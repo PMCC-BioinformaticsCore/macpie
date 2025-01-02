@@ -5,6 +5,7 @@
 #' @importFrom rlang sym
 #' @importFrom dplyr mutate
 #' @importFrom rlang .data
+#' @importFrom utils head
 #' @import tidyseurat
 #' @import rlang
 #' @import ggplot2
@@ -74,7 +75,7 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
         axis.title.y = element_blank(),
         axis.title.x = element_blank()
       ) +
-      geom_text(aes(label = !!rlang::sym(annotation)), size = 2)
+      geom_text(aes(label = !!rlang::sym(annotation)), size = 1.5)
     p
   }, error = function(e) {
     stop("Error in plotting: ", e$message)

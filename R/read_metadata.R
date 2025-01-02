@@ -74,7 +74,7 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
   }
 
   # Print predefined column names
-  cat("Predefined column names:\n", paste(predefined_columns, collapse = ", "), "\n")
+  #cat("Predefined column names:\n", paste(predefined_columns, collapse = ", "), "\n")
 
   # Match columns
   matched_columns <- match_columns(data, predefined_columns)
@@ -82,13 +82,13 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
   #fix return outside a function error
   check_columns <- function(data, matched_columns) {
     if (length(matched_columns) > 0) {
-      cat("Matched columns:\n", paste(matched_columns, collapse = ", "), "\n")
-      cat("Number of matched columns:\n", length(matched_columns), "\n")
       cleaned_data <- data[, matched_columns, drop = FALSE] %>%
         arrange("Barcode")
       return(cleaned_data)
     } else {
       cat("Error: No columns matching predefined criteria found. Check your file.\n")
+      cat("Matched columns:\n", paste(matched_columns, collapse = ", "), "\n")
+      cat("Number of matched columns:\n", length(matched_columns), "\n")
       return(NULL)
     }
   }
