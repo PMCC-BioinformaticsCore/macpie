@@ -4,14 +4,17 @@
 \alias{plate_layout}
 \title{Plot MAC-seq data on a plate layout}
 \usage{
-plate_layout(data, metric, annotation)
+plate_layout(data = NULL, metric = NULL, annotation = NULL)
 }
 \arguments{
-\item{data}{A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column"}
+\item{data}{A tidyseurat object merged with metadata. Must contain columns
+"Well_ID", "Row", "Column"}
 
-\item{metric}{A string specifying which column in data will be used to color a sample.}
+\item{metric}{A string specifying which column in data will be used to color
+a sample. Defaults to "nCount_RNA".}
 
-\item{annotation}{A string specifying which column in data will be used to label a sample.}
+\item{annotation}{A string specifying which column in data will be used to
+label a sample. Defaults to "Treatment_1".}
 }
 \value{
 ggplot object
