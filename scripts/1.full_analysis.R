@@ -112,6 +112,9 @@ rle_plot(mac, label_column = "Row")
 #git checkout main
 #git branch -d function_author
 
+#writing a vignette
+#usethis::use_vignette("my-vignette")
+
 
 
 
