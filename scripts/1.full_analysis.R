@@ -31,6 +31,9 @@ project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 #load metadata
 metadata<-read_metadata(project_metadata)
 
+#validate metadata
+validate_metadata(metadata)
+
 ######## 3. Susi's function: heatmap visualisation of metadata
 metadata_heatmap(metadata)
 
@@ -105,15 +108,15 @@ rle_plot(mac, label_column = "Row")
 #8. make the test
 #use_test("functionX")
 #test()
-#9. terminal: git
+#9. update vignette and create html
+#devtools::build_vignettes()
+#10. terminal: git
 #git add .
 #git commit -m "message"
 #git push origin function_author
 #git checkout main
 #git branch -d function_author
 
-#writing a vignette
-#usethis::use_vignette("my-vignette")
 
 
 
