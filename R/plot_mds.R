@@ -60,7 +60,7 @@ plot_mds <- function(data = NULL, annotation = NULL) {
       geom_point(size = 2) +
       geom_text_repel(aes(label = .data$Treatment_1),                    # Smart label repulsion
                       size = 3.5,
-                      max.overlaps = 100) +        # Add sample labels
+                      max.overlaps = 20) +        # Add sample labels
       theme_minimal() +                             # Minimal theme
       labs(
         title = "MDS plot",

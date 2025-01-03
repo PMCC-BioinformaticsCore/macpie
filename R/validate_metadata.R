@@ -130,8 +130,5 @@ validate_metadata <- function(metadata) {
     dplyr::summarize(across(all_of(summary_columns), ~ length(unique(.)), .names = "count_{col}")) %>%
     dplyr::ungroup()
 
-  print(summary_table)
-
-  # Return cleaned metadata and summary table
-  return(list(cleaned_metadata = metadata, summary_table = summary_table))
+  print(as.data.frame(summary_table))
 }

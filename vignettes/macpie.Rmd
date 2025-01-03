@@ -25,7 +25,7 @@ Macpie is a toolkit specifically developed for researchers working with MAC-seq 
 Since the integrity of metadata is essential for the future analysis, we have set up a set of tools that checks the integrity of metadata, and visualises the key variables.
 
 ```{r setup}
-devtools::load_all()
+library(macpie)
 library(Seurat)
 library(edgeR)
 library(tidyverse)
@@ -44,7 +44,7 @@ metadata <- read_metadata(project_metadata)
 validate_metadata(metadata)
 ```
 
-```{r metadata_plot, fig.width = 8, fig.height = 8}
+```{r metadata_plot, fig.width = 8, fig.height = 6}
 metadata_heatmap(metadata)
 
 ```
@@ -84,7 +84,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
 plot_mds(mac, "Sample_type")
 ```
 
-```{r rle_plot, fig.width = 8}
+```{r rle_plot, fig.width = 8, fig.height=5}
 #RLE function
 rle_plot(mac, label_column = "Row")
 ```
