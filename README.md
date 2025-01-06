@@ -24,12 +24,9 @@ The simplest way is to use our docker container with all the R packages installe
 ``` r
 docker pull lauratwomey/macpie
 ```
-Inside your docker desktop, open a terminal, paste the docker pull command and install.
+Inside your docker desktop, open a terminal, paste the docker pull command and install, depending on your platform.
 ``` r
 docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 lauratwomey/macpie
-```
-Alternatively, if your local computer is based on Mac M chips:
-``` r
 docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=YOURD -v /Users/mark/ML_Macpie_dev:/home/rstudio/ML_Macpie_dev lauratwomey/macpie
 ```
 
