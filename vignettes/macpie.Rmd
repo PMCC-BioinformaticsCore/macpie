@@ -34,7 +34,7 @@ To ensure the integrity of metadata for future analyses, we provide the user wit
 library(macpie)
 library(Seurat)
 library(edgeR)
-library(tidyverse)
+library(dplyr)
 
 # Define project variables
 project_name <- "PMMSq033"
