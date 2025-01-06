@@ -26,8 +26,8 @@ docker pull lauratwomey/macpie
 ```
 Inside your docker desktop, open a terminal, paste the docker pull command and install, depending on your platform.
 ``` r
-docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 lauratwomey/macpie
-docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=YOURD -v /Users/mark/ML_Macpie_dev:/home/rstudio/ML_Macpie_dev lauratwomey/macpie
+docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 -v /Users/username/macpie:/home/rstudio/macpie lauratwomey/macpie
+docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=yourpassword -v /Users/username/macpie:/home/rstudio/macpie lauratwomey/macpie
 ```
 
 ## Example
