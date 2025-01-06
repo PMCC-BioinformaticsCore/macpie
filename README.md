@@ -18,6 +18,21 @@ You can install the development version of macpie like so:
 remotes::install_github("https://github.com/PMCC-BioinformaticsCore/macpie")
 ```
 
+## Dependencies
+
+The simplest way is to use our docker container with all the R packages installed.
+``` r
+docker pull lauratwomey/macpie
+```
+Inside your docker deskstop, open a terminal, paste the docker pull command and install.
+``` r
+docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 lauratwomey/macpie
+```
+Alternatively, if your local computer is based on Mac M chips:
+``` r
+docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=YOURD -v /Users/mark/ML_Macpie_dev:/home/rstudio/ML_Macpie_dev lauratwomey/macpie
+```
+
 ## Example
 
 This is a basic example which shows you how to import data and perform basic QC.
