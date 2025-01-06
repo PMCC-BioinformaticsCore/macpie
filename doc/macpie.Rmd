@@ -18,20 +18,23 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-Macpie is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a great support of the VCFG amd MGC core facilities.
+Macpie is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a substantial support of the VCFG amd MGC core facilities.
 
-### Load metadata
+MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed at the VCFG at PeterMac, primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
 
-Since the integrity of metadata is essential for the future analysis, we have set up a set of tools that checks the integrity of metadata, and visualises the key variables.
+MAC-seq data shares similarities with single-cell RNA-seq data as it derives gene counts from RNA sequences measured at the 3' ends of polyA transcripts. This results in sparse data, with many transcripts undetectable in individual samples, and a high throughput of transcriptomes analyzed per experiment. However, MAC-seq also parallels standard RNA-seq, as it typically includes replicate conditions and involves hundreds rather than thousands of samples per experiment, measured at higher depth.
 
-```{r setup}
+Macpie was designed to offer users a collection of best-practice analytical methods, drawing from both scRNA-seq and RNA-seq methodologies, while ensuring ease of use for non-experts.
+
+### 1. Metadata QC
+
+To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
+
+```{r load_metadata}
 library(macpie)
 library(Seurat)
 library(edgeR)
 library(tidyverse)
-```
-
-```{r load_metadata"}
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -39,10 +42,13 @@ project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", packag
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
+colnames(metadata)
 
 # Validate metadata
 validate_metadata(metadata)
 ```
+
+We recommend that the users first visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 metadata_heatmap(metadata)
@@ -71,13 +77,16 @@ mac <- mac %>%
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 ```
-```{r plate_layout, fig.width = 8}
-#QC plot plate layout (all metadata columns can be used):
-plate_layout(mac, "nCount_RNA", "Sample_type")
-```
+
 ```{r violin_plot, fig.width = 8}
 #example of Seurat function being used
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
+```
+Even though all of the further analysis (scaling, normalisation, visualisation) can be conducted through the standard Seurat functions, we recommend that the user follows the tutorial below that is based on limma's Voom.
+
+```{r plate_layout, fig.width = 8}
+#QC plot plate layout (all metadata columns can be used):
+plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
 ```{r mds_plot, fig.width = 8}
 #example of MDS function, using limma
