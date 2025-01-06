@@ -24,7 +24,7 @@ The simplest way is to use our docker container with all the R packages installe
 ``` r
 docker pull lauratwomey/macpie
 ```
-Inside your docker deskstop, open a terminal, paste the docker pull command and install.
+Inside your docker desktop, open a terminal, paste the docker pull command and install.
 ``` r
 docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 lauratwomey/macpie
 ```
