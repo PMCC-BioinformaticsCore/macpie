@@ -6,13 +6,11 @@ knitr::opts_chunk$set(
   message = FALSE
 )
 
-## ----setup--------------------------------------------------------------------
+## ----load_metadata------------------------------------------------------------
 library(macpie)
 library(Seurat)
 library(edgeR)
 library(tidyverse)
-
-## ----load_metadata"-----------------------------------------------------------
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -20,6 +18,7 @@ project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", packag
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
+colnames(metadata)
 
 # Validate metadata
 validate_metadata(metadata)
@@ -48,13 +47,13 @@ mac <- mac %>%
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-## ----plate_layout, fig.width = 8----------------------------------------------
-#QC plot plate layout (all metadata columns can be used):
-plate_layout(mac, "nCount_RNA", "Sample_type")
-
 ## ----violin_plot, fig.width = 8-----------------------------------------------
 #example of Seurat function being used
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
+
+## ----plate_layout, fig.width = 8----------------------------------------------
+#QC plot plate layout (all metadata columns can be used):
+plate_layout(mac, "nCount_RNA", "Sample_type")
 
 ## ----mds_plot, fig.width = 8--------------------------------------------------
 #example of MDS function, using limma
