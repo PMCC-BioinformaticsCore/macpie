@@ -50,18 +50,35 @@ plate_layout(mac)
 ```
 
 This is a basic example which shows you how to import user defined metadata and basic QC of metadata.
-2024 Nov findmetadata() function remains user interactive
 
 ``` r
 library(macpie)
-## basic example of using find_metadata()
-## user should provide a dir path
-metadata <- find_metadata("path_to_metadata_file")
 
-##if no dir path is provided, it will trigger a file.choose() for user to find file
-metadata <- find_metadata()
+#load metadata
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
 
-## summary of metadata QC
-validate_metadata(metadata)
+# Load metadata
+metadata <- read_metadata(project_metadata)
+
+project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
+raw_counts_total <- Read10X(data.dir = project_rawdata)
+keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
+raw_counts <- raw_counts_total[keep, ]
+
+#create tidySeurat object
+mac <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+
+#join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+
+#example of MDS function, using limma
+plot_mds(mac, "Sample_type")
+
+#RLE function
+rle_plot(mac, label_column = "Row")
 
 ```
