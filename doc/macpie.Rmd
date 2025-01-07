@@ -1,6 +1,9 @@
 ---
 title: "macpie"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
@@ -26,7 +29,7 @@ MAC-seq data shares similarities with single-cell RNA-seq data as it derives gen
 
 Macpie was designed to offer users a collection of best-practice analytical methods, drawing from both scRNA-seq and RNA-seq methodologies, while ensuring ease of use for non-experts.
 
-### 1. Metadata QC
+### 1. Metadata import and QC
 
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
 
@@ -34,7 +37,7 @@ To ensure the integrity of metadata for future analyses, we provide the user wit
 library(macpie)
 library(Seurat)
 library(edgeR)
-library(tidyverse)
+library(dplyr)
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -55,6 +58,7 @@ metadata_heatmap(metadata)
 
 ```
 
+### 2. Sequencing data import and QC 
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
 
 ```{r load_data}

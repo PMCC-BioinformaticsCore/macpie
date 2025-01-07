@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 library(macpie)
 library(Seurat)
 library(edgeR)
-library(tidyverse)
+library(dplyr)
 
 # Define project variables
 project_name <- "PMMSq033"
