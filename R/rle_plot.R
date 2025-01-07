@@ -3,12 +3,17 @@
 #' This function generates a Relative Log Expression (RLE) plot for visualizing
 #' the distribution of expression data after normalization or log transformation.
 #'
-#' @param data A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column".
-#' @param barcodes A vector of sample barcodes corresponding to Cells(seurat_object).
-#' @param labels A vector of labels of the same length as 'barcodes" to group the barcodes.
+#' @param data A tidyseurat object merged with metadata. Must contain columns
+#'   "Well_ID", "Row", "Column".
+#' @param barcodes A vector of sample barcodes corresponding to
+#'   Cells(seurat_object).
+#' @param labels A vector of labels of the same length as 'barcodes" to group
+#'   the barcodes.
 #' @param label_column A metadata column name to group the barcodes.
 #' @param log A logical value indicating whether data should be log-transformed.
-#' Defaults to `TRUE`.
+#'   Defaults to `TRUE`.
+#' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.
 #'
 #' @details
 #' The function performs the following steps:
@@ -37,10 +42,10 @@
 #' @export
 
 # Main function
-rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE) {
+rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE, normalisation = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, barcodes, label_column, labels, log) {
+  validate_inputs <- function(data, barcodes, label_column, labels, log, normalisation) {
     if (!inherits(data, "Seurat")) {
       stop("Error: 'data' must be a Seurat or TidySeurat object.")
     }
@@ -60,7 +65,12 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
     if (length(labels) != ncol(data)) {
       stop("Labels must have the same length as the number of columns in the dataset.")
     }
-    list(barcodes = as.factor(barcodes), labels = as.factor(labels), log = ifelse(inherits(log, "function"), TRUE, log))
+    normalisation <- if (is.null(normalisation)) "raw" else normalisation
+
+    list(barcodes = as.factor(barcodes),
+         labels = as.factor(labels),
+         log = ifelse(inherits(log, "function"), TRUE, log),
+         normalisation = normalisation)
   }
 
   # Helper function to fetch and log-transform count matrix
@@ -97,7 +107,7 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   }
 
   # Helper function to create the plot
-  create_rle_plot <- function(rledf) {
+  create_rle_plot <- function(rledf, normalisation) {
     tryCatch({
       # Generate a color palette for fill
       fill_palette <- colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
@@ -122,6 +132,7 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
         scale_fill_manual(values = fill_palette) +
         scale_color_manual(values = outline_palette) +
         geom_hline(yintercept = 0, linetype = "dotted", col = "red", linewidth = 1) +
+        ggtitle(paste0("Normalisation method: ", normalisation)) +
         ylab("Log expression deviation")
     }, error = function(e) {
       stop("Error in plotting: ", e$message)
@@ -129,13 +140,26 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   }
 
   # Validate inputs
-  validated <- validate_inputs(data, barcodes, label_column, labels, log)
+  validated <- validate_inputs(data, barcodes, label_column, labels, log, normalisation)
   barcodes <- validated$barcodes
   labels <- validated$labels
   log <- validated$log
+  normalisation <- validated$normalisation
 
   # Fetch and transform count matrix
-  count_matrix <- fetch_count_matrix(data, log)
+
+  count_matrix <- switch(
+    normalisation,
+    raw = fetch_count_matrix(data, log),
+    logNorm = fetch_normalised_counts(data, method = "logNorm"),
+    cpm = fetch_normalised_counts(data, method = "cpm"),
+    clr = fetch_normalised_counts(data, method = "clr"),
+    SCT = fetch_normalised_counts(data, method = "SCT"),
+    DEseq2 = fetch_normalised_counts(data, method = "DEseq2"),
+    edgeR = fetch_normalised_counts(data, method = "edgeR"),
+    limma_voom = fetch_normalised_counts(data, method = "limma_voom"),
+    stop("Unsupported normalization method.")
+  )
 
   # Ensure alignment
   if (length(barcodes) != ncol(count_matrix)) {
@@ -149,5 +173,5 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   rledf <- compute_rle_df(count_matrix, labels)
 
   # Create and return plot
-  create_rle_plot(rledf)
+  create_rle_plot(rledf, normalisation)
 }

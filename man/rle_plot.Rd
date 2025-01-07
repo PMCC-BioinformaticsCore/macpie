@@ -4,19 +4,32 @@
 \alias{rle_plot}
 \title{Create an RLE Plot}
 \usage{
-rle_plot(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE)
+rle_plot(
+  data,
+  barcodes = NULL,
+  label_column = NULL,
+  labels = NULL,
+  log = TRUE,
+  normalisation = NULL
+)
 }
 \arguments{
-\item{data}{A tidyseurat object merged with metadata. Must contain columns "Well_ID", "Row", "Column".}
+\item{data}{A tidyseurat object merged with metadata. Must contain columns
+"Well_ID", "Row", "Column".}
 
-\item{barcodes}{A vector of sample barcodes corresponding to Cells(seurat_object).}
+\item{barcodes}{A vector of sample barcodes corresponding to
+Cells(seurat_object).}
 
 \item{label_column}{A metadata column name to group the barcodes.}
 
-\item{labels}{A vector of labels of the same length as 'barcodes" to group the barcodes.}
+\item{labels}{A vector of labels of the same length as 'barcodes" to group
+the barcodes.}
 
 \item{log}{A logical value indicating whether data should be log-transformed.
 Defaults to \code{TRUE}.}
+
+\item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.}
 }
 \value{
 A ggplot object representing the RLE plot.
