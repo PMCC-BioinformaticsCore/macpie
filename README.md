@@ -32,24 +32,7 @@ docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=yourpassword -v /U
 
 ## Example
 
-This is a basic example which shows you how to import data and perform basic QC.
-
-``` r
-library(macpie)
-
-## basic example code
-mac<-read_macseq("directory_of_filtered_gene_matrix","path_to_metadata_file")
-
-## summary of metadata
-summarize_metadata(mac)
-
-## plate layout
-plate_layout(mac)
-
-
-```
-
-This is a basic example which shows you how to import user defined metadata and basic QC of metadata.
+This is a basic example which shows you how to import user-defined data and metadata with some basic QC.
 
 ``` r
 library(macpie)
