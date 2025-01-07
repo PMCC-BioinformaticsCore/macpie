@@ -62,4 +62,5 @@ plot_mds(mac, "Sample_type")
 ## ----rle_plot, fig.width = 8, fig.height=5------------------------------------
 #RLE function
 rle_plot(mac, label_column = "Row")
+rle_plot(mac, label_column = "Row", normalisation = "limma_voom")
 

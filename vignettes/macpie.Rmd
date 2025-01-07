@@ -97,7 +97,9 @@ plate_layout(mac, "nCount_RNA", "Sample_type")
 plot_mds(mac, "Sample_type")
 ```
 
+A number of methods are available for normalisation. 
 ```{r rle_plot, fig.width = 8, fig.height=5}
 #RLE function
 rle_plot(mac, label_column = "Row")
+rle_plot(mac, label_column = "Row", normalisation = "limma_voom")
 ```

@@ -62,7 +62,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   normalize_sct <- function(data, batch) {
     sct <- SCTransform(data, do.scale = TRUE,
                        return.only.var.genes = FALSE,
-                       vars.to.regress = c(batch), verbose = FALSE)
+                       vars.to.regress = if (length(batch) == 1) NULL else batch , verbose = FALSE)
     sct@assays$SCT$data
   }
 
