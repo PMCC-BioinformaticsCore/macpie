@@ -14,7 +14,7 @@
 #' @param predefined_columns A character vector of column names to match in the
 #'   file. Defaults to a predefined set of column names:
 #'   \code{c("Plate_ID", "Well_ID", "Row", "Column", "Species", "Cell_type", "Model_type",
-#'   "Time", "Unit", "Treatment_1", "Concentration_1", "Unit_1", "Sample_type", "Barcode")}.
+#'   "Time", "Unit", "Treatment_1", "Concentration_1", "Unit_1", "Sample_type", "Barcode", "Project")}.
 #' @import readxl
 #' @importFrom utils read.csv
 #' @return A data frame containing only the matched columns if at least one
@@ -40,7 +40,7 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
                           predefined_columns = c("Plate_ID", "Well_ID", "Row", "Column", "Species",
                                                  "Cell_type", "Model_type", "Time", "Unit",
                                                  "Treatment_1", "Concentration_1", "Unit_1",
-                                                 "Sample_type", "Barcode")) {
+                                                 "Sample_type", "Barcode", "Project")) {
   #check file exists
   if (!file.exists(file_path)) {
     stop("The file does not exist. Please provide a valid file path.")

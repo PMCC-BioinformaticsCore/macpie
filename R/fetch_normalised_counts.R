@@ -4,7 +4,7 @@
 #' for normalisation, with the default of limma-voomLmFit.
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
-#' @param method One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+#' @param method One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
@@ -29,7 +29,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
     method <- if (is.null(method)) "limma_voom" else method
     if (!method %in% c("raw", "logNorm",
                        "cpm", "clr", "SCT",
-                       "DEseq2", "edgeR",
+                       "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
                        "limma_voom")) {
       stop("Your normalization method is not available.")
@@ -37,6 +37,23 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
     batch <- if (is.null(batch)) "1" else as.character(batch)
     k <- if (is.null(k)) 2 else k
     list(data = data, batch = batch, k = k, method = method)
+  }
+
+  #create an unique identifier based on combined annotation
+  data <- data %>%
+    mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
+                               1, function(row) paste(row, collapse = "_"))) %>%
+    mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+  #define model matrix
+  model_matrix<- if (length(batch) == 1 && length(unique(data$combined_id)) == 1) {
+    model.matrix(~colnames(data))
+  } else if (length(batch) == 1 && length(unique(data$combined_id)) > 1) {
+    model.matrix(~data$combined_id)
+  } else if (length(batch) %% length(colnames(data)) == 0 && length(unique(data$combined_id)) > 1) {
+    model.matrix(~data$combined_id + batch)
+  } else {
+    stop("Insufficient number of factors for definition of model matrix.")
   }
 
   # Sub-functions for each normalization method
@@ -62,13 +79,13 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   normalize_sct <- function(data, batch) {
     sct <- SCTransform(data, do.scale = TRUE,
                        return.only.var.genes = FALSE,
-                       vars.to.regress = if (length(batch) == 1) NULL else batch , verbose = FALSE)
+                       vars.to.regress = if (length(batch) == 1) NULL else batch, verbose = FALSE)
     sct@assays$SCT$data
   }
 
   normalize_deseq2 <- function(data, batch) {
     coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
-    design <- if (length(batch) == 1) model.matrix(~data$combined_id) else model.matrix(~data$combined_id + batch)
+    design <- model_matrix
     dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts, colData = coldata, design = design)
     dds <- estimateSizeFactors(dds)
     counts(dds, normalized = TRUE)
@@ -77,7 +94,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   normalize_edger <- function(data, batch) {
     dge <- DGEList(counts = data@assays$RNA$counts, samples = data$combined_id, group = data$combined_id)
     dge <- calcNormFactors(dge, methods = "TMMwsp")
-    design <- if (length(batch) == 1) model.matrix(~data$combined_id) else model.matrix(~data$combined_id + batch)
+    design <- model_matrix
     dge <- estimateDisp(dge, design)
     cpm(dge, log = FALSE)
   }
@@ -85,7 +102,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   normalize_limma_voom <- function(data, batch) {
     dge <- DGEList(counts = data@assays$RNA$counts, samples = data$combined_id, group = data$combined_id)
     dge <- calcNormFactors(dge, methods = "TMMwsp")
-    design <- if (length(batch) == 1) model.matrix(~data$combined_id) else model.matrix(~data$combined_id + batch)
+    design <- model_matrix
     dge <- voom(dge, design)
     dge$E
   }
@@ -96,10 +113,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   batch <- validated$batch
   k <- validated$k
   method <- validated$method
-  data <- data %>%
-    mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
-                               1, function(row) paste(row, collapse = "_"))) %>%
-    mutate(combined_id = gsub(" ", "", .data$combined_id))
+
 
   # Select the appropriate normalization method
   norm_data <- switch(
@@ -109,7 +123,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
     cpm = normalize_cpm(data),
     clr = normalize_clr(data),
     SCT = normalize_sct(data, batch),
-    DEseq2 = normalize_deseq2(data, batch),
+    DESeq2 = normalize_deseq2(data, batch),
     edgeR = normalize_edger(data, batch),
     limma_voom = normalize_limma_voom(data, batch),
     stop("Unsupported normalization method.")

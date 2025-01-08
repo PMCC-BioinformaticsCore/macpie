@@ -43,11 +43,16 @@ mac <- CreateSeuratObject(counts = raw_counts,
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
+## ----subset_seurat------------------------------------------------------------
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
+
+## ----violin_plot, fig.width = 8-----------------------------------------------
 #calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-## ----violin_plot, fig.width = 8-----------------------------------------------
 #example of Seurat function being used
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
 
