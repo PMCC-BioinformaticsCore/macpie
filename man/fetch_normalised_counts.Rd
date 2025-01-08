@@ -10,7 +10,7 @@ fetch_normalised_counts(data = NULL, method = NULL, batch = NULL, k = NULL)
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column"}
 
-\item{method}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+\item{method}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
 
 \item{batch}{Either empty, a single value, or a vector corresponding to the

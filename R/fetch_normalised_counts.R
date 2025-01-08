@@ -40,6 +40,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   }
 
   #create an unique identifier based on combined annotation
+  batch <- if (is.null(batch)) "1" else as.character(batch)
   data <- data %>%
     mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
                                1, function(row) paste(row, collapse = "_"))) %>%
@@ -48,7 +49,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   #define model matrix
   model_matrix<- if (length(batch) == 1 && length(unique(data$combined_id)) == 1) {
     model.matrix(~colnames(data))
-  } else if (length(batch) == 1 && length(unique(data$combined_id)) > 1) {
+  } else if (length(batch) == 1 && (length(unique(data$combined_id)) > 1)) {
     model.matrix(~data$combined_id)
   } else if (length(batch) %% length(colnames(data)) == 0 && length(unique(data$combined_id)) > 1) {
     model.matrix(~data$combined_id + batch)
