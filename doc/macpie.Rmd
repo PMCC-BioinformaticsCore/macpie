@@ -76,13 +76,22 @@ mac <- CreateSeuratObject(counts = raw_counts,
 #join with metadata
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
+```
 
-#calculate percent of mitochondrial and ribosomal genes
-mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
-mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
+For example, let's subset the Seurat object based on the column "Project" in metadata:
+
+```{r subset_seurat}
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
 ```
 
 ```{r violin_plot, fig.width = 8}
+#calculate percent of mitochondrial and ribosomal genes
+mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
+mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
 #example of Seurat function being used
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
 ```

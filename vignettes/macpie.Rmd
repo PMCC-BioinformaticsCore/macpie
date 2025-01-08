@@ -39,6 +39,9 @@ library(Seurat)
 library(edgeR)
 library(dplyr)
 
+#load all functions
+devtools::load_all()
+
 # Define project variables
 project_name <- "PMMSq033"
 project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
@@ -73,33 +76,52 @@ mac <- CreateSeuratObject(counts = raw_counts,
                           min.cells = 1,
                           min.features = 1)
 
+```
+
+```{r violin_plot, fig.width = 8}
+#calculate percent of mitochondrial and ribosomal genes
+mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
+mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
 #join with metadata
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
-#calculate percent of mitochondrial and ribosomal genes
-mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
-mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+#example of a function from Seurat QC 
+VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by="Sample_type")
 ```
 
-```{r violin_plot, fig.width = 8}
-#example of Seurat function being used
-VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
-```
-Even though all of the further analysis (scaling, normalisation, visualisation) can be conducted through the standard Seurat functions, we recommend that the user follows the tutorial below that is based on limma's Voom.
+This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
+For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
-```{r plate_layout, fig.width = 8}
+```{r subset_seurat, fig.width = 8}
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
+
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
+
 ```{r mds_plot, fig.width = 8}
 #example of MDS function, using limma
 plot_mds(mac, "Sample_type")
 ```
 
-A number of methods are available for normalisation. 
+Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate the quality of scaling and normalisation is through the RLE plots.
+
 ```{r rle_plot, fig.width = 8, fig.height=5}
+
+# First we will subset the data to look at control, DMSO samples only
+mac_dmso <- mac %>%
+  filter(Treatment_1 == "DMSO")
+
 #RLE function
-rle_plot(mac, label_column = "Row")
-rle_plot(mac, label_column = "Row", normalisation = "limma_voom")
+rle_plot(mac_dmso, label_column = "Row")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 ```
+Even though all of the further analysis (scaling, normalisation, visualisation) can be conducted through the standard Seurat functions, we recommend that the user follows the tutorial below that is based on Voom method, specifically by using TMMwsp to normalise and voomLmFit to perform DE calculations.
+
+

@@ -12,7 +12,7 @@
 #' @param label_column A metadata column name to group the barcodes.
 #' @param log A logical value indicating whether data should be log-transformed.
 #'   Defaults to `TRUE`.
-#' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+#' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.
 #'
 #' @details
@@ -42,10 +42,12 @@
 #' @export
 
 # Main function
-rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, log = TRUE, normalisation = NULL) {
+rle_plot <- function(data, barcodes = NULL, label_column = NULL,
+                     labels = NULL, log = TRUE,
+                     batch = NULL, normalisation = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, barcodes, label_column, labels, log, normalisation) {
+  validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
     if (!inherits(data, "Seurat")) {
       stop("Error: 'data' must be a Seurat or TidySeurat object.")
     }
@@ -65,11 +67,13 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
     if (length(labels) != ncol(data)) {
       stop("Labels must have the same length as the number of columns in the dataset.")
     }
+    batch <- if (is.null(batch)) "1" else as.character(batch)
     normalisation <- if (is.null(normalisation)) "raw" else normalisation
 
     list(barcodes = as.factor(barcodes),
          labels = as.factor(labels),
          log = ifelse(inherits(log, "function"), TRUE, log),
+         batch = batch,
          normalisation = normalisation)
   }
 
@@ -85,7 +89,7 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   # Helper function to compute RLE
   compute_rle_df <- function(count_matrix, labels) {
     # Compute RLE
-    rle <- count_matrix - Biobase::rowMedians(count_matrix)
+    rle <- count_matrix - Biobase::rowMedians(as.matrix(count_matrix))
     sort_index <- sort.list(labels)
     rle <- rle[, sort_index]
 
@@ -140,10 +144,11 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   }
 
   # Validate inputs
-  validated <- validate_inputs(data, barcodes, label_column, labels, log, normalisation)
+  validated <- validate_inputs(data, barcodes, label_column, labels, log, batch, normalisation)
   barcodes <- validated$barcodes
   labels <- validated$labels
   log <- validated$log
+  batch <- validated$batch
   normalisation <- validated$normalisation
 
   # Fetch and transform count matrix
@@ -151,13 +156,13 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL, labels = NULL, 
   count_matrix <- switch(
     normalisation,
     raw = fetch_count_matrix(data, log),
-    logNorm = fetch_normalised_counts(data, method = "logNorm"),
-    cpm = fetch_normalised_counts(data, method = "cpm"),
-    clr = fetch_normalised_counts(data, method = "clr"),
-    SCT = fetch_normalised_counts(data, method = "SCT"),
-    DEseq2 = fetch_normalised_counts(data, method = "DEseq2"),
-    edgeR = fetch_normalised_counts(data, method = "edgeR"),
-    limma_voom = fetch_normalised_counts(data, method = "limma_voom"),
+    logNorm = fetch_normalised_counts(data, method = "logNorm", batch = batch),
+    cpm = fetch_normalised_counts(data, method = "cpm", batch = batch),
+    clr = fetch_normalised_counts(data, method = "clr", batch = batch),
+    SCT = fetch_normalised_counts(data, method = "SCT", batch = batch),
+    DESeq2 = fetch_normalised_counts(data, method = "DESeq2", batch = batch),
+    edgeR = fetch_normalised_counts(data, method = "edgeR", batch = batch),
+    limma_voom = fetch_normalised_counts(data, method = "limma_voom", batch = batch),
     stop("Unsupported normalization method.")
   )
 
