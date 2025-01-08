@@ -10,6 +10,7 @@ rle_plot(
   label_column = NULL,
   labels = NULL,
   log = TRUE,
+  batch = NULL,
   normalisation = NULL
 )
 }
@@ -28,7 +29,10 @@ the barcodes.}
 \item{log}{A logical value indicating whether data should be log-transformed.
 Defaults to \code{TRUE}.}
 
-\item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DEseq2",
+\item{batch}{Either empty, a single value, or a vector corresponding to the
+number of samples.}
+
+\item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.}
 }
 \value{

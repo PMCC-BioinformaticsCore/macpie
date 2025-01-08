@@ -12,6 +12,8 @@
 #' @param label_column A metadata column name to group the barcodes.
 #' @param log A logical value indicating whether data should be log-transformed.
 #'   Defaults to `TRUE`.
+#' @param batch Either empty, a single value, or a vector corresponding to the
+#'   number of samples.
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.
 #'
