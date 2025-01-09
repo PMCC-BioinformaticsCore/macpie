@@ -54,6 +54,7 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
     mutate(cell__ = NA) %>%
     mutate(Col = as.character(.data$Column)) %>%
     mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
+    mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
     mutate(median_value = median(!!rlang::sym(metric))) %>%
     mutate(max_value = max(!!rlang::sym(metric))) %>%
     mutate(min_value = min(!!rlang::sym(metric)))
