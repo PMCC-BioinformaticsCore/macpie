@@ -34,5 +34,7 @@ Imports:
     readr,
     stringr,
     readxl,
-    DESeq2
+    DESeq2,
+    RUVSeq,
+    EDASeq
 VignetteBuilder: knitr

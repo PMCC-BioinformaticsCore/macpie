@@ -9,10 +9,14 @@
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
+#' @param spikes List of genes to use as spike controls
 #' @importFrom limma voom
 #' @import DESeq2
-#' @importFrom stats model.matrix
-
+#' @import RUVSeq
+#' @importFrom EDASeq newSeqExpressionSet normCounts
+#' @importFrom Biobase pData
+#' @importFrom stats model.matrix residuals
+#'
 #' @returns Data frame of normalised counts
 #' @export
 #'
@@ -20,9 +24,13 @@
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
 #' fetch_normalised_counts(mac)
-fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k = NULL) {
+fetch_normalised_counts <- function(data = NULL,
+                                    method = NULL,
+                                    batch = NULL,
+                                    k = NULL,
+                                    spikes = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(data, method, batch, k) {
+  validate_inputs <- function(data, method, batch, k, spikes) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -46,13 +54,17 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
                                1, function(row) paste(row, collapse = "_"))) %>%
     mutate(combined_id = gsub(" ", "", .data$combined_id))
 
-  #define model matrix
-  model_matrix<- if (length(batch) == 1 && length(unique(data$combined_id)) == 1) {
-    model.matrix(~colnames(data))
+  #define pheno data and model matrix
+  #replicates but only one data type
+  if (length(batch) == 1 && length(unique(data$combined_id)) == 1) {
+    model_matrix <- matrix(1, ncol = 1, nrow = ncol(data))
+    coldata <- data.frame(batch = as.factor(batch), condition = as.factor(colnames(data)))
   } else if (length(batch) == 1 && (length(unique(data$combined_id)) > 1)) {
-    model.matrix(~data$combined_id)
+    model_matrix <- model.matrix(~data$combined_id)
+    coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
   } else if (length(batch) %% length(colnames(data)) == 0 && length(unique(data$combined_id)) > 1) {
-    model.matrix(~data$combined_id + batch)
+    model_matrix <- model.matrix(~data$combined_id + batch)
+    coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
   } else {
     stop("Insufficient number of factors for definition of model matrix.")
   }
@@ -85,7 +97,7 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   }
 
   normalize_deseq2 <- function(data, batch) {
-    coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
+    coldata <- coldata
     design <- model_matrix
     dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts, colData = coldata, design = design)
     dds <- estimateSizeFactors(dds)
@@ -93,28 +105,82 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
   }
 
   normalize_edger <- function(data, batch) {
-    dge <- DGEList(counts = data@assays$RNA$counts, samples = data$combined_id, group = data$combined_id)
-    dge <- calcNormFactors(dge, methods = "TMMwsp")
+    if (ncol(data) > 100) {
+      print("Warning: EdgeR with over 100 samples takes a long time. Consider reducing the number of samples or genes.")
+    }
+    dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
+    dge <- calcNormFactors(dge, methods = "TMM")
     design <- model_matrix
     dge <- estimateDisp(dge, design)
     cpm(dge, log = FALSE)
   }
 
   normalize_limma_voom <- function(data, batch) {
-    dge <- DGEList(counts = data@assays$RNA$counts, samples = data$combined_id, group = data$combined_id)
+    dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
     dge <- calcNormFactors(dge, methods = "TMMwsp")
     design <- model_matrix
     dge <- voom(dge, design)
     dge$E
   }
 
+  normalize_ruvg <- function(data, batch, spikes, k) {
+    counts <- data@assays$RNA$counts
+    if (length(spikes) == 0) {
+      stop("List of control genes not provided for RUVg.")
+    }
+    if (!all(spikes %in% row.names(data@assays$RNA$counts))) {
+      stop("Some or all of your control genes are not present in the dataset.")
+    }
+    #k defines number of sources of variation, two have been chosen for row and column
+    set <- newSeqExpressionSet(counts = as.matrix(counts),
+                               phenoData = data.frame(condition = coldata$condition,
+                                                      row.names = colnames(counts)))
+    set <- RUVg(set, cIdx = spikes, k = k)
+    normCounts(set)
+  }
+
+  normalize_ruvs <- function(data, batch, k) {
+    counts <- data@assays$RNA$counts
+    genes <- rownames(counts)
+
+    #k defines number of sources of variation, two have been chosen for row and column
+    set <- newSeqExpressionSet(as.matrix(counts),
+                               phenoData = data.frame(condition = coldata$condition,
+                                                      row.names = colnames(counts)))
+    differences <- model_matrix
+    set <- RUVs(set, cIdx = genes[99:590], k = k, scIdx = differences)
+
+    normCounts(set)
+  }
+
+  normalize_ruvr <- function(data, batch, k) {
+    if (ncol(data) > 100) {
+      print("Warning: EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
+    }
+    counts <- as.matrix(data@assays$RNA$counts)
+    genes <- rownames(counts)
+
+    #k defines number of sources of variation, two have been chosen for row and column
+    set <- newSeqExpressionSet(counts,
+                               phenoData = data.frame(condition = coldata$condition,
+                                                      row.names = colnames(counts)))
+    design <- model_matrix
+    y <- DGEList(counts = counts(set), group = pData(set)$condition)
+    y <- calcNormFactors(y, method = "TMMwsp")
+    y <- estimateGLMCommonDisp(y, design)
+    y <- estimateGLMTagwiseDisp(y, design)
+    fit <- glmFit(y, design)
+    res <- residuals(fit, type = "deviance")
+    set <- RUVr(set, genes, k = k, res)
+    normCounts(set)
+  }
+
   # Main function logic
-  validated <- validate_inputs(data, method, batch, k)
+  validated <- validate_inputs(data, method, batch, k, spikes)
   data <- validated$data
   batch <- validated$batch
   k <- validated$k
   method <- validated$method
-
 
   # Select the appropriate normalization method
   norm_data <- switch(
@@ -127,8 +193,10 @@ fetch_normalised_counts <- function(data = NULL, method = NULL, batch = NULL, k 
     DESeq2 = normalize_deseq2(data, batch),
     edgeR = normalize_edger(data, batch),
     limma_voom = normalize_limma_voom(data, batch),
+    RUVg = normalize_ruvg(data, batch, spikes, k),
+    RUVs = normalize_ruvs(data, batch, k),
+    RUVr = normalize_ruvr(data, batch, k),
     stop("Unsupported normalization method.")
   )
-
   return(norm_data)
 }

@@ -11,7 +11,8 @@ rle_plot(
   labels = NULL,
   log = TRUE,
   batch = NULL,
-  normalisation = NULL
+  normalisation = NULL,
+  spikes = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ number of samples.}
 
 \item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.}
+
+\item{spikes}{List of genes to use as spike controls in RUVg}
 }
 \value{
 A ggplot object representing the RLE plot.

@@ -80,7 +80,9 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ri
 plot_mds(mac,"Sample_type")
 
 #RLE function
-rle_plot(mac, label_column = "Row")
+mac_dmso<- mac %>%
+  filter(Treatment_1=="DMSO")
+rle_plot(mac_dmso, label_column = "Row",normalisation="RUVr")
 
 #TO-DO: verify that different plates would be plotted side-by-side
 
