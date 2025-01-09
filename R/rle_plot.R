@@ -16,6 +16,7 @@
 #'   number of samples.
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.
+#' @param spikes List of genes to use as spike controls in RUVg
 #'
 #' @details
 #' The function performs the following steps:
@@ -46,7 +47,8 @@
 # Main function
 rle_plot <- function(data, barcodes = NULL, label_column = NULL,
                      labels = NULL, log = TRUE,
-                     batch = NULL, normalisation = NULL) {
+                     batch = NULL, normalisation = NULL,
+                     spikes = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
@@ -76,7 +78,8 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL,
          labels = as.factor(labels),
          log = ifelse(inherits(log, "function"), TRUE, log),
          batch = batch,
-         normalisation = normalisation)
+         normalisation = normalisation,
+         spikes = spikes)
   }
 
   # Helper function to fetch and log-transform count matrix
@@ -154,7 +157,6 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL,
   normalisation <- validated$normalisation
 
   # Fetch and transform count matrix
-
   count_matrix <- switch(
     normalisation,
     raw = fetch_count_matrix(data, log),
@@ -165,6 +167,9 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL,
     DESeq2 = fetch_normalised_counts(data, method = "DESeq2", batch = batch),
     edgeR = fetch_normalised_counts(data, method = "edgeR", batch = batch),
     limma_voom = fetch_normalised_counts(data, method = "limma_voom", batch = batch),
+    RUVg = fetch_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes),
+    RUVs = fetch_normalised_counts(data, method = "RUVs", batch = batch),
+    RUVr = fetch_normalised_counts(data, method = "RUVr", batch = batch),
     stop("Unsupported normalization method.")
   )
 

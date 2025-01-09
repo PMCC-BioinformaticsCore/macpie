@@ -4,7 +4,13 @@
 \alias{fetch_normalised_counts}
 \title{Retrieve normalised counts of MAC-seq data}
 \usage{
-fetch_normalised_counts(data = NULL, method = NULL, batch = NULL, k = NULL)
+fetch_normalised_counts(
+  data = NULL,
+  method = NULL,
+  batch = NULL,
+  k = NULL,
+  spikes = NULL
+)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
@@ -17,6 +23,8 @@ fetch_normalised_counts(data = NULL, method = NULL, batch = NULL, k = NULL)
 number of samples}
 
 \item{k}{Parameter k for RUVSeq methods, check RUVSeq tutorial}
+
+\item{spikes}{List of genes to use as spike controls}
 }
 \value{
 Data frame of normalised counts
