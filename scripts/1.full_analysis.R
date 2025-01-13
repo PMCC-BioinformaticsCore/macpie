@@ -68,7 +68,8 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[sl][[:digit:]]
 
 #add metadata to the real data
 mac<- mac %>%
-  inner_join(metadata,by=c(".cell"="Barcode"))
+  inner_join(metadata,by=c(".cell"="Barcode")) %>%
+  filter(Project == "Current")
 
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac,"nCount_RNA","Sample_type")
@@ -85,6 +86,17 @@ mac_dmso<- mac %>%
 rle_plot(mac_dmso, label_column = "Row",normalisation="RUVr")
 
 #TO-DO: verify that different plates would be plotted side-by-side
+
+#differential expression
+mac <- mac %>%
+  mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
+                             1, function(row) paste(row, collapse = "_"))) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+treatment_samples="Staurosporine_0.1"
+control_samples<-"DMSO_0.0"
+
+
 
 
 ############ PROCEDURE TO MAKE A FUNCTION

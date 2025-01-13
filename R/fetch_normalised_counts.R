@@ -30,7 +30,7 @@ fetch_normalised_counts <- function(data = NULL,
                                     k = NULL,
                                     spikes = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(data, method, batch, k, spikes) {
+  validate_inputs <- function(data, method, batch, k) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -176,7 +176,7 @@ fetch_normalised_counts <- function(data = NULL,
   }
 
   # Main function logic
-  validated <- validate_inputs(data, method, batch, k, spikes)
+  validated <- validate_inputs(data, method, batch, k)
   data <- validated$data
   batch <- validated$batch
   k <- validated$k
