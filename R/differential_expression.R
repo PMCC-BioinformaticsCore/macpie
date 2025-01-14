@@ -63,6 +63,29 @@ differential_expression <- function(data = NULL,
          k = k, method = method, spikes = spikes)
   }
 
+
+  de_exprs_edgeR<-function(data, pheno_data, treatment_samples, control_samples){
+    countData<-mac@assays$RNA$counts[,grepl(paste0(treatment_1,"|",treatment_2),coldata$condition)]
+    coldata_temp<-coldata[grepl(paste0(treatment_1,"|",treatment_2),coldata$condition),]
+    group = coldata_temp$condition
+    batch = coldata_temp$batch
+    design = model.matrix(~0+group+batch)
+    edgeR<-DGEList(
+      counts = countData+1,
+      samples = coldata_temp$condition,
+      group = coldata_temp$condition
+    )
+    edgeR <- calcNormFactors(edgeR,methods="TMMwsp")
+    edgeR <- estimateDisp(edgeR,design)
+    fit <- glmQLFit(edgeR, design)
+    myargs = list(paste0("group",treatment_1,"-",paste0("group",treatment_2)), levels=design)
+    contrasts <- do.call(makeContrasts, myargs)
+    qlf <- glmQLFTest(fit, contrast=contrasts)
+    topTags <- topTags(qlf,n=length(qlf$df.total))
+    return(as.data.frame(topTags))
+  }
+
+
   de_limma_voom <- function(data, pheno_data, treatment_samples, control_samples) {
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
       model.matrix(~0 + combined_id + batch)

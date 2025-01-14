@@ -9,7 +9,7 @@ differential_expression(
   treatment_samples = NULL,
   control_samples = NULL,
   method = NULL,
-  batch = NULL,
+  batch = 1,
   k = NULL,
   spikes = NULL
 )
@@ -18,9 +18,9 @@ differential_expression(
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column"}
 
-\item{treatment_samples}{A logical vector representing replicates of treatment samples in the data}
+\item{treatment_samples}{Value in the column "combined_id" representing replicates of treatment samples in the data}
 
-\item{control_samples}{A logical vector representing replicates of control samples in the data}
+\item{control_samples}{Value in the column "combined_id"  representing replicates of control samples in the data}
 
 \item{method}{One of "Seurat", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
 
