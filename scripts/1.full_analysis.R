@@ -57,8 +57,8 @@ raw_counts <- raw_counts_total[keep,]
 #create tidySeurat object
 mac <- CreateSeuratObject(counts = raw_counts,
                           project = project_name,
-                          min.cells = 1,
-                          min.features = 1)
+                          min.cells = 5,
+                          min.features = 5)
 
 #calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
@@ -75,28 +75,34 @@ mac<- mac %>%
 plate_layout(mac,"nCount_RNA","Sample_type")
 
 #example of Seurat function being used
-VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ribo"), ncol = 4)
+VlnPlot(mac,
+        features = c("nFeature_RNA", "nCount_RNA", "percent.mt","percent.ribo"),
+        group.by = "Sample_type",
+        ncol = 4)
 
 #example of MDS function, using limma
 plot_mds(mac,"Sample_type")
 
-#RLE function
+#Compare normalisation methods using the RLE function
 mac_dmso<- mac %>%
   filter(Treatment_1=="DMSO")
-rle_plot(mac_dmso, label_column = "Row",normalisation="RUVr")
+rle_plot(mac_dmso, label_column = "Row",normalisation="limma_voom")
 
 #TO-DO: verify that different plates would be plotted side-by-side
 
 #differential expression
+#first create an ID that uniquely identifies samples based on the
+#combination of treatment and treatment concentration
+
 mac <- mac %>%
-  mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
-                             1, function(row) paste(row, collapse = "_"))) %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
 
 treatment_samples="Staurosporine_0.1"
-control_samples<-"DMSO_0.0"
+control_samples<-"DMSO_0"
 
-
+#perform differential expression
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
