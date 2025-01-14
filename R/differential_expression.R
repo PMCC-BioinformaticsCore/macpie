@@ -11,7 +11,7 @@
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
-#' @importFrom limma voom makeContrasts
+#' @importFrom limma voom makeContrasts eBayes contrasts.fit topTable
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom EDASeq newSeqExpressionSet normCounts
@@ -48,7 +48,12 @@ differential_expression <- function(data = NULL,
     if (is.null(treatment_samples) || is.null(control_samples)) {
       stop("Missing the vectors of treatment and control samples.")
     }
-
+    if (!"combined_id" %in% colnames(data@meta.data)) {
+      data <- data %>%
+        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
+                                   1, paste, collapse = "_")) %>%
+        mutate(combined_id = gsub(" ", "", .data$combined_id))
+    }
     if (length(treatment_samples) == 1 && length(control_samples) == 1) {
       treatment_samples_list <- grepl(treatment_samples, data$combined_id)
       control_samples_list <- grepl(control_samples, data$combined_id)
@@ -61,12 +66,6 @@ differential_expression <- function(data = NULL,
   # Helper: Prepare data and pheno_data
   prepare_data <- function(data, treatment_samples, control_samples, batch) {
     data <- data[, grepl(paste0(treatment_samples, "|", control_samples), data$combined_id)]
-    if (!"combined_id" %in% colnames(data@meta.data)) {
-      data <- data %>%
-        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
-                                   1, paste, collapse = "_")) %>%
-        mutate(combined_id = gsub(" ", "", .data$combined_id))
-    }
     if (length(unique(data$combined_id)) < 2) {
       stop("Insufficient factors for differential expression analysis.")
     }
@@ -75,6 +74,7 @@ differential_expression <- function(data = NULL,
   }
 
   de_limma_voom <- function(data, pheno_data, treatment_samples, control_samples) {
+    combined_id <- data$combined_id
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
       model.matrix(~0 + combined_id + batch)
     dge <- DGEList(counts = data@assays$RNA$counts,
@@ -91,7 +91,7 @@ differential_expression <- function(data = NULL,
     contrasts <- do.call(makeContrasts, myargs)
     tmp <- contrasts.fit(fit, contrasts)
     tmp <- eBayes(tmp)
-    top_table <- topTable(tmp, n = Inf)
+    top_table <- topTable(tmp, number = Inf)
     return(as.data.frame(top_table))
   }
 
