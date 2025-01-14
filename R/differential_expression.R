@@ -31,10 +31,11 @@ differential_expression <- function(data = NULL,
                                     control_samples = NULL,
                                     method = NULL,
                                     batch = 1,
-                                    k = NULL,
+                                    k = 2,
                                     spikes = NULL) {
+
   # Helper function to validate input data
-  validate_inputs <- function(data, treatment_samples, control_samples, method, k) {
+  validate_inputs <- function(data, method, treatment_samples, control_samples) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -55,36 +56,23 @@ differential_expression <- function(data = NULL,
         stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
       }
     }
-
-    k <- if (is.null(k)) 2 else k
-    list(data = data,
-         treatment_samples_list = treatment_samples,
-         control_samples_list = control_samples,
-         k = k, method = method, spikes = spikes)
   }
 
-
-  de_exprs_edgeR<-function(data, pheno_data, treatment_samples, control_samples){
-    countData<-mac@assays$RNA$counts[,grepl(paste0(treatment_1,"|",treatment_2),coldata$condition)]
-    coldata_temp<-coldata[grepl(paste0(treatment_1,"|",treatment_2),coldata$condition),]
-    group = coldata_temp$condition
-    batch = coldata_temp$batch
-    design = model.matrix(~0+group+batch)
-    edgeR<-DGEList(
-      counts = countData+1,
-      samples = coldata_temp$condition,
-      group = coldata_temp$condition
-    )
-    edgeR <- calcNormFactors(edgeR,methods="TMMwsp")
-    edgeR <- estimateDisp(edgeR,design)
-    fit <- glmQLFit(edgeR, design)
-    myargs = list(paste0("group",treatment_1,"-",paste0("group",treatment_2)), levels=design)
-    contrasts <- do.call(makeContrasts, myargs)
-    qlf <- glmQLFTest(fit, contrast=contrasts)
-    topTags <- topTags(qlf,n=length(qlf$df.total))
-    return(as.data.frame(topTags))
+  # Helper: Prepare data and pheno_data
+  prepare_data <- function(data, treatment_samples, control_samples, batch) {
+    data <- data[, grepl(paste0(treatment_samples, "|", control_samples), data$combined_id)]
+    if (!"combined_id" %in% colnames(data@meta.data)) {
+      data <- data %>%
+        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
+                                   1, paste, collapse = "_")) %>%
+        mutate(combined_id = gsub(" ", "", .data$combined_id))
+    }
+    if (length(unique(data$combined_id)) < 2) {
+      stop("Insufficient factors for differential expression analysis.")
+    }
+    pheno_data <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
+    return(list(data = data, pheno_data = pheno_data))
   }
-
 
   de_limma_voom <- function(data, pheno_data, treatment_samples, control_samples) {
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
@@ -95,46 +83,23 @@ differential_expression <- function(data = NULL,
     dge <- estimateDisp(dge, model_matrix)
     dge <- calcNormFactors(dge, methods = "TMMwsp")
     design <- model_matrix
-    fit <- glmQLFit(dge, design)
+    fit <- voomLmFit(dge, design)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
                    levels = model_matrix)
     contrasts <- do.call(makeContrasts, myargs)
-    qlf <- glmQLFTest(fit, contrast = contrasts)
-    top_tags <- topTags(qlf, n = length(qlf$df.total))
-    return(as.data.frame(top_tags))
+    tmp <- contrasts.fit(fit, contrasts)
+    tmp <- eBayes(tmp)
+    top_table <- topTable(tmp, n = Inf)
+    return(as.data.frame(top_table))
   }
 
   # Main function
-
-  #create an unique identifier based on combined annotation
-  if (!any(colnames(data@meta.data) %in% "combined_id")) {
-    data <- data %>%
-      mutate(combined_id = apply(pick(starts_with("Treatment_") | starts_with("Concentration_")),
-                                 1, function(row) paste(row, collapse = "_"))) %>%
-      mutate(combined_id = gsub(" ", "", .data$combined_id))
-  }
-
-  #validate inputs
-  validated <- validate_inputs(data, treatment_samples, control_samples, method, k)
-  data <- validated$data
-  treatment_samples_list <- validated$treatment_samples_list
-  control_samples_list <- validated$control_samples_list
-  method <- validated$method
-  k <- validated$k
-
-  #define pheno data and model matrix
-  data <- data[, grepl(paste0(treatment_samples, "|", control_samples), data$combined_id)]
-
-  #replicates but only one data type
-  if (length(unique(data$combined_id)) == 1) {
-    stop("Only one factor given for the DE analysis.")
-  } else if (length(unique(data$combined_id)) > 1) {
-    pheno_data <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
-  } else {
-    stop("Insufficient number of factors for definition of model matrix.")
-  }
+  validate_inputs(data, method, treatment_samples, control_samples)
+  prepared <- prepare_data(data, treatment_samples, control_samples, batch)
+  data <- prepared$data
+  pheno_data <- prepared$pheno_data
 
   # Select the appropriate normalization method
   de_data <- switch(
