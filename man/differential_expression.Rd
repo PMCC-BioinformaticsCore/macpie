@@ -10,7 +10,7 @@ differential_expression(
   control_samples = NULL,
   method = NULL,
   batch = 1,
-  k = NULL,
+  k = 2,
   spikes = NULL
 )
 }
