@@ -83,16 +83,15 @@ differential_expression <- function(data = NULL,
                    group = pheno_data$condition)
     dge <- estimateDisp(dge, model_matrix)
     dge <- calcNormFactors(dge, method = "TMMwsp")
-    design <- model_matrix
-    fit <- voomLmFit(dge, design)
+    fit <- voomLmFit(dge, model_matrix)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
                    levels = model_matrix)
     contrasts <- do.call(makeContrasts, myargs)
     tmp <- contrasts.fit(fit, contrasts)
-    tmp <- eBayes(tmp)
-    top_table <- topTable(tmp, number = Inf) %>%
+    tmp <- eBayes(tmp, robust = TRUE)
+    top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
       select("logFC", "P.Value", "adj.P.Val") %>%
       rename("log2FC" = "logFC", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val")
     return(as.data.frame(top_table))
@@ -186,9 +185,9 @@ differential_expression <- function(data = NULL,
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
-    dge <- estimateGLMCommonDisp(dge, design)
-    dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(dge, design)
+    dge <- estimateGLMCommonDisp(dge, model_matrix)
+    dge <- estimateGLMTagwiseDisp(dge, model_matrix)
+    fit <- glmFit(dge, model_matrix)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
@@ -218,9 +217,9 @@ differential_expression <- function(data = NULL,
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
-    dge <- estimateGLMCommonDisp(dge, design)
-    dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(dge, design)
+    dge <- estimateGLMCommonDisp(dge, model_matrix)
+    dge <- estimateGLMTagwiseDisp(dge, model_matrix)
+    fit <- glmFit(dge, model_matrix)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
@@ -240,18 +239,19 @@ differential_expression <- function(data = NULL,
     }
     combined_id <- data$combined_id
     genes <- row.names(data@assays$RNA$counts)
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
 
     #k defines number of sources of variation, two have been chosen for row and column
     set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
-    design <- model_matrix
     dge <- DGEList(counts = data@assays$RNA$counts,
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method = "TMMwsp")
-    dge <- estimateGLMCommonDisp(dge, design)
-    dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(dge, design)
+    dge <- estimateGLMCommonDisp(dge, model_matrix)
+    dge <- estimateGLMTagwiseDisp(dge, model_matrix)
+    fit <- glmFit(dge, model_matrix)
     res <- residuals(fit, type = "deviance")
     set <- RUVr(set, genes, k = k, res)
 
@@ -259,9 +259,9 @@ differential_expression <- function(data = NULL,
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
-    dge <- estimateGLMCommonDisp(dge, design)
-    dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(dge, design)
+    dge <- estimateGLMCommonDisp(dge, model_matrix)
+    dge <- estimateGLMTagwiseDisp(dge, model_matrix)
+    fit <- glmFit(dge, model_matrix)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
@@ -289,9 +289,9 @@ differential_expression <- function(data = NULL,
     edgeR = de_edger(data, pheno_data, treatment_samples, control_samples),
     DESeq2 = de_deseq2(data, pheno_data, treatment_samples, control_samples),
     Seurat_wilcox = de_seurat(data, pheno_data, treatment_samples, control_samples),
-    Seurat_wilcox = de_ruvg(data, pheno_data, treatment_samples, control_samples, batch, spikes, k),
-    Seurat_wilcox = de_ruvs(data, pheno_data, treatment_samples, control_samples, k),
-    Seurat_wilcox = de_ruvr(data, pheno_data, treatment_samples, control_samples, k),
+    RUVg = de_ruvg(data, pheno_data, treatment_samples, control_samples, batch, spikes, k),
+    RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, k),
+    RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, k),
     stop("Unsupported DE method.")
   )
   return(de_data)
