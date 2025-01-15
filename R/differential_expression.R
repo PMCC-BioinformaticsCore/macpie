@@ -6,17 +6,16 @@
 #'   "Well_ID", "Row", "Column"
 #' @param treatment_samples Value in the column "combined_id" representing replicates of treatment samples in the data
 #' @param control_samples Value in the column "combined_id"  representing replicates of control samples in the data
-#' @param method One of "Seurat", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
+#' @param method One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
-#' @importFrom limma voom makeContrasts eBayes contrasts.fit topTable
+#' @importFrom limma makeContrasts eBayes contrasts.fit topTable
 #' @import DESeq2
 #' @import RUVSeq
-#' @importFrom EDASeq newSeqExpressionSet normCounts
-#' @importFrom Biobase pData
-#' @importFrom stats model.matrix residuals
+#' @importFrom stats model.matrix
+#' @importFrom dplyr rename select
 #'
 #' @returns Data frame of DE counts
 #' @export
@@ -40,7 +39,7 @@ differential_expression <- function(data = NULL,
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
     method <- if (is.null(method)) "limma_voom" else method
-    if (!method %in% c("SCT", "DESeq2", "edgeR",
+    if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
                        "limma_voom")) {
       stop("Your normalization method is not available.")
@@ -81,7 +80,7 @@ differential_expression <- function(data = NULL,
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- estimateDisp(dge, model_matrix)
-    dge <- calcNormFactors(dge, methods = "TMMwsp")
+    dge <- calcNormFactors(dge, method = "TMMwsp")
     design <- model_matrix
     fit <- voomLmFit(dge, design)
     myargs <- list(paste0("combined_id",
@@ -91,8 +90,71 @@ differential_expression <- function(data = NULL,
     contrasts <- do.call(makeContrasts, myargs)
     tmp <- contrasts.fit(fit, contrasts)
     tmp <- eBayes(tmp)
-    top_table <- topTable(tmp, number = Inf)
+    top_table <- topTable(tmp, number = Inf) %>%
+      select(logFC, P.Value, adj.P.Val) %>%
+      rename("log2FC" = logFC, "p_value" = P.Value, "p_value_adj" = adj.P.Val)
     return(as.data.frame(top_table))
+  }
+
+  de_edger <- function(data, pheno_data, treatment_samples, control_samples) {
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+    group <- pheno_data$condition
+    dge <- DGEList(counts = data@assays$RNA$counts,
+                  samples = pheno_data$condition,
+                  group = pheno_data$condition)
+    dge <- calcNormFactors(dge, method = "TMMwsp")
+    dge <- estimateDisp(dge, model_matrix)
+    fit <- glmQLFit(dge, model_matrix)
+    myargs <- list(paste0("combined_id",
+                          treatment_samples, "-",
+                          paste0("combined_id", control_samples)),
+                   levels = model_matrix)
+    contrasts <- do.call(makeContrasts, myargs)
+    qlf <- glmQLFTest(fit, contrast = contrasts)
+    top_tags <- topTags(qlf, n = nrow(data)) %>%
+      as.data.frame() %>%
+      select(logFC, PValue, FDR) %>%
+      rename("log2FC" = logFC, "p_value" = PValue, "adj.p.value" = FDR)
+    return(as.data.frame(top_tags))
+  }
+
+  #DEseq produces NA adjusted p-values if
+  de_deseq2 <- function(data, pheno_data, treatment_samples, control_samples) {
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+    dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts,
+                                  colData = pheno_data,
+                                  design = ~ condition)
+    dds <- DESeq(dds)
+    res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
+    #res.ape <- lfcShrink(dds, coef = "condition_Staurosporine_0.1_vs_DMSO_0", type = "apeglm")
+    res <- as.data.frame(res) %>%
+      as.data.frame() %>%
+      select(log2FoldChange, pvalue, padj) %>%
+      rename("log2FC" = log2FoldChange, "p_value" = pvalue, "adj.p.value" = padj)
+    return(as.data.frame(top_tags))
+  }
+
+  de_seurat <- function(data, pheno_data, treatment_samples, control_samples) {
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+
+    data <- NormalizeData(data)
+    Idents(data) <- combined_id
+    data$batch = batch
+    de.markers <- FindMarkers(data,
+                              ident.1 = treatment_samples,
+                              ident.2 = control_samples,
+                              latent.vars = "batch",
+                              test.use = "DESeq2") %>%
+      select(avg_log2FC, p_val, p_val_adj) %>%
+      rename("log2FC" = avg_log2FC, "p_val" = p_val, "adj.p.value" = p_val_adj)
+
+    return(as.data.frame(de.markers))
   }
 
   # Main function
@@ -104,10 +166,10 @@ differential_expression <- function(data = NULL,
   # Select the appropriate normalization method
   de_data <- switch(
     method,
-    limma_voom = de_limma_voom(data = data,
-                               pheno_data = pheno_data,
-                               treatment_samples = treatment_samples,
-                               control_samples = control_samples),
+    limma_voom = de_limma_voom(data, pheno_data, treatment_samples, control_samples),
+    edgeR = de_edger(data, pheno_data, treatment_samples, control_samples),
+    DESeq2 = de_deseq2(data, pheno_data, treatment_samples, control_samples),
+    Seurat_wilcox = de_edger(data, pheno_data, treatment_samples, control_samples),
     stop("Unsupported DE method.")
   )
   return(de_data)
