@@ -22,7 +22,7 @@ differential_expression(
 
 \item{control_samples}{Value in the column "combined_id"  representing replicates of control samples in the data}
 
-\item{method}{One of "Seurat", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
+\item{method}{One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
 
 \item{batch}{Either empty, a single value, or a vector corresponding to the
 number of samples}
@@ -41,5 +41,7 @@ for normalisation, with the default of limma-voomLmFit.
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-fetch_normalised_counts(mac)
+treatment_samples="Staurosporine_0.1"
+control_samples<-"DMSO_0"
+top_table <- differential_expression(mac, treatment_samples, control_samples, method = "limma_voom")
 }

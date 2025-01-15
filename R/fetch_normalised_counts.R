@@ -148,7 +148,7 @@ fetch_normalised_counts <- function(data = NULL,
                                phenoData = data.frame(condition = coldata$condition,
                                                       row.names = colnames(counts)))
     differences <- model_matrix
-    set <- RUVs(set, cIdx = genes[99:590], k = k, scIdx = differences)
+    set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
 
     normCounts(set)
   }
