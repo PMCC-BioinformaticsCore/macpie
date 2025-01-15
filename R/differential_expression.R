@@ -182,7 +182,7 @@ differential_expression <- function(data = NULL,
                                phenoData = pheno_data)
     set <- RUVg(set, cIdx = spikes, k = k)
 
-    dge <- DGEList(counts = data@assays$RNA$counts,
+    dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
@@ -207,18 +207,14 @@ differential_expression <- function(data = NULL,
     genes <- row.names(data@assays$RNA$counts)
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
       model.matrix(~0 + combined_id + batch)
-    if (length(spikes) == 0) {
-      stop("List of control genes not provided for RUVg.")
-    }
-    if (!all(spikes %in% row.names(data@assays$RNA$counts))) {
-      stop("Some or all of your control genes are not present in the dataset.")
-    }
+
     #k defines number of sources of variation, two have been chosen for row and column
     set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
     differences <- makeGroups(combined_id)
     set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
-    dge <- DGEList(counts = data@assays$RNA$counts,
+
+    dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
@@ -259,13 +255,13 @@ differential_expression <- function(data = NULL,
     res <- residuals(fit, type = "deviance")
     set <- RUVr(set, genes, k = k, res)
 
-    dge <- DGEList(counts = data@assays$RNA$counts,
+    dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method="upperquartile")
     dge <- estimateGLMCommonDisp(dge, design)
     dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(y, design)
+    fit <- glmFit(dge, design)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
