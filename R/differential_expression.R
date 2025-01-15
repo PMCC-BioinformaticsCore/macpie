@@ -203,6 +203,8 @@ differential_expression <- function(data = NULL,
   }
 
   de_ruvs <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
+    combined_id <- data$combined_id
+    genes <- row.names(data@assays$RNA$counts)
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
       model.matrix(~0 + combined_id + batch)
     if (length(spikes) == 0) {
@@ -214,7 +216,7 @@ differential_expression <- function(data = NULL,
     #k defines number of sources of variation, two have been chosen for row and column
     set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
-    differences <- model_matrix
+    differences <- makeGroups(combined_id)
     set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
     dge <- DGEList(counts = data@assays$RNA$counts,
                    samples = pheno_data$condition,
@@ -222,7 +224,7 @@ differential_expression <- function(data = NULL,
     dge <- calcNormFactors(dge, method="upperquartile")
     dge <- estimateGLMCommonDisp(dge, design)
     dge <- estimateGLMTagwiseDisp(dge, design)
-    fit <- glmFit(y, design)
+    fit <- glmFit(dge, design)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
                           paste0("combined_id", control_samples)),
@@ -240,13 +242,12 @@ differential_expression <- function(data = NULL,
     if (ncol(data) > 100) {
       print("Warning: EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
     }
-    counts <- as.matrix(data@assays$RNA$counts)
-    genes <- rownames(counts)
+    combined_id <- data$combined_id
+    genes <- row.names(data@assays$RNA$counts)
 
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts,
-                               phenoData = data.frame(condition = coldata$condition,
-                                                      row.names = colnames(counts)))
+    set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
+                               phenoData = pheno_data)
     design <- model_matrix
     dge <- DGEList(counts = data@assays$RNA$counts,
                    samples = pheno_data$condition,
