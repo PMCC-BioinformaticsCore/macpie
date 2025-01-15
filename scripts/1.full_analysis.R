@@ -102,9 +102,9 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "RUVs")
 
-
+plot_volcano(top_table)
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
 #git pull origin main
@@ -136,7 +136,6 @@ top_table<-differential_expression(mac, treatment_samples, control_samples,metho
 #git push origin function_author
 #git checkout main
 #git branch -d function_author
-
 
 
 

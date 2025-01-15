@@ -1,0 +1,75 @@
+#' Volcano plot of differentially expressed genes
+#'
+#' @param top_table Data frame with columns that contain FC and P-values, default to log2FC and p_value_adj
+#' @param x Name of the column with logFC values
+#' @param y Name of the column with adjusted p-values
+#' @param FDR_cutoff Cutoff for labels to be plotted based on their adjusted p-values
+#' @param max.overlaps Maximum number of overlaps of points for package ggrepel
+#' @import forcats
+#' @import stringr
+#' @returns ggpplot plot
+#' @export
+#'
+#' @examples
+#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac <- readRDS(file_path)
+#' treatment_samples="Staurosporine_0.1"
+#' control_samples<-"DMSO_0"
+#' top_table <- differential_expression(mac, treatment_samples, control_samples, method = "limma_voom")
+#' plot_volcano(top_table)
+plot_volcano<-function(top_table, x = "log2FC", y = "p_value_adj", FDR_cutoff=0.05, max.overlaps=30){
+
+  # Helper function to validate input data
+  validate_inputs <- function(top_table, x, y, FDR_cutoff, max.overlaps) {
+    if (!inherits(as.data.frame(top_table), "data.frame")) {
+      stop("Error: 'top_table' must be convertable to a data frame.")
+    }
+    if(!all(x %in% colnames(top_table) && y %in% colnames(top_table))) {
+      stop("Error: 'top_table' does not contain expected column names, check paramaterrs 'x' and 'y'.")
+    }
+    if (!inherits(FDR_cutoff, "numeric") && FDR_cutoff <= 1) {
+      stop("FDR should be numeric and smaller than 1.")
+    }
+    if (!inherits(max.overlaps, "numeric")) {
+      stop("max.overlaps should be numeric.")
+    }
+  }
+
+  validate_inputs(top_table, x, y, FDR_cutoff, max.overlaps)
+
+  top_table$diff_expressed<-"no"
+  top_table$labelgenes<-""
+
+  top_table <- top_table %>%
+    mutate(
+      diff_expressed = case_when(
+        !!rlang::sym(x) >= 1 & !!rlang::sym(y) <= FDR_cutoff ~ "up",
+        !!rlang::sym(x) <= -1 & !!rlang::sym(y) <= FDR_cutoff ~ "down",
+        TRUE ~ diff_expressed
+      )
+    ) %>%
+    mutate(
+      labelgenes = ifelse(diff_expressed != "no", rownames(.), "")
+    ) %>%
+    mutate(colors = as.character(fct_recode(diff_expressed,
+                               darkred = "up",
+                               gray = "no",
+                               navy = "down")))
+
+  color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
+  named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
+
+  ggplot(top_table,
+         aes(x = log2FC, y = -log10(p_value_adj),
+             group = diff_expressed,
+             col = diff_expressed,
+             label = labelgenes))+
+    geom_point()+
+    theme_classic()+
+    geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps)+
+    scale_color_manual(
+      values = named_colors # Map colors dynamically
+    ) +
+    geom_vline(xintercept = c(-1, 1), col = "darkred") +
+    geom_hline(yintercept = -log10(0.05), col = "darkred")
+}

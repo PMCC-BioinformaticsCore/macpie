@@ -109,7 +109,7 @@ plate_layout(mac, "nCount_RNA", "Sample_type")
 plot_mds(mac, "Sample_type")
 ```
 
-Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate the quality of scaling and normalisation is through the RLE plots.
+Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
 
 ```{r rle_plot, fig.width = 8, fig.height=5}
 
@@ -120,8 +120,33 @@ mac_dmso <- mac %>%
 #RLE function
 rle_plot(mac_dmso, label_column = "Row")
 rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
-rle_plot(mac_dmso, label_column = "Row", normalisation = "limma_voom")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
-Even though all of the further analysis (scaling, normalisation, visualisation) can be conducted through the standard Seurat functions, we recommend that the user follows the tutorial below that is based on Voom method, specifically by using TMMwsp to normalise and voomLmFit to perform DE calculations.
+
+### 3. Differential gene expression
+
+Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero counts compared to bulk RNA-seq. Statistical models assuming a Poisson or negative binomial distribution may not fit the data well. For that reason, differential expression effects could be over or underestimated.
+
+Let's first perform the differential expression analysis with a couple of methods and visualise
+the results on the volcano plots.
+
+```{r de_analysis, fig.width = 8, fig.height=5}
+
+# First perform the differential expression analysis
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+treatment_samples="Staurosporine_0.1"
+control_samples<-"DMSO_0"
+
+top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table_Seurat<-differential_expression(mac, treatment_samples, control_samples,method = "Seurat_wilcox")
+
+plot_volcano(top_table_edgeR)
+plot_volcano(top_table_Seurat)
+
+```
+
 
 

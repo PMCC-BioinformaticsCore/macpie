@@ -116,7 +116,7 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(qlf, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "adj.p.value" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
     return(as.data.frame(top_table))
   }
 
@@ -130,7 +130,7 @@ differential_expression <- function(data = NULL,
     res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
     top_table <- as.data.frame(res) %>%
       select("log2FoldChange", "pvalue", "padj") %>%
-      rename("log2FC" = "log2FoldChange", "p_value" = "pvalue", "adj.p.value" = "padj")
+      rename("log2FC" = "log2FoldChange", "p_value" = "pvalue", "p_value_adj" = "padj")
     return(as.data.frame(top_table))
   }
 
@@ -145,7 +145,7 @@ differential_expression <- function(data = NULL,
                               latent.vars = "batch",
                               test.use = "DESeq2") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
-      rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "adj.p.value" = "p_val_adj")
+      rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj")
 
     return(as.data.frame(top_table))
   }
@@ -197,7 +197,7 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "adj.p.value" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
     return(as.data.frame(top_table))
   }
 
@@ -229,7 +229,7 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "adj.p.value" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
     return(as.data.frame(top_table))
   }
 
@@ -271,7 +271,7 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "adj.p.value" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
     return(as.data.frame(top_table))
   }
 
@@ -290,8 +290,8 @@ differential_expression <- function(data = NULL,
     DESeq2 = de_deseq2(data, pheno_data, treatment_samples, control_samples),
     Seurat_wilcox = de_seurat(data, pheno_data, treatment_samples, control_samples),
     RUVg = de_ruvg(data, pheno_data, treatment_samples, control_samples, batch, spikes, k),
-    RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, k),
-    RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, k),
+    RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, batch, k),
+    RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, batch, k),
     stop("Unsupported DE method.")
   )
   return(de_data)
