@@ -20,6 +20,7 @@
 #' plot_volcano(top_table)
 plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff = 0.05, max.overlaps = 30) {
 
+  assign("last.warning", NULL, envir = baseenv())
   # Helper function to validate input data
   validate_inputs <- function(top_table, x, y, fdr_cutoff, max.overlaps) {
     if (!inherits(as.data.frame(top_table), "data.frame")) {
@@ -50,7 +51,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
       ),
       diff_expressed = forcats::fct_expand(diff_expressed, "up", "down", "no"), # Add all expected levels
       gene_labels = case_when(
-        .data$diff_expressed != "no" ~ rownames(top_table),
+        .data$diff_expressed != "no" ~ .data$gene,
         TRUE ~ ""),
       colors = as.character(fct_recode(.data$diff_expressed,
                                             darkred = "up",
@@ -60,6 +61,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
   named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
 
+  suppressWarnings({
   p <- ggplot(top_table,
               aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
                   group = .data$diff_expressed,
@@ -73,6 +75,6 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
     ) +
     geom_vline(xintercept = c(-1, 1), col = "darkred") +
     geom_hline(yintercept = -log10(0.05), col = "darkred")
-
+  })
   return(p)
 }

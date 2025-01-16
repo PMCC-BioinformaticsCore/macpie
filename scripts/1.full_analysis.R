@@ -109,13 +109,12 @@ plot_volcano(top_table)
 #perform pathway enrichment
 top_genes<-top_table %>%
   filter(p_value_adj<0.05) %>%
-  rownames_to_column("genes") %>%
-  select(genes) %>%
+  select(gene) %>%
   pull()
 
 #basic pathway enrichment
 enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET"))
-plotEnrich(enriched[[1]])
+plotEnrich(enriched[[2]])
 
 treatments <- mac %>%
   select(combined_id) %>%
@@ -136,16 +135,10 @@ num_cores <- detectCores() - 1
 #  cat(".")
 #}, mc.cores = num_cores)
 
-#handlers(global = TRUE)
-#with_progress({
-#  p <- progressr::progressor(steps = length(treatments))
-#  de_list <- mclapply(treatments, function(x) {
-#    result <- differential_expression(mac, x, control_samples, method = "edgeR")
-#    return(result)
-#  }, mc.cores = num_cores)
-#})
+control.compute=list(save.memory=TRUE)
 de_list <- pmclapply(treatments, function(x) {
   result <- differential_expression(mac, x, control_samples, method = "edgeR")
+  result$combined_id <- x
   return(result)
 }, mc.cores = num_cores)
 
