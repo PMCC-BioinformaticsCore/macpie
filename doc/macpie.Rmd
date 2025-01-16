@@ -21,9 +21,10 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-Macpie is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a substantial support of the VCFG amd MGC core facilities.
+MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed as a collaboration betwee VCFG and MGC core facilities at PeterMac Cancer Centre, primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
 
-MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed at the VCFG at PeterMac, primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
+<b>macpie</b> is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a substantial support of the VCFG amd MGC core facilities.
+
 
 MAC-seq data shares similarities with single-cell RNA-seq data as it derives gene counts from RNA sequences measured at the 3' ends of polyA transcripts. This results in sparse data, with many transcripts undetectable in individual samples, and a high throughput of transcriptomes analyzed per experiment. However, MAC-seq also parallels standard RNA-seq, as it typically includes replicate conditions and involves hundreds rather than thousands of samples per experiment, measured at higher depth.
 
@@ -38,6 +39,10 @@ library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
+library(leidenbase)
+
+#load all functions
+devtools::load_all()
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -73,18 +78,6 @@ mac <- CreateSeuratObject(counts = raw_counts,
                           min.cells = 1,
                           min.features = 1)
 
-#join with metadata
-mac <- mac %>%
-  inner_join(metadata, by = c(".cell" = "Barcode"))
-```
-
-This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
-For example, let's subset the Seurat object based on the column "Project" in metadata:
-
-```{r subset_seurat}
-unique(mac$Project)
-mac <- mac %>%
-  filter(Project == "Current")
 ```
 
 ```{r violin_plot, fig.width = 8}
@@ -92,23 +85,70 @@ mac <- mac %>%
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-#example of Seurat function being used
-VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
-```
-Even though all of the further analysis (scaling, normalisation, visualisation) can be conducted through the standard Seurat functions, we recommend that the user follows the tutorial below that is based on limma's Voom.
+#join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
 
-```{r plate_layout, fig.width = 8}
+#example of a function from Seurat QC 
+VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by="Sample_type")
+```
+
+This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
+For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
+
+```{r subset_seurat, fig.width = 8}
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
+
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
+
 ```{r mds_plot, fig.width = 8}
 #example of MDS function, using limma
 plot_mds(mac, "Sample_type")
 ```
 
-A number of methods are available for normalisation. 
+Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
+
 ```{r rle_plot, fig.width = 8, fig.height=5}
+
+# First we will subset the data to look at control, DMSO samples only
+mac_dmso <- mac %>%
+  filter(Treatment_1 == "DMSO")
+
 #RLE function
-rle_plot(mac, label_column = "Row")
-rle_plot(mac, label_column = "Row", normalisation = "limma_voom")
+rle_plot(mac_dmso, label_column = "Row")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
+
+### 3. Differential gene expression
+
+Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero counts compared to bulk RNA-seq. Statistical models assuming a Poisson or negative binomial distribution may not fit the data well. For that reason, differential expression effects could be over or underestimated.
+
+Let's first perform the differential expression analysis with a couple of methods and visualise
+the results on the volcano plots.
+
+```{r de_analysis, fig.width = 8, fig.height=5}
+
+# First perform the differential expression analysis
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+treatment_samples="Staurosporine_0.1"
+control_samples<-"DMSO_0"
+
+top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table_Seurat<-differential_expression(mac, treatment_samples, control_samples,method = "Seurat_wilcox")
+
+plot_volcano(top_table_edgeR)
+plot_volcano(top_table_Seurat)
+
+```
+
+
+

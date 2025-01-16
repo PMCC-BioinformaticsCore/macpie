@@ -11,6 +11,10 @@ library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
+library(leidenbase)
+
+#load all functions
+devtools::load_all()
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -39,24 +43,25 @@ mac <- CreateSeuratObject(counts = raw_counts,
                           min.cells = 1,
                           min.features = 1)
 
-#join with metadata
-mac <- mac %>%
-  inner_join(metadata, by = c(".cell" = "Barcode"))
-
-## ----subset_seurat------------------------------------------------------------
-unique(mac$Project)
-mac <- mac %>%
-  filter(Project == "Current")
 
 ## ----violin_plot, fig.width = 8-----------------------------------------------
 #calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-#example of Seurat function being used
-VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 4)
+#join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
 
-## ----plate_layout, fig.width = 8----------------------------------------------
+#example of a function from Seurat QC 
+VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by="Sample_type")
+
+## ----subset_seurat, fig.width = 8---------------------------------------------
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
+
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac, "nCount_RNA", "Sample_type")
 
@@ -65,7 +70,30 @@ plate_layout(mac, "nCount_RNA", "Sample_type")
 plot_mds(mac, "Sample_type")
 
 ## ----rle_plot, fig.width = 8, fig.height=5------------------------------------
+
+# First we will subset the data to look at control, DMSO samples only
+mac_dmso <- mac %>%
+  filter(Treatment_1 == "DMSO")
+
 #RLE function
-rle_plot(mac, label_column = "Row")
-rle_plot(mac, label_column = "Row", normalisation = "limma_voom")
+rle_plot(mac_dmso, label_column = "Row")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
+rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
+
+## ----de_analysis, fig.width = 8, fig.height=5---------------------------------
+
+# First perform the differential expression analysis
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+treatment_samples="Staurosporine_0.1"
+control_samples<-"DMSO_0"
+
+top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table_Seurat<-differential_expression(mac, treatment_samples, control_samples,method = "Seurat_wilcox")
+
+plot_volcano(top_table_edgeR)
+plot_volcano(top_table_Seurat)
+
 
