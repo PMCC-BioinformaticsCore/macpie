@@ -8,7 +8,7 @@ plot_volcano(
   top_table,
   x = "log2FC",
   y = "p_value_adj",
-  FDR_cutoff = 0.05,
+  fdr_cutoff = 0.05,
   max.overlaps = 30
 )
 }
@@ -19,7 +19,7 @@ plot_volcano(
 
 \item{y}{Name of the column with adjusted p-values}
 
-\item{FDR_cutoff}{Cutoff for labels to be plotted based on their adjusted p-values}
+\item{fdr_cutoff}{Cutoff for labels to be plotted based on their adjusted p-values}
 
 \item{max.overlaps}{Maximum number of overlaps of points for package ggrepel}
 }

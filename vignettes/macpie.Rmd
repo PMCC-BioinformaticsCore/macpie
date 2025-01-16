@@ -21,9 +21,10 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-Macpie is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a substantial support of the VCFG amd MGC core facilities.
+MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed as a collaboration betwee VCFG and MGC core facilities at PeterMac Cancer Centre, primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
 
-MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed at the VCFG at PeterMac, primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
+<b>macpie</b> is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. Macpie is a result of a collaborative effort by a workgroup at the Peter MacCallum Cancer Centre (PeterMac), with a substantial support of the VCFG amd MGC core facilities.
+
 
 MAC-seq data shares similarities with single-cell RNA-seq data as it derives gene counts from RNA sequences measured at the 3' ends of polyA transcripts. This results in sparse data, with many transcripts undetectable in individual samples, and a high throughput of transcriptomes analyzed per experiment. However, MAC-seq also parallels standard RNA-seq, as it typically includes replicate conditions and involves hundreds rather than thousands of samples per experiment, measured at higher depth.
 
@@ -38,6 +39,7 @@ library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
+library(leidenbase)
 
 #load all functions
 devtools::load_all()

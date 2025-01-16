@@ -11,6 +11,7 @@ library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
+library(leidenbase)
 
 #load all functions
 devtools::load_all()

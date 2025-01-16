@@ -9,6 +9,7 @@
 #' @import tidyseurat
 #' @import rlang
 #' @import ggplot2
+#' @importFrom dplyr select
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
 #' @param metric A string specifying which column in data will be used to color
@@ -33,9 +34,10 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
     metric <- if (is.null(metric)) "nCount_RNA" else metric
     annotation <- if (is.null(annotation)) "Treatment_1" else annotation
 
-    column_names <- data %>%
+    suppressWarnings({column_names <- data %>%
       head() %>%
       colnames()
+    })
     if (!all(c(metric, annotation) %in% column_names)) {
       stop("Your column names are not present in the data or metadata.")
     }
@@ -49,17 +51,17 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
   data <- validated$data
 
   # Find stats for the data to arrange plotting
-  data <- data %>%
-    dplyr::select("Well_ID", "Row", "Column", {{metric}}, {{annotation}}) %>%
-    mutate(cell__ = NA) %>%
-    mutate(Col = as.character(.data$Column)) %>%
-    mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
-    mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
-    mutate(median_value = median(!!rlang::sym(metric))) %>%
-    mutate(max_value = max(!!rlang::sym(metric))) %>%
-    mutate(min_value = min(!!rlang::sym(metric)))
-
+  suppressWarnings({
+    data <- data %>%
+      mutate(Col = as.character(.data$Column)) %>%
+      mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
+      mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
+      mutate(median_value = median(!!rlang::sym(metric))) %>%
+      mutate(max_value = max(!!rlang::sym(metric))) %>%
+      mutate(min_value = min(!!rlang::sym(metric)))
+  })
   # Plot the results
+
   tryCatch({
     p <- ggplot(data, aes(.data$Col,
                           forcats::fct_rev(forcats::as_factor(.data$Row)),
@@ -81,4 +83,5 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
   }, error = function(e) {
     stop("Error in plotting: ", e$message)
   })
+
 }
