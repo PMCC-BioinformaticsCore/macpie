@@ -11,6 +11,7 @@ library(reshape2)
 library(gridExtra)
 library(ggrepel)
 library(lintr)
+library(enrichR)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -102,9 +103,53 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "RUVs")
-
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
 plot_volcano(top_table)
+
+#perform pathway enrichment
+top_genes<-top_table %>%
+  filter(p_value_adj<0.05) %>%
+  rownames_to_column("genes") %>%
+  select(genes) %>%
+  pull()
+
+#basic pathway enrichment
+enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET"))
+plotEnrich(enriched[[1]])
+
+treatments <- mac %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+
+#de_list<-sapply(treatments,function(x){
+#  differential_expression(mac, x, control_samples,method = "edgeR");
+#  cat(".")
+#})
+
+library(parallel)
+library(mcprogress)
+num_cores <- detectCores() - 1
+#de_list <- mclapply(treatments, function(x) {
+#  differential_expression(mac, x, control_samples, method = "edgeR");
+#  cat(".")
+#}, mc.cores = num_cores)
+
+#handlers(global = TRUE)
+#with_progress({
+#  p <- progressr::progressor(steps = length(treatments))
+#  de_list <- mclapply(treatments, function(x) {
+#    result <- differential_expression(mac, x, control_samples, method = "edgeR")
+#    return(result)
+#  }, mc.cores = num_cores)
+#})
+de_list <- pmclapply(treatments, function(x) {
+  result <- differential_expression(mac, x, control_samples, method = "edgeR")
+  return(result)
+}, mc.cores = num_cores)
+
+
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
 #git pull origin main

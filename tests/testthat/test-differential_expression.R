@@ -7,5 +7,5 @@ test_that("Produces non-empty dataframe with a specific top gene.", {
 
   #perform differential expression
   top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
-  expect_true(nrow(top_table) > 0 & top_table["ANAPC16","log2FC"]>0)
+  expect_true(nrow(top_table) > 0 & top_table[top_table$gene == "ANAPC16","log2FC"]>0)
 })
