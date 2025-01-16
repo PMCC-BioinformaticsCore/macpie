@@ -7,6 +7,7 @@
 #' @param max.overlaps Maximum number of overlaps of points for package ggrepel
 #' @import forcats
 #' @import stringr
+#' @importFrom stats setNames
 #' @returns ggpplot plot
 #' @export
 #'
@@ -38,7 +39,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   validate_inputs(top_table, x, y, fdr_cutoff, max.overlaps)
 
   top_table$diff_expressed <- "no"
-  top_table$label_genes <- ""
+  top_table$gene_labels <- ""
 
   top_table <- top_table %>%
     mutate(
@@ -46,12 +47,12 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
         !!rlang::sym(x) >= 1 & !!rlang::sym(y) <= fdr_cutoff ~ "up",
         !!rlang::sym(x) <= -1 & !!rlang::sym(y) <= fdr_cutoff ~ "down",
         TRUE ~ diff_expressed
-      )
-    ) %>%
-    mutate(
-      gene_labels = ifelse(.data$diff_expressed != "no", rownames(.), "")
-    ) %>%
-    mutate(colors = as.character(fct_recode(.data$diff_expressed,
+      ),
+      diff_expressed = forcats::fct_expand(diff_expressed, "up", "down", "no"), # Add all expected levels
+      gene_labels = case_when(
+        .data$diff_expressed != "no" ~ rownames(top_table),
+        TRUE ~ ""),
+      colors = as.character(fct_recode(.data$diff_expressed,
                                             darkred = "up",
                                             gray = "no",
                                             navy = "down")))
