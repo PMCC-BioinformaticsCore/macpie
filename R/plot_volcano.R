@@ -20,7 +20,6 @@
 #' plot_volcano(top_table)
 plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff = 0.05, max.overlaps = 30) {
 
-  assign("last.warning", NULL, envir = baseenv())
   # Helper function to validate input data
   validate_inputs <- function(top_table, x, y, fdr_cutoff, max.overlaps) {
     if (!inherits(as.data.frame(top_table), "data.frame")) {
