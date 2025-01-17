@@ -167,7 +167,7 @@ top_genes<-top_table_edgeR %>%
   pull()
 
 enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
-                                 "Drug_Perturbations_from_GEO_2014"))
+                                 "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
 p1<-plotEnrich(enriched[[1]])
 p2<-plotEnrich(enriched[[2]])
 p3<-plotEnrich(enriched[[3]])

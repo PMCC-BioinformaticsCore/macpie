@@ -16,6 +16,7 @@ library(jsonlite)
 library(parallel)
 library(mcprogress)
 library(httr2)
+library(clusterProfiler)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -159,7 +160,7 @@ de_list <- pmclapply(treatments, function(x) {
 #4. edit script
 #load_all()
 #5. check if the function exists in the global environment
-#exists("plot_plate_layout", where = globalenv(), inherits = FALSE)
+#exists("plote_plate_layout", where = globalenv(), inherits = FALSE)
 #6. check and document
 #check()
 #7. click inside the function and
@@ -181,7 +182,7 @@ de_list <- pmclapply(treatments, function(x) {
 
 
 
-
+#test ChEA_2022
 # Function to download and parse Enrichr gene sets
 fetch_enrichr_genes <- function(databases, output_dir = tempdir()) {
   # Base URL for Enrichr libraries
