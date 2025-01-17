@@ -24,7 +24,7 @@
 #'   filter(!grepl("DMSO", combined_id)) %>%
 #'   pull() %>%
 #'   unique()
-#' de_list <- multi_DE(mac, treatment_samples, control_samples, method = "limma_voom")
+#' de_list <- multi_DE(mac, treatment_samples, control_samples, method = "edgeR")
 
 multi_DE <- function(data = NULL,
                      treatment_samples = NULL,

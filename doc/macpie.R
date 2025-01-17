@@ -12,6 +12,10 @@ library(Seurat)
 library(edgeR)
 library(dplyr)
 library(leidenbase)
+library(gridExtra)
+library(enrichR)
+library(parallel)
+library(mcprogress)
 
 #load all functions
 devtools::load_all()
@@ -96,4 +100,25 @@ top_table_Seurat<-differential_expression(mac, treatment_samples, control_sample
 plot_volcano(top_table_edgeR)
 plot_volcano(top_table_Seurat)
 
+
+## ----pathway_analysis_single, fig.width = 8, fig.height=15--------------------
+
+top_genes<-top_table_edgeR %>%
+  filter(p_value_adj<0.05) %>%
+  select(gene) %>%
+  pull()
+
+enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+                                 "Drug_Perturbations_from_GEO_2014"))
+p1<-plotEnrich(enriched[[1]])
+p2<-plotEnrich(enriched[[2]])
+p3<-plotEnrich(enriched[[3]])
+
+grid.arrange(p1, p2, p3, ncol = 1)
+
+## ----de_multi, fig.width = 8, fig.height=5------------------------------------
+de_list <- multi_DE(data = mac[50:150], 
+                    treatment_samples = NULL, 
+                    control_samples = "DMSO_0", 
+                    method = "edgeR")
 

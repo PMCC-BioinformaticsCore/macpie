@@ -3,7 +3,7 @@ title: "macpie"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 3
+    toc_depth: 4
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
@@ -28,7 +28,7 @@ MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed
 
 MAC-seq data shares similarities with single-cell RNA-seq data as it derives gene counts from RNA sequences measured at the 3' ends of polyA transcripts. This results in sparse data, with many transcripts undetectable in individual samples, and a high throughput of transcriptomes analyzed per experiment. However, MAC-seq also parallels standard RNA-seq, as it typically includes replicate conditions and involves hundreds rather than thousands of samples per experiment, measured at higher depth.
 
-Macpie was designed to offer users a collection of best-practice analytical methods, drawing from both scRNA-seq and RNA-seq methodologies, while ensuring ease of use for non-experts.
+<b>macpie</b> was designed to offer users a collection of best-practice analytical methods, drawing from both scRNA-seq and RNA-seq methodologies, while ensuring ease of use for non-experts.
 
 ### 1. Metadata import and QC
 
@@ -40,6 +40,10 @@ library(Seurat)
 library(edgeR)
 library(dplyr)
 library(leidenbase)
+library(gridExtra)
+library(enrichR)
+library(parallel)
+library(mcprogress)
 
 #load all functions
 devtools::load_all()
@@ -126,6 +130,7 @@ rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
 
 ### 3. Differential gene expression
+#### 3.1. Single comparison
 
 Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero counts compared to bulk RNA-seq. Statistical models assuming a Poisson or negative binomial distribution may not fit the data well. For that reason, differential expression effects could be over or underestimated.
 
@@ -150,5 +155,33 @@ plot_volcano(top_table_Seurat)
 
 ```
 
+#### 3.2. Pathway analysis, single comparison
 
+Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, the effect of Staurosporine on breast cancer cells through Myc inactivation can be observed through pathway enrichment analyses.
 
+```{r pathway_analysis_single, fig.width = 8, fig.height=15}
+
+top_genes<-top_table_edgeR %>%
+  filter(p_value_adj<0.05) %>%
+  select(gene) %>%
+  pull()
+
+enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+                                 "Drug_Perturbations_from_GEO_2014"))
+p1<-plotEnrich(enriched[[1]])
+p2<-plotEnrich(enriched[[2]])
+p3<-plotEnrich(enriched[[3]])
+
+grid.arrange(p1, p2, p3, ncol = 1)
+```
+
+#### 3.3. Differential gene expression - multiple comparisons
+
+On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised.
+
+```{r de_multi, fig.width = 8, fig.height=5}
+de_list <- multi_DE(data = mac[50:150], 
+                    treatment_samples = NULL, 
+                    control_samples = "DMSO_0", 
+                    method = "edgeR")
+```

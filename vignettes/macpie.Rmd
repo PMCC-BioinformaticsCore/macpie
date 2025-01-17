@@ -40,6 +40,10 @@ library(Seurat)
 library(edgeR)
 library(dplyr)
 library(leidenbase)
+library(gridExtra)
+library(enrichR)
+library(parallel)
+library(mcprogress)
 
 #load all functions
 devtools::load_all()
@@ -153,13 +157,22 @@ plot_volcano(top_table_Seurat)
 
 #### 3.2. Pathway analysis, single comparison
 
-Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, 
+Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, the effect of Staurosporine on breast cancer cells through Myc inactivation can be observed through pathway enrichment analyses.
 
-```{r pathway_analysis_single, fig.width = 8, fig.height=5}
-enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET"))
+```{r pathway_analysis_single, fig.width = 8, fig.height=15}
+
+top_genes<-top_table_edgeR %>%
+  filter(p_value_adj<0.05) %>%
+  select(gene) %>%
+  pull()
+
+enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+                                 "Drug_Perturbations_from_GEO_2014"))
 p1<-plotEnrich(enriched[[1]])
 p2<-plotEnrich(enriched[[2]])
-p1+p2
+p3<-plotEnrich(enriched[[3]])
+
+grid.arrange(p1, p2, p3, ncol = 1)
 ```
 
 #### 3.3. Differential gene expression - multiple comparisons
@@ -167,7 +180,7 @@ p1+p2
 On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised.
 
 ```{r de_multi, fig.width = 8, fig.height=5}
-de_list <- multi_DE(data = mac, 
+de_list <- multi_DE(data = mac[50:150], 
                     treatment_samples = NULL, 
                     control_samples = "DMSO_0", 
                     method = "edgeR")
