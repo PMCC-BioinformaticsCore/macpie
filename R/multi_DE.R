@@ -12,10 +12,20 @@
 #' @param spikes List of genes to use as spike controls
 #' @param num_cores
 #'
-#' @returns
+#' @returns List of DE counts vs control
 #' @export
 #'
 #' @examples
+#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac <- readRDS(file_path)[50:150]
+#' control_samples<-"DMSO_0"
+#' treatment_samples <- mac %>%
+#'   select(combined_id) %>%
+#'   filter(!grepl("DMSO", combined_id)) %>%
+#'   pull() %>%
+#'   unique()
+#' de_list <- multi_DE(mac, treatment_samples, control_samples, method = "limma_voom")
+
 multi_DE <- function(data = NULL,
                      treatment_samples = NULL,
                      control_samples = NULL,

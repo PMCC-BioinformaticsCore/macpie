@@ -13,6 +13,9 @@ library(ggrepel)
 library(lintr)
 library(enrichR)
 
+library(parallel)
+library(mcprogress)
+
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
   line_length_linter = lintr::line_length_linter(120) # Set max line length to 120
@@ -127,8 +130,7 @@ treatments <- mac %>%
 #  cat(".")
 #})
 
-library(parallel)
-library(mcprogress)
+
 num_cores <- detectCores() - 1
 #de_list <- mclapply(treatments, function(x) {
 #  differential_expression(mac, x, control_samples, method = "edgeR");

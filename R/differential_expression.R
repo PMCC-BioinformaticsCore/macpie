@@ -12,6 +12,7 @@
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
+#' @importFrom tibble rownames_to_column
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom stats model.matrix
