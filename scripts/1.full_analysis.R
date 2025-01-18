@@ -120,7 +120,7 @@ top_genes<-top_table %>%
 #basic pathway enrichment
 enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-plotEnrich(enriched[[1]])
+plotEnrich(results)
 
 treatments <- mac %>%
   select(combined_id) %>%
@@ -182,61 +182,3 @@ de_list <- pmclapply(treatments, function(x) {
 
 
 
-#test ChEA_2022
-# Function to download and parse Enrichr gene sets
-fetch_enrichr_genes <- function(databases, output_dir = tempdir()) {
-  # Base URL for Enrichr libraries
-  base_url <- "https://maayanlab.cloud/Enrichr/geneSetLibrary"
-
-  all_genes <- list()  # To store results
-
-  for (db in databases) {
-    message("Processing database: ", db)
-
-    # Construct URL for the database
-    db_url <- sprintf("%s?libraryName=%s", base_url, URLencode(db, reserved = TRUE))
-
-    # Download the database file
-    tryCatch({
-      gmt_path <- file.path(output_dir, paste0(db, ".gmt"))
-      download.file(db_url, gmt_path, quiet = TRUE)
-
-      # Parse GMT file
-
-      json_data<-fromJSON(gmt_path)
-
-      gmt_data <- readLines(gmt_path)
-      test <- fromJSON(gmt_data)
-      terms_list <- test[[1]][[5]]
-      terms_df <- terms_list %>%
-        bind_rows(.id = "Term") %>%
-        pivot_longer(cols = -Term, names_to = "Gene", values_to = "Value")
-
-
-      parsed <- lapply(gmt_data, function(line) {
-        fields <- strsplit(line, "\t")[[1]]
-        list(
-          term = fields[1],
-          description = fields[2],
-          genes = fields[-(1:2)]  # Genes start at the 3rd column
-        )
-      })
-
-      all_genes[[db]] <- parsed
-    }, error = function(e) {
-      warning("Failed to process database ", db, ": ", e$message)
-    })
-  }
-
-  return(all_genes)
-}
-
-# List of Enrichr databases to fetch
-databases <- c("MSigDB_Hallmark_2020")
-
-# Fetch genes from specified Enrichr databases
-gene_sets <- fetch_enrichr_genes(databases)
-
-# Access genes for a specific term in a database
-gene_sets[["KEGG_2021_Human"]][[3]]$term     # Name of the first KEGG pathway
-gene_sets[["KEGG_2021_Human"]][[3]]$genes    # Genes in the first KEGG pathway

@@ -34,6 +34,20 @@ number of samples}
 
 \item{spikes}{List of genes to use as spike controls}
 }
+\value{
+List of DE counts vs control
+}
 \description{
 Perform DE of multiple samples in a screen vs control
+}
+\examples{
+file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+mac <- readRDS(file_path)[50:150]
+control_samples<-"DMSO_0"
+treatment_samples <- mac \%>\%
+  select(combined_id) \%>\%
+  filter(!grepl("DMSO", combined_id)) \%>\%
+  pull() \%>\%
+  unique()
+de_list <- multi_DE(mac, treatment_samples, control_samples, method = "edgeR")
 }
