@@ -36,7 +36,7 @@ multi_DE <- function(data = NULL,
                      spikes = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, treatment_samples, control_samples, method) {
+  validate_inputs <- function(data, treatment_samples, control_samples, method, num_cores) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -70,17 +70,16 @@ multi_DE <- function(data = NULL,
         stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
       }
     }
-    num_cores <- if (is.null(num_cores)) {
-      num_cores <- detectCores() - 1
-    }
+    num_cores <- if (is.null(num_cores)) (detectCores() - 1) else num_cores
     return(list(data = data, treatment_samples = treatment_samples, num_cores = num_cores))
   }
 
-  validated <- validate_inputs(data, treatment_samples, control_samples, method)
+  validated <- validate_inputs(data, treatment_samples, control_samples, method, num_cores)
   data <- validated$data
   treatment_samples <- validated$treatment_samples
   num_cores <- validated$num_cores
 
+  control.compute=list(save.memory=TRUE)
   de_list <- pmclapply(treatment_samples, function(x) {
     result <- differential_expression(data, x, control_samples, method, batch, k, spikes)
     result$combined_id <- x

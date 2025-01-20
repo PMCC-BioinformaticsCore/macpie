@@ -31,31 +31,29 @@ project_name<-"PMMSq033"
 
 #directory with data
 data_dir<-"inst/extdata/"
-project_metadata<-paste0(data_dir,project_name,"/",project_name,"_metadata.csv")
-project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 
-#load metadata
+################## metadata ##################
+# Mark's load metadata
+project_metadata<-paste0(data_dir,project_name,"/",project_name,"_metadata.csv")
 metadata<-read_metadata(project_metadata)
 
-#validate metadata
+# Mark's validate metadata
 validate_metadata(metadata)
 
-######## 3. Susi's function: heatmap visualisation of metadata
+# Susi's function: heatmap visualisation of metadata
 metadata_heatmap(metadata)
 
 #only create an id if there are multiple plates
-#to-do: push this to read_metadata
+#to-do: test multiple plates
 if(length(project_metadata)>1){
   metadata<-metadata %>%
     mutate(id=gsub("Plate","",Plate_ID)) %>%
     mutate(Barcode=paste0(id,"_",Barcode))
 }
 
-######## 2. Mark's function
-#validate_metadata(metadata)
-
-#import reads
+################## reads to Seurat object ##################
 # TO-DO: check for multiple folders of data that should be imported at the same time
+project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 raw_counts_total <- Read10X(data.dir = project_rawdata)
 keep <- rowSums(cpm(raw_counts_total)>=10) >= 2
 raw_counts <- raw_counts_total[keep,]
@@ -77,6 +75,8 @@ mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode")) %>%
   filter(Project == "Current")
 
+################## QC ##################
+
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac,"nCount_RNA","Sample_type")
 
@@ -90,16 +90,21 @@ VlnPlot(mac,
 plot_mds(mac,"Sample_type")
 
 #Compare normalisation methods using the RLE function
+#To-do: verify that different plates would be plotted side-by-side
+#To-do: add all Xin's plots
+#To-do: QC summary
+
+# Xin's rle plot
 mac_dmso<- mac %>%
   filter(Treatment_1=="DMSO")
-rle_plot(mac_dmso, label_column = "Row",normalisation="limma_voom")
+rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
 
-#TO-DO: verify that different plates would be plotted side-by-side
+################## Differential expression ##################
 
-#differential expression
+################## DE Single ##################
+
 #first create an ID that uniquely identifies samples based on the
 #combination of treatment and treatment concentration
-
 mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
@@ -108,7 +113,7 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -118,9 +123,10 @@ top_genes<-top_table %>%
   pull()
 
 #basic pathway enrichment
-enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
-                                 "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-plotEnrich(results)
+enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020"))
+plotEnrich(enriched[[1]])
+
+################## DE Multiple ##################
 
 treatments <- mac %>%
   select(combined_id) %>%
@@ -128,24 +134,15 @@ treatments <- mac %>%
   pull() %>%
   unique()
 
+##slow version
 #de_list<-sapply(treatments,function(x){
 #  differential_expression(mac, x, control_samples,method = "edgeR");
 #  cat(".")
 #})
 
-
-num_cores <- detectCores() - 1
-#de_list <- mclapply(treatments, function(x) {
-#  differential_expression(mac, x, control_samples, method = "edgeR");
-#  cat(".")
-#}, mc.cores = num_cores)
-
-control.compute=list(save.memory=TRUE)
-de_list <- pmclapply(treatments, function(x) {
-  result <- differential_expression(mac, x, control_samples, method = "edgeR")
-  result$combined_id <- x
-  return(result)
-}, mc.cores = num_cores)
+num_cores <- detectCores() - 2
+#temp fix to prevent plotting of errors
+de_results<-multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
