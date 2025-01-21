@@ -141,7 +141,6 @@ treatments <- mac %>%
 #})
 
 num_cores <- detectCores() - 2
-#temp fix to prevent plotting of errors
 de_results<-multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
 
 
