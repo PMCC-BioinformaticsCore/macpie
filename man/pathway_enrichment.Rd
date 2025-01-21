@@ -15,6 +15,9 @@ pathway_enrichment(genes = NULL, db = NULL, genesets = NULL, species = NULL)
 
 \item{species}{One of "human", "mouse", "fly", "yeast", "worm" or "fish"}
 }
+\value{
+Data frame of pathway-enrichment statistics
+}
 \description{
 pathway_enrichment performs hypergeometric test of enrichment of a set of genes
 in user-provided genesets of enricher databases

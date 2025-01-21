@@ -6,9 +6,9 @@
 #' @param db Valid name of an enrichR database
 #' @param genesets Named list of genes
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
-#' @importFrom httr2 request, req_perform, resp_body_string
-#' @importFrom purrr map, list_rbind
-#' @importFrom dplyr filter, distinct
+#' @importFrom httr2 request req_perform resp_body_string
+#' @importFrom purrr map list_rbind
+#' @importFrom dplyr filter distinct
 
 #' @returns Data frame of pathway-enrichment statistics
 #' @export
