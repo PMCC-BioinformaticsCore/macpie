@@ -20,18 +20,14 @@
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)[50:150]
 #' control_samples<-"DMSO_0"
-#' treatment_samples <- mac %>%
-#'   select(combined_id) %>%
-#'   filter(!grepl("DMSO", combined_id)) %>%
-#'   pull() %>%
-#'   unique()
+#' treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
 #' de_list <- multi_DE(mac, treatment_samples, control_samples, num_cores = 2, method = "edgeR")
 
 multi_DE <- function(data = NULL,
                      treatment_samples = NULL,
                      control_samples = NULL,
                      method = "edgeR",
-                     num_cores = NULL,
+                     num_cores = 2,
                      batch = 1,
                      k = 2,
                      spikes = NULL) {

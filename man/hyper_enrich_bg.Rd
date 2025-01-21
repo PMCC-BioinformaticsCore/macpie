@@ -29,11 +29,9 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 top_table <- differential_expression(mac, treatment_samples, control_samples,
 method = "limma_voom")
-top_genes <- top_genes<-top_table \%>\%
-  filter(.data$p_value_adj<0.01) \%>\%
-    select(gene) \%>\%
-    pull()
-genesets <- geneset_download(url=paste0("https://maayanlab.cloud/", NULL,
-"Enrichr/"), "MSigDB_Hallmark_2020")
-hyper_enrich_bg(top_genes, genesets) \%>\% head()
+top_genes <- top_table$gene[top_table$p_value_adj<0.01]
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+results <- hyper_enrich_bg(top_genes, genesets)
+head(results)
 }

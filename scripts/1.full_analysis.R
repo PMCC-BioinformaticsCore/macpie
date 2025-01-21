@@ -113,7 +113,7 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -123,8 +123,11 @@ top_genes<-top_table %>%
   pull()
 
 #basic pathway enrichment
-enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020"))
+enriched <- enrichr(top_genes, "MSigDB_Hallmark_2020")
 plotEnrich(enriched[[1]])
+
+enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
+plotEnrich(enriched)
 
 ################## DE Multiple ##################
 
@@ -134,6 +137,7 @@ treatments <- mac %>%
   pull() %>%
   unique()
 
+
 ##slow version
 #de_list<-sapply(treatments,function(x){
 #  differential_expression(mac, x, control_samples,method = "edgeR");
@@ -142,6 +146,24 @@ treatments <- mac %>%
 
 num_cores <- detectCores() - 2
 de_results<-multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+
+pe_list<-lapply(de_results,function(x){
+  degs=x$gene[x$p_value_adj<0.01];
+  if(length(degs)>5 & (any(degs %in% unlist(unique(genesets))))){
+    res=hyper_enrich_bg(degs, genesets=genesets,background = "human");
+    res$combined_id=unique(x$combined_id)
+  }
+  cat(".")
+  return(res)
+})
+
+pe_df <- do.call("rbind",pe_list)
+
+pe_df %>%
+  mutate(logPval=-log10(Adjusted.P.value)) %>%
+  ggplot(.,aes(combined_id, Term, size=logPval))+
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
