@@ -7,6 +7,6 @@ test_that("Results are a non-empty list", {
     filter(!grepl("DMSO", combined_id)) %>%
     pull() %>%
     unique()
-  de_list <- multi_DE(mac, treatment_samples, control_samples, method = "edgeR")
+  de_list <- multi_DE(mac, treatment_samples, control_samples, num_cores = 2, method = "edgeR")
   expect_true(length(de_list) > 0 && ncol(de_list[[1]]) == 5)
 })

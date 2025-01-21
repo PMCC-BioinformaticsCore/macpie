@@ -166,13 +166,13 @@ top_genes<-top_table_edgeR %>%
   select(gene) %>%
   pull()
 
-enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-p1<-plotEnrich(enriched[[1]])
-p2<-plotEnrich(enriched[[2]])
-p3<-plotEnrich(enriched[[3]])
+p1<-enrichR::plotEnrich(enriched[[1]])
+p2<-enrichR::plotEnrich(enriched[[2]])
+p3<-enrichR::plotEnrich(enriched[[3]])
 
-grid.arrange(p1, p2, p3, ncol = 1)
+gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 ```
 
 #### 3.3. Differential gene expression - multiple comparisons

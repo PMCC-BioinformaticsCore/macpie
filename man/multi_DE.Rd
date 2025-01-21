@@ -25,7 +25,7 @@ multi_DE(
 
 \item{method}{One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
 
-\item{num_cores}{}
+\item{num_cores}{Number of cores}
 
 \item{batch}{Either empty, a single value, or a vector corresponding to the
 number of samples}
@@ -49,5 +49,5 @@ treatment_samples <- mac \%>\%
   filter(!grepl("DMSO", combined_id)) \%>\%
   pull() \%>\%
   unique()
-de_list <- multi_DE(mac, treatment_samples, control_samples, method = "edgeR")
+de_list <- multi_DE(mac, treatment_samples, control_samples, num_cores = 2, method = "edgeR")
 }

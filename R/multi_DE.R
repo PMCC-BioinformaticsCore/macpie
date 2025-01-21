@@ -10,8 +10,9 @@
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
-#' @param num_cores
-#'
+#' @param num_cores Number of cores
+#' @importFrom parallel detectCores
+#' @importFrom mcprogress pmclapply
 #' @returns List of DE counts vs control
 #' @export
 #'
@@ -24,7 +25,7 @@
 #'   filter(!grepl("DMSO", combined_id)) %>%
 #'   pull() %>%
 #'   unique()
-#' de_list <- multi_DE(mac, treatment_samples, control_samples, method = "edgeR")
+#' de_list <- multi_DE(mac, treatment_samples, control_samples, num_cores = 2, method = "edgeR")
 
 multi_DE <- function(data = NULL,
                      treatment_samples = NULL,

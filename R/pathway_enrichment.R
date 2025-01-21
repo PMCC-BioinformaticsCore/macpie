@@ -9,7 +9,6 @@
 #' @importFrom httr2 request req_perform resp_body_string
 #' @importFrom purrr map list_rbind
 #' @importFrom dplyr filter distinct
-
 #' @returns Data frame of pathway-enrichment statistics
 #' @export
 #'
@@ -53,7 +52,7 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
       .[[1]] %>%                #take the first element
       map(~ {
         x <- strsplit(.x, "\t")[[1]] #split each pathway into components
-        tibble( # Convert to a tibble per list element for easier manipulation
+        data.frame( # Convert to a tibble per list element for easier manipulation
           pathway_name = x[1],
           description = x[2],
           gene = x[-(1:2)]
@@ -75,6 +74,7 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
     genesets <- geneset_download(url=paste0("https://maayanlab.cloud/", species, "Enrichr/"), db)
   }
 
+  #perform enrichment analysis
   gene_enrichment_scores <- hyper_enrich_bg(genes, genesets)
   return(gene_enrichment_scores)
 }
