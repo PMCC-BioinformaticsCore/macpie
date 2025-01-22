@@ -11,6 +11,12 @@ library(reshape2)
 library(gridExtra)
 library(ggrepel)
 library(lintr)
+library(enrichR)
+library(jsonlite)
+library(parallel)
+library(mcprogress)
+library(httr2)
+library(clusterProfiler)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -25,31 +31,29 @@ project_name<-"PMMSq033"
 
 #directory with data
 data_dir<-"inst/extdata/"
-project_metadata<-paste0(data_dir,project_name,"/",project_name,"_metadata.csv")
-project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 
-#load metadata
+################## metadata ##################
+# Mark's load metadata
+project_metadata<-paste0(data_dir,project_name,"/",project_name,"_metadata.csv")
 metadata<-read_metadata(project_metadata)
 
-#validate metadata
+# Mark's validate metadata
 validate_metadata(metadata)
 
-######## 3. Susi's function: heatmap visualisation of metadata
+# Susi's function: heatmap visualisation of metadata
 metadata_heatmap(metadata)
 
 #only create an id if there are multiple plates
-#to-do: push this to read_metadata
+#to-do: test multiple plates
 if(length(project_metadata)>1){
   metadata<-metadata %>%
     mutate(id=gsub("Plate","",Plate_ID)) %>%
     mutate(Barcode=paste0(id,"_",Barcode))
 }
 
-######## 2. Mark's function
-#validate_metadata(metadata)
-
-#import reads
+################## reads to Seurat object ##################
 # TO-DO: check for multiple folders of data that should be imported at the same time
+project_rawdata<-paste0(data_dir,project_name,"/raw_matrix")
 raw_counts_total <- Read10X(data.dir = project_rawdata)
 keep <- rowSums(cpm(raw_counts_total)>=10) >= 2
 raw_counts <- raw_counts_total[keep,]
@@ -71,6 +75,8 @@ mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode")) %>%
   filter(Project == "Current")
 
+################## QC ##################
+
 #QC plot plate layout (all metadata columns can be used):
 plate_layout(mac,"nCount_RNA","Sample_type")
 
@@ -84,16 +90,21 @@ VlnPlot(mac,
 plot_mds(mac,"Sample_type")
 
 #Compare normalisation methods using the RLE function
+#To-do: verify that different plates would be plotted side-by-side
+#To-do: add all Xin's plots
+#To-do: QC summary
+
+# Xin's rle plot
 mac_dmso<- mac %>%
   filter(Treatment_1=="DMSO")
-rle_plot(mac_dmso, label_column = "Row",normalisation="limma_voom")
+rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
 
-#TO-DO: verify that different plates would be plotted side-by-side
+################## Differential expression ##################
 
-#differential expression
+################## DE Single ##################
+
 #first create an ID that uniquely identifies samples based on the
 #combination of treatment and treatment concentration
-
 mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
@@ -102,9 +113,67 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "RUVs")
-
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_")
 plot_volcano(top_table)
+
+#perform pathway enrichment
+top_genes<-top_table %>%
+  filter(p_value_adj<0.01) %>%
+  select(gene) %>%
+  pull()
+
+#basic pathway enrichment
+enrichr_results <- enrichr(top_genes, "MSigDB_Hallmark_2020")
+plotEnrich(enrichr_results[[1]])
+
+enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
+plotEnrich(enriched)
+
+################## DE Multiple ##################
+
+treatments <- mac %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+
+
+##slow version
+#de_list<-sapply(treatments,function(x){
+#  differential_expression(mac, x, control_samples,method = "edgeR");
+#  cat(".")
+#})
+
+num_cores <- detectCores() - 2
+de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+de_df <- do.call("rbind", de_list)
+
+enriched_pathways <- de_df %>%
+  filter(p_value_adj<0.01) %>%
+  group_by(combined_id) %>%
+  filter(n_distinct(gene)>5) %>%
+  mutate(res=hyper_enrich_bg(degs, genesets=genesets,background = "human"))
+  ungroup()
+
+pe_list<-lapply(de_results,function(x){
+  degs=x$gene[x$p_value_adj<0.01];
+  if(length(degs)>5 & (any(degs %in% unlist(unique(genesets))))){
+    res=hyper_enrich_bg(degs, genesets=genesets,background = "human");
+    res$combined_id=unique(x$combined_id)
+  }
+  cat(".")
+  return(res)
+})
+
+pe_df <- do.call("rbind",pe_list)
+
+pe_df %>%
+  mutate(logPval=-log10(Adjusted.P.value)) %>%
+  ggplot(.,aes(combined_id, Term, size=logPval))+
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
 #git pull origin main
@@ -117,7 +186,7 @@ plot_volcano(top_table)
 #4. edit script
 #load_all()
 #5. check if the function exists in the global environment
-#exists("plot_plate_layout", where = globalenv(), inherits = FALSE)
+#exists("plote_plate_layout", where = globalenv(), inherits = FALSE)
 #6. check and document
 #check()
 #7. click inside the function and
@@ -136,10 +205,6 @@ plot_volcano(top_table)
 #git push origin function_author
 #git checkout main
 #git branch -d function_author
-
-
-
-
 
 
 

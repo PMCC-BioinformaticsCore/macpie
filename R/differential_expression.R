@@ -12,6 +12,7 @@
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
+#' @importFrom tibble rownames_to_column
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom stats model.matrix
@@ -93,7 +94,8 @@ differential_expression <- function(data = NULL,
     tmp <- eBayes(tmp, robust = TRUE)
     top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
       select("logFC", "P.Value", "adj.P.Val") %>%
-      rename("log2FC" = "logFC", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val")
+      rename("log2FC" = "logFC", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 
@@ -116,7 +118,8 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(qlf, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 
@@ -130,7 +133,8 @@ differential_expression <- function(data = NULL,
     res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
     top_table <- as.data.frame(res) %>%
       select("log2FoldChange", "pvalue", "padj") %>%
-      rename("log2FC" = "log2FoldChange", "p_value" = "pvalue", "p_value_adj" = "padj")
+      rename("log2FC" = "log2FoldChange", "p_value" = "pvalue", "p_value_adj" = "padj") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 
@@ -140,12 +144,13 @@ differential_expression <- function(data = NULL,
     Idents(data) <- combined_id
     data$batch <- batch
     top_table <- FindMarkers(data,
-                              ident.1 = treatment_samples,
-                              ident.2 = control_samples,
-                              latent.vars = "batch",
-                              test.use = "DESeq2") %>%
+                             ident.1 = treatment_samples,
+                             ident.2 = control_samples,
+                             latent.vars = "batch",
+                             test.use = "DESeq2") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
-      rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj")
+      rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj") %>%
+      rownames_to_column("gene")
 
     return(as.data.frame(top_table))
   }
@@ -184,7 +189,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)
@@ -197,7 +202,8 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 
@@ -216,7 +222,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)
@@ -229,7 +235,8 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 
@@ -258,7 +265,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)
@@ -271,7 +278,8 @@ differential_expression <- function(data = NULL,
     top_table <- topTags(lrt, n = nrow(data)) %>%
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR")
+      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
 

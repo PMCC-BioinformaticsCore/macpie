@@ -20,6 +20,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports:
     dplyr,
+    magrittr,
     ggplot2,
     forcats,
     gtools,
@@ -38,5 +39,10 @@ Imports:
     readxl,
     DESeq2,
     RUVSeq,
-    EDASeq
+    EDASeq,
+    httr2,
+    purrr,
+    tibble,
+    methods,
+    mcprogress
 VignetteBuilder: knitr
