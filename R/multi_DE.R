@@ -55,7 +55,7 @@ multi_DE <- function(data = NULL,
     if (is.null(treatment_samples)) {
       warn("Missing treatment samples, using all that differ from control.")
       treatment_samples <- data %>%
-        select(combined_id) %>%
+        select(.data$combined_id) %>%
         filter(!grepl(control_samples, combined_id)) %>%
         pull() %>%
         unique()
@@ -76,7 +76,6 @@ multi_DE <- function(data = NULL,
   treatment_samples <- validated$treatment_samples
   num_cores <- validated$num_cores
 
-  control.compute=list(save.memory=TRUE)
   de_list <- pmclapply(treatment_samples, function(x) {
     result <- differential_expression(data, x, control_samples, method, batch, k, spikes)
     result$combined_id <- x
@@ -84,4 +83,3 @@ multi_DE <- function(data = NULL,
   }, mc.cores = num_cores)
   return(de_list)
 }
-

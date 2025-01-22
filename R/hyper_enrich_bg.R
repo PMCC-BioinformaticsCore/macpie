@@ -23,10 +23,9 @@
 #' results <- hyper_enrich_bg(top_genes, genesets)
 #' head(results)
 
-hyper_enrich_bg <-function(deg = NULL, #vector of DEGs
-                          genesets = NULL, #pathway from enrichr
-                          background = "human" #define the number of genes in your experiment (interger), or "human" to use human genome or
-                          #"geneset" to use number genes in the gene set collection
+hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
+                            genesets = NULL, #pathway from enrichr
+                            background = "human"
 ) {
   #checking input
   if (!is(deg, "vector")) {
@@ -41,11 +40,11 @@ hyper_enrich_bg <-function(deg = NULL, #vector of DEGs
     background <- switch(background,
                          "human" = as.character(20000),
                          #as enrichr set
-                         "geneset" = length(unique(unlist(genesets))),)
+                         "geneset" = length(unique(unlist(genesets))))
     background <- as.numeric(background)
 
-  } else{
-    background = background
+  } else {
+    background <- background
   }
 
   deg <- unique(deg)
@@ -85,11 +84,13 @@ hyper_enrich_bg <-function(deg = NULL, #vector of DEGs
     Overlap = paste0(n_hits, "/", n_genesets),
     P.value = pvals,
     Adjusted.P.value = p.adjust(pvals, "BH"),
-    Genes = sapply(genesets, function(x, y)
-      paste(intersect(x, y), collapse = ";"), deg_genesets),
+    Genes = sapply(genesets, function(x, y) {
+      paste(intersect(x, y), collapse = ";")
+    }, deg_genesets),
     Combined.Score = combined_scores
   )
 
-  res_data <- arrange(res_data, P.value)
+  res_data <- res_data %>%
+    arrange(.,.data$P.value)
   return(results = res_data)
 }

@@ -42,8 +42,8 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
   }
 
   #download enrichr gene sets
-  geneset_download<-function(url, geneset){
-    results_table <- request(paste0(url,"geneSetLibrary?mode=text&libraryName=",geneset)) %>%
+  geneset_download <- function(url, geneset) {
+    results_table <- request(paste0(url, "geneSetLibrary?mode=text&libraryName=", geneset)) %>%
       req_perform() %>%           #perform request
       resp_body_string() %>%      #extract body of the response
       strsplit(split = "\n") %>%  #split by newline
@@ -57,8 +57,8 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
         )
       }) %>%
       list_rbind() %>% #join into a data frame to
-      filter(gene != "") %>% #eliminate empty genes per pathway
-      distinct(pathway_name, gene)
+      filter(.data$gene != "") %>% #eliminate empty genes per pathway
+      distinct(.data$pathway_name, .data$gene)
 
     results_list <- split(results_table$gene, results_table$pathway_name)
 
@@ -67,9 +67,9 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
 
   validate_inputs(genes, db, genesets, species)
 
-  if(length(db) > 0){
+  if (length(db) > 0) {
     cat("Downloading gene sets from the Enrichr server.\n")
-    genesets <- geneset_download(url=paste0("https://maayanlab.cloud/", species, "Enrichr/"), db)
+    genesets <- geneset_download(url = paste0("https://maayanlab.cloud/", species, "Enrichr/"), db)
   }
 
   #perform enrichment analysis

@@ -144,10 +144,10 @@ differential_expression <- function(data = NULL,
     Idents(data) <- combined_id
     data$batch <- batch
     top_table <- FindMarkers(data,
-                              ident.1 = treatment_samples,
-                              ident.2 = control_samples,
-                              latent.vars = "batch",
-                              test.use = "DESeq2") %>%
+                             ident.1 = treatment_samples,
+                             ident.2 = control_samples,
+                             latent.vars = "batch",
+                             test.use = "DESeq2") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
       rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj") %>%
       rownames_to_column("gene")
@@ -189,7 +189,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)
@@ -222,7 +222,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)
@@ -265,7 +265,7 @@ differential_expression <- function(data = NULL,
     dge <- DGEList(counts = normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
-    dge <- calcNormFactors(dge, method="upperquartile")
+    dge <- calcNormFactors(dge, method = "upperquartile")
     dge <- estimateGLMCommonDisp(dge, model_matrix)
     dge <- estimateGLMTagwiseDisp(dge, model_matrix)
     fit <- glmFit(dge, model_matrix)

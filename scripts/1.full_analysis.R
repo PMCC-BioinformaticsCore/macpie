@@ -123,8 +123,8 @@ top_genes<-top_table %>%
   pull()
 
 #basic pathway enrichment
-enriched <- enrichr(top_genes, "MSigDB_Hallmark_2020")
-plotEnrich(enriched[[1]])
+enrichr_results <- enrichr(top_genes, "MSigDB_Hallmark_2020")
+plotEnrich(enrichr_results[[1]])
 
 enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
@@ -145,7 +145,15 @@ treatments <- mac %>%
 #})
 
 num_cores <- detectCores() - 2
-de_results<-multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+de_df <- do.call("rbind", de_list)
+
+enriched_pathways <- de_df %>%
+  filter(p_value_adj<0.01) %>%
+  group_by(combined_id) %>%
+  filter(n_distinct(gene)>5) %>%
+  mutate(res=hyper_enrich_bg(degs, genesets=genesets,background = "human"))
+  ungroup()
 
 pe_list<-lapply(de_results,function(x){
   degs=x$gene[x$p_value_adj<0.01];
