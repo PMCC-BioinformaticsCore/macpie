@@ -148,24 +148,35 @@ num_cores <- detectCores() - 2
 de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
 de_df <- do.call("rbind", de_list)
 
+#load genesets for human MSigDB_Hallmark_2020
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+
 enriched_pathways <- de_df %>%
   filter(p_value_adj<0.01) %>%
   group_by(combined_id) %>%
   filter(n_distinct(gene)>5) %>%
-  mutate(res=hyper_enrich_bg(degs, genesets=genesets,background = "human"))
-  ungroup()
+  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
+  unnest(enrichment)
 
-pe_list<-lapply(de_results,function(x){
-  degs=x$gene[x$p_value_adj<0.01];
-  if(length(degs)>5 & (any(degs %in% unlist(unique(genesets))))){
-    res=hyper_enrich_bg(degs, genesets=genesets,background = "human");
-    res$combined_id=unique(x$combined_id)
-  }
-  cat(".")
-  return(res)
-})
+enriched_pathways_mat <- enriched_pathways %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(
+    names_from = combined_id,
+    values_from = Combined.Score
+  ) %>%
+  column_to_rownames(var = "Term") %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
+  as.matrix()
 
-pe_df <- do.call("rbind",pe_list)
+pheatmap(enriched_pathways_mat)
+
+enriched_pathways %>%
+  ggplot(., aes(combined_id,Term,fill=log(Combined.Score)))+
+  geom_tile() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
 
 pe_df %>%
   mutate(logPval=-log10(Adjusted.P.value)) %>%
