@@ -5,7 +5,9 @@
 #' speed.
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
-#' @param annotation A string specifying which column in data will be used to
+#' @param group_by A string specifying which column in data will be used to
+#'   color the samples.
+#' @param label A string specifying which column in data will be used to
 #'   label a sample.
 #' @importFrom limma plotMDS
 #' @importFrom utils head
@@ -33,7 +35,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
     column_names <- data %>%
       head() %>%
       colnames()
-    if (!all(c(annotation) %in% column_names)) {
+    if (!all(c(group_by, label) %in% column_names)) {
       stop("Your column names are not present in the data or metadata.")
     }
     list(data = data, group_by = group_by, label = label, max_overlaps = max_overlaps)
@@ -65,8 +67,8 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
       geom_point_interactive(aes(x = .data$PCA1,
                                  y = .data$PCA2,
                                  color = .data$Sample_type,
-                                 tooltip = !!rlang::sym(annotation),
-                                 data_id = !!rlang::sym(annotation))) +
+                                 tooltip = !!rlang::sym(label),
+                                 data_id = !!rlang::sym(label))) +
       geom_text_repel(aes(label = .data$combined_id),                    # Smart label repulsion
                       size = 3.5,
                       max.overlaps = max_overlaps) +        # Add sample labels
