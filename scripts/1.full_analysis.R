@@ -17,6 +17,7 @@ library(parallel)
 library(mcprogress)
 library(httr2)
 library(clusterProfiler)
+library(ggsci)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -75,6 +76,12 @@ mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode")) %>%
   filter(Project == "Current")
 
+#create an ID that uniquely identifies samples based on the
+#combination of treatment and treatment concentration
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_"))
+
+
 ################## QC ##################
 
 #QC plot plate layout (all metadata columns can be used):
@@ -87,7 +94,8 @@ VlnPlot(mac,
         ncol = 4)
 
 #example of MDS function, using limma
-plot_mds(mac,"Sample_type")
+p<-plot_mds(mac)
+girafe(ggobj = p)
 
 #Compare normalisation methods using the RLE function
 #To-do: verify that different plates would be plotted side-by-side
@@ -103,17 +111,11 @@ rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
 
 ################## DE Single ##################
 
-#first create an ID that uniquely identifies samples based on the
-#combination of treatment and treatment concentration
-mac <- mac %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
-  mutate(combined_id = gsub(" ", "", .data$combined_id))
-
 treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -153,9 +155,9 @@ file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
 genesets <- readRDS(file_path)
 
 enriched_pathways <- de_df %>%
-  filter(p_value_adj<0.01) %>%
+  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
   group_by(combined_id) %>%
-  filter(n_distinct(gene)>5) %>%
+  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
   reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
   unnest(enrichment)
 
@@ -171,18 +173,14 @@ enriched_pathways_mat <- enriched_pathways %>%
 
 pheatmap(enriched_pathways_mat)
 
-enriched_pathways %>%
-  ggplot(., aes(combined_id,Term,fill=log(Combined.Score)))+
-  geom_tile() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+df<-do.call("rbind",de_list) %>%
+  mutate(comparison=combined_id)
+df_wide <- df %>%
+  select(gene, comparison, t) %>%
+  pivot_wider(names_from = comparison, values_from = t)
 
-
-
-pe_df %>%
-  mutate(logPval=-log10(Adjusted.P.value)) %>%
-  ggplot(.,aes(combined_id, Term, size=logPval))+
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+set.seed(10)
+df_umap<-umap(t(df_wide[,-1]))
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
@@ -204,7 +202,7 @@ pe_df %>%
 #Code > Insert roxygen skeleton.
 #document()
 #check()
-#lint(filename="R/functionX.R",linters = custom_linters)
+# lint(filename="R/functionX.R",linters = custom_linters)
 #8. make the test
 #use_test("functionX")
 #test()
