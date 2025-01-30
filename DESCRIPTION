@@ -47,5 +47,6 @@ Imports:
     mcprogress,
     ggiraph,
     ggsci,
-    fgsea
+    fgsea,
+    tidyr
 VignetteBuilder: knitr
