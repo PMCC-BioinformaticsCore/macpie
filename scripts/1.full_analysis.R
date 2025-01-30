@@ -18,6 +18,7 @@ library(mcprogress)
 library(httr2)
 library(clusterProfiler)
 library(ggsci)
+library(pheatmap)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -175,12 +176,12 @@ pheatmap(enriched_pathways_mat)
 
 ########## Screen for similarity of profiles
 
-fgsea_results <- screen_profile(de_list, target = "Staurosporine_0.1")
-fgsea_results<-fgsea_results %>%
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
+fgsea_results %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
-  mutate(combined_id = factor(combined_id, levels = unique(combined_id)))
-p1<-ggplot(fgsea_results,aes(combined_id,NES))+
+  mutate(target = factor(target, levels = unique(target))) %>%
+  ggplot(.,aes(target,NES))+
   #geom_point(aes(size = logPadj)) +
   geom_point() +
   facet_wrap(~pathway,scales = "free") +

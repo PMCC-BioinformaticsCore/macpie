@@ -8,15 +8,16 @@
 #'   be evaluated
 #' @param n_genes_profile Number of genes for a target profile, default 200
 #' @param direction Direction of the expression of DE genes in the target
-#'   profile: on of "up", "down" and "both", default both.
+#'   profile: one of "up", "down" and "both", default both.
 #' @param num_cores Number of cores
 #' @importFrom fgsea fgsea
 #' @importFrom stats setNames
 #'
-#' @returns Data with fgsea enrichment score
+#' @returns Data frame with fgsea enrichment score
 #' @export
 #'
 #' @examples
+#' library(macpie)
 #' file_path <- system.file("extdata", "PMMSq033/de_screen.Rds", package = "macpie")
 #' de_list <- readRDS(file_path)
 #' fgsea_results <- screen_profile(de_list, target = "Staurosporine_10",
@@ -25,9 +26,9 @@
 screen_profile <- function(data = NULL,
                            target = NULL,
                            geneset = NULL,
-                           n_genes_profile = NULL,
-                           direction = NULL,
-                           num_cores = NULL) {
+                           n_genes_profile = 200,
+                           direction = "both",
+                           num_cores = parallel::detectCores() - 1) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, target, geneset, n_genes_profile, direction, num_cores) {
@@ -36,10 +37,6 @@ screen_profile <- function(data = NULL,
     }
     target <- if (is.null(target)) NULL else target
     geneset <- if (is.null(geneset)) NULL else geneset
-    n_genes_profile <- if (is.null(n_genes_profile)) 200 else n_genes_profile
-    num_cores <- if (is.null(num_cores)) (detectCores() - 1) else num_cores
-
-    direction <- if (is.null(direction)) "both" else direction
     if (is.null(target) && is.null(geneset)) {
       stop("Both the target and geneset parameters are empty.")
     }
@@ -68,8 +65,6 @@ screen_profile <- function(data = NULL,
   }
 
   #perform the enrichment analysis
-  fgsea_list <- list()
-
   fgsea_list <- pmclapply(data, function(x) {
     ordered_genes <- x %>%
       filter(!grepl("mt-", .data$gene, ignore.case = TRUE)) %>%
@@ -77,14 +72,14 @@ screen_profile <- function(data = NULL,
     ranks <- ordered_genes$log2FC
     names(ranks) <- ordered_genes$gene
     result <- fgsea(geneset, ranks, minSize = 15, maxSize = 500)
-    result$target <- unique(x$target)
+    result$target <- unique(x$combined_id)
     return(result)
   }, mc.cores = num_cores)
 
-  fgsea_df <- do.call("rbind", fgsea_list) %>%
-    mutate(NES = -.data$NES) %>%
-    filter(!is.na(.data$NES))
+  #reorder the NES direction (why though?)
+  fgsea_df <- bind_rows(fgsea_list) %>%
+    mutate(NES = -NES) %>%
+    drop_na(NES)
 
   return(fgsea_df)
-
 }

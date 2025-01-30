@@ -8,16 +8,16 @@ screen_profile(
   data = NULL,
   target = NULL,
   geneset = NULL,
-  n_genes_profile = NULL,
-  direction = NULL,
-  num_cores = NULL
+  n_genes_profile = 200,
+  direction = "both",
+  num_cores = parallel::detectCores() - 1
 )
 }
 \arguments{
 \item{data}{List of expression profiles, output of the multi_DE function}
 
-\item{target}{Value of a target expression profile in data (target)
-against which the others should be compared to}
+\item{target}{Value of a target expression profile in data (target) against
+which the others should be compared to}
 
 \item{geneset}{List of genes whose enrichment in expression profiles should
 be evaluated}
@@ -25,18 +25,20 @@ be evaluated}
 \item{n_genes_profile}{Number of genes for a target profile, default 200}
 
 \item{direction}{Direction of the expression of DE genes in the target
-profile: on of "up", "down" and "both", default both.}
+profile: one of "up", "down" and "both", default both.}
 
 \item{num_cores}{Number of cores}
 }
 \value{
-Data with fgsea enrichment score
+Data frame with fgsea enrichment score
 }
 \description{
 Find similarities between expression profiles with fgsea
 }
 \examples{
+library(macpie)
 file_path <- system.file("extdata", "PMMSq033/de_screen.Rds", package = "macpie")
 de_list <- readRDS(file_path)
-fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 100, direction = "up", num_cores = 2)
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_10",
+n_genes_profile = 100, direction = "up", num_cores = 2)
 }
