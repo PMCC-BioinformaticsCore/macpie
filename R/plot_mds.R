@@ -9,6 +9,7 @@
 #'   color the samples.
 #' @param label A string specifying which column in data will be used to
 #'   label a sample.
+#' @param max_overlaps Maximum number of overlaps for ggrepel
 #' @importFrom limma plotMDS
 #' @importFrom utils head
 #' @importFrom ggsci scale_color_npg
