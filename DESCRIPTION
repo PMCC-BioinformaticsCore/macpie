@@ -44,5 +44,9 @@ Imports:
     purrr,
     tibble,
     methods,
-    mcprogress
+    mcprogress,
+    ggiraph,
+    ggsci,
+    fgsea,
+    tidyr
 VignetteBuilder: knitr

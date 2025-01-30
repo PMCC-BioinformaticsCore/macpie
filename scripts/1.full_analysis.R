@@ -17,6 +17,8 @@ library(parallel)
 library(mcprogress)
 library(httr2)
 library(clusterProfiler)
+library(ggsci)
+library(pheatmap)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -75,6 +77,12 @@ mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode")) %>%
   filter(Project == "Current")
 
+#create an ID that uniquely identifies samples based on the
+#combination of treatment and treatment concentration
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_"))
+
+
 ################## QC ##################
 
 #QC plot plate layout (all metadata columns can be used):
@@ -87,7 +95,8 @@ VlnPlot(mac,
         ncol = 4)
 
 #example of MDS function, using limma
-plot_mds(mac,"Sample_type")
+p<-plot_mds(mac)
+girafe(ggobj = p)
 
 #Compare normalisation methods using the RLE function
 #To-do: verify that different plates would be plotted side-by-side
@@ -103,17 +112,11 @@ rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
 
 ################## DE Single ##################
 
-#first create an ID that uniquely identifies samples based on the
-#combination of treatment and treatment concentration
-mac <- mac %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
-  mutate(combined_id = gsub(" ", "", .data$combined_id))
-
 treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -148,30 +151,53 @@ num_cores <- detectCores() - 2
 de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
 de_df <- do.call("rbind", de_list)
 
+#load genesets for human MSigDB_Hallmark_2020
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+
 enriched_pathways <- de_df %>%
-  filter(p_value_adj<0.01) %>%
+  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
   group_by(combined_id) %>%
-  filter(n_distinct(gene)>5) %>%
-  mutate(res=hyper_enrich_bg(degs, genesets=genesets,background = "human"))
-  ungroup()
+  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
+  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
+  unnest(enrichment)
 
-pe_list<-lapply(de_results,function(x){
-  degs=x$gene[x$p_value_adj<0.01];
-  if(length(degs)>5 & (any(degs %in% unlist(unique(genesets))))){
-    res=hyper_enrich_bg(degs, genesets=genesets,background = "human");
-    res$combined_id=unique(x$combined_id)
-  }
-  cat(".")
-  return(res)
-})
+enriched_pathways_mat <- enriched_pathways %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(
+    names_from = combined_id,
+    values_from = Combined.Score
+  ) %>%
+  column_to_rownames(var = "Term") %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
+  as.matrix()
 
-pe_df <- do.call("rbind",pe_list)
+pheatmap(enriched_pathways_mat)
 
-pe_df %>%
-  mutate(logPval=-log10(Adjusted.P.value)) %>%
-  ggplot(.,aes(combined_id, Term, size=logPval))+
+########## Screen for similarity of profiles
+
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
+fgsea_results %>%
+  mutate(logPadj=c(-log10(padj))) %>%
+  arrange(desc(NES)) %>%
+  mutate(target = factor(target, levels = unique(target))) %>%
+  ggplot(.,aes(target,NES))+
+  #geom_point(aes(size = logPadj)) +
   geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  facet_wrap(~pathway,scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+df<-do.call("rbind",de_list) %>%
+  mutate(comparison=combined_id)
+df_wide <- df %>%
+  select(gene, comparison, t) %>%
+  pivot_wider(names_from = comparison, values_from = t)
+
+set.seed(10)
+df_umap<-umap(t(df_wide[,-1]))
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
@@ -193,7 +219,7 @@ pe_df %>%
 #Code > Insert roxygen skeleton.
 #document()
 #check()
-#lint(filename="R/functionX.R",linters = custom_linters)
+# lint(filename="R/functionX.R",linters = custom_linters)
 #8. make the test
 #use_test("functionX")
 #test()

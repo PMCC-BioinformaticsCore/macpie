@@ -68,9 +68,9 @@ plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
                           fill = !!rlang::sym(metric))) +
       geom_tile() +
       scale_x_discrete(position = "top") +
-      scale_fill_gradient2(low = "blue",
+      scale_fill_gradient2(high = "#E64B35FF",
                            mid = "white",
-                           high = "red",
+                           low = "#3C5488FF",
                            midpoint = unique(data$median_value),
                            name = {{metric}}) +
       theme(

@@ -134,7 +134,7 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
 
     combined_plot <- wrap_plots(heatmaps, ncol = 3) +
       plot_annotation(
-        title = paste("macpie Metadata Heatmap Grid - Plate ID:", plate_id),
+        title = paste("Metadata Heatmap Grid - Plate ID:", plate_id),
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 8, face = "bold")
         )

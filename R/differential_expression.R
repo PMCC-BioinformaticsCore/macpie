@@ -93,8 +93,8 @@ differential_expression <- function(data = NULL,
     tmp <- contrasts.fit(fit, contrasts)
     tmp <- eBayes(tmp, robust = TRUE)
     top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
-      select("logFC", "P.Value", "adj.P.Val") %>%
-      rename("log2FC" = "logFC", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
+      select("logFC", "t", "P.Value", "adj.P.Val") %>%
+      rename("log2FC" = "logFC", "metric" = "t", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -117,8 +117,8 @@ differential_expression <- function(data = NULL,
     qlf <- glmQLFTest(fit, contrast = contrasts)
     top_table <- topTags(qlf, n = nrow(data)) %>%
       as.data.frame() %>%
-      select("logFC", "PValue", "FDR") %>%
-      rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      select("logFC", "F", "PValue", "FDR") %>%
+      rename("log2FC" = "logFC", "metric" = "F", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -132,8 +132,8 @@ differential_expression <- function(data = NULL,
     dds <- DESeq(dds)
     res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
     top_table <- as.data.frame(res) %>%
-      select("log2FoldChange", "pvalue", "padj") %>%
-      rename("log2FC" = "log2FoldChange", "p_value" = "pvalue", "p_value_adj" = "padj") %>%
+      select("log2FoldChange", "stat", "pvalue", "padj") %>%
+      rename("log2FC" = "log2FoldChange", "metric" = "stat", "p_value" = "pvalue", "p_value_adj" = "padj") %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -147,9 +147,10 @@ differential_expression <- function(data = NULL,
                              ident.1 = treatment_samples,
                              ident.2 = control_samples,
                              latent.vars = "batch",
-                             test.use = "DESeq2") %>%
+                             test.use = "wilcox") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
       rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
 
     return(as.data.frame(top_table))
@@ -203,6 +204,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -236,6 +238,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -279,6 +282,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }

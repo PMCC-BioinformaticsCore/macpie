@@ -72,8 +72,8 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
     scale_color_manual(
       values = named_colors # Map colors dynamically
     ) +
-    geom_vline(xintercept = c(-1, 1), col = "darkred") +
-    geom_hline(yintercept = -log10(0.05), col = "darkred")
+    geom_vline(xintercept = c(-1, 1), col = "#E64B35FF") +
+    geom_hline(yintercept = -log10(0.05), col = "#E64B35FF")
   })
   return(p)
 }

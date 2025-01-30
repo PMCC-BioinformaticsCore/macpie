@@ -16,6 +16,8 @@ library(gridExtra)
 library(enrichR)
 library(parallel)
 library(mcprogress)
+library(ggsci)
+library(ggiraph)
 
 #load all functions
 devtools::load_all()
@@ -57,6 +59,11 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
+#add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
 #example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
         ncol = 4, group.by="Sample_type")
@@ -70,8 +77,9 @@ mac <- mac %>%
 plate_layout(mac, "nCount_RNA", "Sample_type")
 
 ## ----mds_plot, fig.width = 8--------------------------------------------------
-#example of MDS function, using limma
-plot_mds(mac, "Sample_type")
+#example of MDS function 
+p<-plot_mds(mac)
+girafe(ggobj = p)
 
 ## ----rle_plot, fig.width = 8, fig.height=5------------------------------------
 
@@ -87,10 +95,6 @@ rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ## ----de_analysis, fig.width = 8, fig.height=5---------------------------------
 
 # First perform the differential expression analysis
-mac <- mac %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
-  mutate(combined_id = gsub(" ", "", .data$combined_id))
-
 treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
@@ -108,13 +112,13 @@ top_genes<-top_table_edgeR %>%
   select(gene) %>%
   pull()
 
-enriched <- enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
-                                 "Drug_Perturbations_from_GEO_2014"))
-p1<-plotEnrich(enriched[[1]])
-p2<-plotEnrich(enriched[[2]])
-p3<-plotEnrich(enriched[[3]])
+enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+                                 "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
+p1<-enrichR::plotEnrich(enriched[[1]])
+p2<-enrichR::plotEnrich(enriched[[2]])
+p3<-enrichR::plotEnrich(enriched[[3]])
 
-grid.arrange(p1, p2, p3, ncol = 1)
+gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 ## ----de_multi, fig.width = 8, fig.height=5------------------------------------
 de_list <- multi_DE(data = mac[50:150], 

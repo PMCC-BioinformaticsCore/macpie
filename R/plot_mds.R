@@ -5,10 +5,15 @@
 #' speed.
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
-#' @param annotation A string specifying which column in data will be used to
+#' @param group_by A string specifying which column in data will be used to
+#'   color the samples.
+#' @param label A string specifying which column in data will be used to
 #'   label a sample.
+#' @param max_overlaps Maximum number of overlaps for ggrepel
 #' @importFrom limma plotMDS
 #' @importFrom utils head
+#' @importFrom ggsci scale_color_npg
+#' @importFrom ggiraph geom_point_interactive girafe
 #' @import edgeR
 #' @import ggrepel
 
@@ -17,29 +22,32 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_mds(mac, "Treatment_1")
+#' plot_mds(mac)
 #' @export
-plot_mds <- function(data = NULL, annotation = NULL) {
+plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, annotation) {
+  validate_inputs <- function(data, group_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
-    annotation <- if (is.null(annotation)) "Treatment_1" else annotation
-
+    group_by <- if (is.null(group_by)) "Sample_type" else group_by
+    label <- if (is.null(label)) "combined_id" else label
+    max_overlaps <- if (is.null(max_overlaps)) 20 else max_overlaps
     column_names <- data %>%
       head() %>%
       colnames()
-    if (!all(c(annotation) %in% column_names)) {
+    if (!all(c(group_by, label) %in% column_names)) {
       stop("Your column names are not present in the data or metadata.")
     }
-    list(data = data, annotation = annotation)
+    list(data = data, group_by = group_by, label = label, max_overlaps = max_overlaps)
   }
 
   # Validate inputs
-  validated <- validate_inputs(data, annotation)
-  annotation <- validated$annotation
+  validated <- validate_inputs(data, group_by, label, max_overlaps)
+  group_by <- validated$group_by
+  label <- validated$label
+  max_overlaps <- validated$max_overlaps
   data <- validated$data
 
   dge <- edgeR::DGEList(counts = data@assays$RNA$counts)
@@ -56,17 +64,24 @@ plot_mds <- function(data = NULL, annotation = NULL) {
     p <- ggplot(data, aes(x = .data$PCA1,
                           y = .data$PCA2,
                           color = .data$Sample_type,
-                          label = !!rlang::sym(annotation))) +
-      geom_point(size = 2) +
-      geom_text_repel(aes(label = .data$Treatment_1),                    # Smart label repulsion
+                          label = !!rlang::sym(label))) +
+      #geom_point(size = 2) +
+      geom_point_interactive(aes(x = .data$PCA1,
+                                 y = .data$PCA2,
+                                 color = .data$Sample_type,
+                                 tooltip = !!rlang::sym(label),
+                                 data_id = !!rlang::sym(label))) +
+      geom_text_repel(aes(label = .data$combined_id),                    # Smart label repulsion
                       size = 3.5,
-                      max.overlaps = 20) +        # Add sample labels
+                      max.overlaps = max_overlaps) +        # Add sample labels
       theme_minimal() +                             # Minimal theme
+      scale_color_npg() +
       labs(
         title = "MDS plot",
         x = "Dimension 1",
         y = "Dimension 2"
-      )
+      ) +
+      theme_minimal()
     p
   }, error = function(e) {
     stop("Error in plotting: ", e$message)
