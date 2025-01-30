@@ -204,6 +204,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -237,6 +238,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }
@@ -280,6 +282,7 @@ differential_expression <- function(data = NULL,
       as.data.frame() %>%
       select("logFC", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      mutate(metric = 1) %>%
       rownames_to_column("gene")
     return(as.data.frame(top_table))
   }

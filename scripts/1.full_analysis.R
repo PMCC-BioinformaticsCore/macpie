@@ -173,6 +173,22 @@ enriched_pathways_mat <- enriched_pathways %>%
 
 pheatmap(enriched_pathways_mat)
 
+########## Screen for similarity of profiles
+
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_0.1")
+fgsea_results<-fgsea_results %>%
+  mutate(logPadj=c(-log10(padj))) %>%
+  arrange(desc(NES)) %>%
+  mutate(combined_id = factor(combined_id, levels = unique(combined_id)))
+p1<-ggplot(fgsea_results,aes(combined_id,NES))+
+  #geom_point(aes(size = logPadj)) +
+  geom_point() +
+  facet_wrap(~pathway,scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
 df<-do.call("rbind",de_list) %>%
   mutate(comparison=combined_id)
 df_wide <- df %>%

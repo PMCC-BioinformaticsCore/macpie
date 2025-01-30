@@ -11,6 +11,7 @@
 #'   label a sample.
 #' @importFrom limma plotMDS
 #' @importFrom utils head
+#' @importFrom ggsci scale_color_npg
 #' @importFrom ggiraph geom_point_interactive girafe
 #' @import edgeR
 #' @import ggrepel
@@ -20,7 +21,7 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_mds(mac, "Treatment_1")
+#' plot_mds(mac)
 #' @export
 plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
 

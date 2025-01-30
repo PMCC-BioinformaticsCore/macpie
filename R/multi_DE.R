@@ -81,5 +81,6 @@ multi_DE <- function(data = NULL,
     result$combined_id <- x
     return(result)
   }, mc.cores = num_cores)
+  names(de_list) <- treatment_samples
   return(de_list)
 }
