@@ -12,6 +12,7 @@
 #' @param num_cores Number of cores
 #' @importFrom fgsea fgsea
 #' @importFrom stats setNames
+#' @importFrom tidyr drop_na
 #'
 #' @returns Data frame with fgsea enrichment score
 #' @export

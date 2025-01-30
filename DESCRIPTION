@@ -46,5 +46,6 @@ Imports:
     methods,
     mcprogress,
     ggiraph,
-    ggsci
+    ggsci,
+    fgsea
 VignetteBuilder: knitr
