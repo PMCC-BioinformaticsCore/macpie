@@ -188,8 +188,6 @@ fgsea_results %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-
-
 df<-do.call("rbind",de_list) %>%
   mutate(comparison=combined_id)
 df_wide <- df %>%

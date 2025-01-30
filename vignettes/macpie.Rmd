@@ -46,6 +46,9 @@ library(parallel)
 library(mcprogress)
 library(ggsci)
 library(ggiraph)
+library(pheatmap)
+library(tidyr)
+library(tibble)
 
 #load all functions
 devtools::load_all()
@@ -188,4 +191,30 @@ de_list <- multi_DE(data = mac[50:150],
                     treatment_samples = NULL, 
                     control_samples = "DMSO_0", 
                     method = "edgeR")
+```
+```{r enriched_pathways, fig.width = 8, fig.height=5}
+de_df <- bind_rows(de_list)
+
+#load genesets for human MSigDB_Hallmark_2020
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+
+enriched_pathways <- de_df %>%
+  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
+  group_by(combined_id) %>%
+  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
+  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
+  unnest(enrichment)
+
+enriched_pathways_mat <- enriched_pathways %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(
+    names_from = combined_id,
+    values_from = Combined.Score
+  ) %>%
+  column_to_rownames(var = "Term") %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
+  as.matrix()
+
+pheatmap(enriched_pathways_mat)
 ```
