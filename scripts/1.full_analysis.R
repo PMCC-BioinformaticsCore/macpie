@@ -19,6 +19,7 @@ library(httr2)
 library(clusterProfiler)
 library(ggsci)
 library(pheatmap)
+library(umap)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -106,7 +107,7 @@ girafe(ggobj = p)
 # Xin's rle plot
 mac_dmso<- mac %>%
   filter(Treatment_1=="DMSO")
-rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
+rle_plot(mac_dmso, label_column = "Row",normalisation="edgeR")
 
 ################## Differential expression ##################
 
@@ -116,7 +117,7 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -125,10 +126,13 @@ top_genes<-top_table %>%
   select(gene) %>%
   pull()
 
-#basic pathway enrichment
+#basic pathway enrichment (MSigDB_Hallmark_2020, LINCS_L1000_CRISPR_KO_Consensus_Sigs)
 enrichr_results <- enrichr(top_genes, "MSigDB_Hallmark_2020")
 plotEnrich(enrichr_results[[1]])
+enrichr_results <- enrichr(top_genes, "LINCS_L1000_CRISPR_KO_Consensus_Sigs")
+plotEnrich(enrichr_results[[1]],title = "LINCS_L1000_CRISPR_KO_Consensus_Sigs")
 
+#download dataset to process localy
 enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
@@ -162,6 +166,7 @@ enriched_pathways <- de_df %>%
   reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
   unnest(enrichment)
 
+#plot the results for pathways across all the comparisons
 enriched_pathways_mat <- enriched_pathways %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(
@@ -175,7 +180,6 @@ enriched_pathways_mat <- enriched_pathways %>%
 pheatmap(enriched_pathways_mat)
 
 ########## Screen for similarity of profiles
-
 fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
 fgsea_results %>%
   mutate(logPadj=c(-log10(padj))) %>%

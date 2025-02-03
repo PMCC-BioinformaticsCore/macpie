@@ -122,12 +122,12 @@ p3<-enrichR::plotEnrich(enriched[[3]])
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 ## ----de_multi, fig.width = 8, fig.height=5------------------------------------
-de_list <- multi_DE(data = mac[50:150], 
+de_list <- multi_DE(data = mac, 
                     treatment_samples = NULL, 
                     control_samples = "DMSO_0", 
                     method = "edgeR")
 
-## ----enriched_pathways, fig.width = 8, fig.height=5---------------------------
+## ----enriched_pathways, fig.width = 8, fig.height=8---------------------------
 de_df <- bind_rows(de_list)
 
 #load genesets for human MSigDB_Hallmark_2020
@@ -152,4 +152,18 @@ enriched_pathways_mat <- enriched_pathways %>%
   as.matrix()
 
 pheatmap(enriched_pathways_mat)
+
+## ----screen_profiles, fig.width = 8, fig.height=5-----------------------------
+
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
+fgsea_results %>%
+  mutate(logPadj=c(-log10(padj))) %>%
+  arrange(desc(NES)) %>%
+  mutate(target = factor(target, levels = unique(target))) %>%
+  ggplot(.,aes(target,NES))+
+  #geom_point(aes(size = logPadj)) +
+  geom_point() +
+  facet_wrap(~pathway,scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 
