@@ -26,11 +26,11 @@
 #' n_genes_profile = 100, direction = "up", num_cores = 2)
 
 multi_screen_profile <- function(data = NULL,
-                           target = NULL,
-                           geneset = NULL,
-                           n_genes_profile = 200,
-                           direction = "both",
-                           num_cores = parallel::detectCores() - 1) {
+                                 target = NULL,
+                                 geneset = NULL,
+                                 n_genes_profile = 200,
+                                 direction = "both",
+                                 num_cores = parallel::detectCores() - 1) {
 
   # Helper function to validate input data
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
@@ -82,7 +82,7 @@ multi_screen_profile <- function(data = NULL,
 
   #reorder the NES direction (why though?)
   fgsea_df <- bind_rows(fgsea_list) %>%
-    mutate(NES = -NES) %>%
+    mutate(NES = -.data$NES) %>%
     drop_na(NES)
 
   data@tools[["screen_profile"]] <- fgsea_df
