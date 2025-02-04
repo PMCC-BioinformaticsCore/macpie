@@ -130,11 +130,12 @@ enrichR_pathway <- "MSigDB_Hallmark_2020"
 enrichr_results <- enrichr(top_genes, enrichR_pathway)
 plotEnrich(enrichr_results[[1]], title = enrichR_pathway)
 
-#download dataset to process localy
+#process locally
 enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
 ################## DE Multiple ##################
+#to-do: shorten
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
@@ -147,23 +148,18 @@ treatments <- mac %>%
 #  cat(".")
 #})
 
+#load genesets from enrichr for a specific species or define your own
+enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
+
 #update the mac object with differential expression
-num_cores <- detectCores() - 2
-mac <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets, p_value_cutoff = 0.01)
+mac <- multi_screen_profile()
+mac <- multi_calculate_umap()
+mac <- multi_umap_clusters()
 
 #get all the differential expression information in a tabular format
 de_df <- bind_rows(mac@tools$diff_exprs)
-
-#load genesets for human MSigDB_Hallmark_2020
-file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
-genesets <- readRDS(file_path)
-
-enriched_pathways <- de_df %>%
-  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
-  group_by(combined_id) %>%
-  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
-  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
-  unnest(enrichment)
 
 #plot the results for pathways across all the comparisons
 enriched_pathways_mat <- enriched_pathways %>%
@@ -175,7 +171,6 @@ enriched_pathways_mat <- enriched_pathways %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
-
 pheatmap(enriched_pathways_mat)
 
 ########## Screen for similarity of profiles

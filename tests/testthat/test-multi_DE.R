@@ -1,4 +1,4 @@
-test_that("Results are a non-empty list", {
+test_that("Results are a non-empty list in the slot tools of a Seurat object", {
   file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
   mac <- readRDS(file_path)[50:150]
   control_samples<-"DMSO_0"
