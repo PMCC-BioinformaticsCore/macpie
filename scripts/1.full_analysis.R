@@ -161,8 +161,9 @@ mac <- multi_umap_clusters()
 #get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
 enriched_pathways_per_comparison <- mac@tools$pathway_enrichment
+screen_profile_per_comparison <- mac@tools$screen_profile
 
-#plot the results for pathways across all the comparisons
+####### plot the results for pathways across all the comparisons
 enriched_pathways_mat <- enriched_pathways_per_comparison %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(
@@ -174,9 +175,9 @@ enriched_pathways_mat <- enriched_pathways_per_comparison %>%
   as.matrix()
 pheatmap(enriched_pathways_mat)
 
-########## Screen for similarity of profiles
-fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
-fgsea_results %>%
+####### Screen for similarity of profiles
+
+screen_profile_per_comparison %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
   mutate(target = factor(target, levels = unique(target))) %>%
@@ -185,16 +186,6 @@ fgsea_results %>%
   geom_point() +
   facet_wrap(~pathway,scales = "free") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-df<-do.call("rbind",de_list) %>%
-  mutate(comparison=combined_id)
-df_wide <- df %>%
-  select(gene, comparison, t) %>%
-  pivot_wider(names_from = comparison, values_from = t)
-
-set.seed(10)
-df_umap<-umap(t(df_wide[,-1]))
 
 
 ############ PROCEDURE TO MAKE A FUNCTION
