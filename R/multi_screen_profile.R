@@ -1,7 +1,8 @@
 
 #' Find similarities between expression profiles with fgsea
 #'
-#' @param data List of expression profiles, output of the multi_DE function
+#' @param data A tidyseurat object merged with metadata. Must contain columns
+#'   "Well_ID", "Row", "Column".
 #' @param target Value of a target expression profile in data (target) against
 #'   which the others should be compared to
 #' @param geneset List of genes whose enrichment in expression profiles should
@@ -21,10 +22,10 @@
 #' library(macpie)
 #' file_path <- system.file("extdata", "PMMSq033/de_screen.Rds", package = "macpie")
 #' de_list <- readRDS(file_path)
-#' fgsea_results <- screen_profile(de_list, target = "Staurosporine_10",
+#' mac <- multi_screen_profile(mac, target = "Staurosporine_10",
 #' n_genes_profile = 100, direction = "up", num_cores = 2)
 
-screen_profile <- function(data = NULL,
+multi_screen_profile <- function(data = NULL,
                            target = NULL,
                            geneset = NULL,
                            n_genes_profile = 200,
@@ -32,8 +33,8 @@ screen_profile <- function(data = NULL,
                            num_cores = parallel::detectCores() - 1) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, target, geneset, n_genes_profile, direction, num_cores) {
-    if (!inherits(data, "list")) {
+  validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
+    if (!inherits(de_list, "list")) {
       stop("Error: argument 'data' must be a list of DE comparisons vs DMSO.")
     }
     target <- if (is.null(target)) NULL else target
@@ -46,13 +47,15 @@ screen_profile <- function(data = NULL,
     }
   }
 
+  de_list <- data@tools$diff_exprs
+
   # Validate inputs
-  validate_inputs(data, target, geneset, n_genes_profile, direction, num_cores)
+  validate_inputs(de_list, target, geneset, n_genes_profile, direction, num_cores)
 
   #### prepare your gene list
   if (!is.null(target)) {
     geneset <- list(
-      data[[target]] %>%
+      de_list[[target]] %>%
         filter(!grepl("mt-", .data$gene, ignore.case = TRUE)) %>%
         filter(!grepl("Rp(s|l)", .data$gene, ignore.case = TRUE)) %>%
         filter(
@@ -66,7 +69,7 @@ screen_profile <- function(data = NULL,
   }
 
   #perform the enrichment analysis
-  fgsea_list <- pmclapply(data, function(x) {
+  fgsea_list <- pmclapply(de_list, function(x) {
     ordered_genes <- x %>%
       filter(!grepl("mt-", .data$gene, ignore.case = TRUE)) %>%
       filter(!grepl("Rp(s|l)", .data$gene, ignore.case = TRUE))
@@ -82,5 +85,6 @@ screen_profile <- function(data = NULL,
     mutate(NES = -NES) %>%
     drop_na(NES)
 
-  return(fgsea_df)
+  mac@tools[["screen_profile"]] <- fgsea_df
+  return(data)
 }
