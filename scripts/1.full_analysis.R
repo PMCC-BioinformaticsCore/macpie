@@ -19,6 +19,7 @@ library(httr2)
 library(clusterProfiler)
 library(ggsci)
 library(pheatmap)
+library(umap)
 
 #define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -72,7 +73,7 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[sl][[:digit:]]
                                                 ^RP[SL][[:digit:]]|^RPLP[[:digit:]]|^RPSA|^RP[SL][[:digit:]]|^RPLP[[:digit:]]|^RPSA")
 #TO-DO: verify that the mouse and human regexp for ribo proteins is correct (grepl("^RP",row.names(mac@assays$RNA$counts)))
 
-#add metadata to the real data
+#add metadata to the sequencing data and select only a specific project
 mac<- mac %>%
   inner_join(metadata,by=c(".cell"="Barcode")) %>%
   filter(Project == "Current")
@@ -106,17 +107,16 @@ girafe(ggobj = p)
 # Xin's rle plot
 mac_dmso<- mac %>%
   filter(Treatment_1=="DMSO")
-rle_plot(mac_dmso, label_column = "Row",normalisation="DESeq2")
+rle_plot(mac_dmso, label_column = "Row",normalisation="edgeR")
 
 ################## Differential expression ##################
-
 ################## DE Single ##################
 
 treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 #perform differential expression
-top_table<-differential_expression(mac, treatment_samples, control_samples,method = "limma_voom")
+top_table<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
 plot_volcano(top_table)
 
 #perform pathway enrichment
@@ -125,21 +125,22 @@ top_genes<-top_table %>%
   select(gene) %>%
   pull()
 
-#basic pathway enrichment
-enrichr_results <- enrichr(top_genes, "MSigDB_Hallmark_2020")
-plotEnrich(enrichr_results[[1]])
+#basic pathway enrichment (MSigDB_Hallmark_2020, LINCS_L1000_CRISPR_KO_Consensus_Sigs)
+enrichR_pathway <- "MSigDB_Hallmark_2020"
+enrichr_results <- enrichr(top_genes, enrichR_pathway)
+plotEnrich(enrichr_results[[1]], title = enrichR_pathway)
 
+#process locally
 enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
-################## DE Multiple ##################
-
+################## Screen - level analysis from DE to pathway enrichment ##################
+#to-do: shorten
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-
 
 ##slow version
 #de_list<-sapply(treatments,function(x){
@@ -147,22 +148,22 @@ treatments <- mac %>%
 #  cat(".")
 #})
 
-num_cores <- detectCores() - 2
-de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
-de_df <- do.call("rbind", de_list)
+#load genesets from enrichr for a specific species or define your own
+enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 
-#load genesets for human MSigDB_Hallmark_2020
-file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
-genesets <- readRDS(file_path)
+#update the mac object with differential expression
+mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets)
+mac <- multi_screen_profile(mac, target = "Staurosporine_10")
+mac <- multi_calculate_umap()
+mac <- multi_umap_clusters()
 
-enriched_pathways <- de_df %>%
-  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
-  group_by(combined_id) %>%
-  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
-  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
-  unnest(enrichment)
+#get all the differential expression information in a tabular format
+de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
+enriched_pathways_per_comparison <- mac@tools$pathway_enrichment
 
-enriched_pathways_mat <- enriched_pathways %>%
+#plot the results for pathways across all the comparisons
+enriched_pathways_mat <- enriched_pathways_per_comparison %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(
     names_from = combined_id,
@@ -171,11 +172,9 @@ enriched_pathways_mat <- enriched_pathways %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
-
 pheatmap(enriched_pathways_mat)
 
 ########## Screen for similarity of profiles
-
 fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
 fgsea_results %>%
   mutate(logPadj=c(-log10(padj))) %>%
@@ -186,8 +185,6 @@ fgsea_results %>%
   geom_point() +
   facet_wrap(~pathway,scales = "free") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
 
 
 df<-do.call("rbind",de_list) %>%

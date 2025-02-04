@@ -18,6 +18,9 @@ library(parallel)
 library(mcprogress)
 library(ggsci)
 library(ggiraph)
+library(pheatmap)
+library(tidyr)
+library(tibble)
 
 #load all functions
 devtools::load_all()
@@ -99,10 +102,8 @@ treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
 top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
-top_table_Seurat<-differential_expression(mac, treatment_samples, control_samples,method = "Seurat_wilcox")
 
 plot_volcano(top_table_edgeR)
-plot_volcano(top_table_Seurat)
 
 
 ## ----pathway_analysis_single, fig.width = 8, fig.height=15--------------------
@@ -121,8 +122,48 @@ p3<-enrichR::plotEnrich(enriched[[3]])
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 ## ----de_multi, fig.width = 8, fig.height=5------------------------------------
-de_list <- multi_DE(data = mac[50:150], 
+de_list <- multi_DE(data = mac, 
                     treatment_samples = NULL, 
                     control_samples = "DMSO_0", 
                     method = "edgeR")
+
+## ----enriched_pathways, fig.width = 8, fig.height=8---------------------------
+de_df <- bind_rows(de_list)
+
+#load genesets for human MSigDB_Hallmark_2020
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+
+enriched_pathways <- de_df %>%
+  filter(p_value_adj<0.01) %>% #select DE genes based on FDR < 0.01
+  group_by(combined_id) %>%
+  filter(n_distinct(gene)>5) %>% #filter out samples with less than 5 DE genes
+  reframe(enrichment=hyper_enrich_bg(gene, genesets=.env$genesets,background = "human")) %>%
+  unnest(enrichment)
+
+enriched_pathways_mat <- enriched_pathways %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(
+    names_from = combined_id,
+    values_from = Combined.Score
+  ) %>%
+  column_to_rownames(var = "Term") %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
+  as.matrix()
+
+pheatmap(enriched_pathways_mat)
+
+## ----screen_profiles, fig.width = 8, fig.height=5-----------------------------
+
+fgsea_results <- screen_profile(de_list, target = "Staurosporine_10", n_genes_profile = 500)
+fgsea_results %>%
+  mutate(logPadj=c(-log10(padj))) %>%
+  arrange(desc(NES)) %>%
+  mutate(target = factor(target, levels = unique(target))) %>%
+  ggplot(.,aes(target,NES))+
+  #geom_point(aes(size = logPadj)) +
+  geom_point() +
+  facet_wrap(~pathway,scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 
