@@ -110,7 +110,6 @@ mac_dmso<- mac %>%
 rle_plot(mac_dmso, label_column = "Row",normalisation="edgeR")
 
 ################## Differential expression ##################
-
 ################## DE Single ##################
 
 treatment_samples="Staurosporine_0.1"
@@ -127,23 +126,20 @@ top_genes<-top_table %>%
   pull()
 
 #basic pathway enrichment (MSigDB_Hallmark_2020, LINCS_L1000_CRISPR_KO_Consensus_Sigs)
-enrichr_results <- enrichr(top_genes, "MSigDB_Hallmark_2020")
-plotEnrich(enrichr_results[[1]])
-enrichr_results <- enrichr(top_genes, "LINCS_L1000_CRISPR_KO_Consensus_Sigs")
-plotEnrich(enrichr_results[[1]],title = "LINCS_L1000_CRISPR_KO_Consensus_Sigs")
+enrichR_pathway <- "MSigDB_Hallmark_2020"
+enrichr_results <- enrichr(top_genes, enrichR_pathway)
+plotEnrich(enrichr_results[[1]], title = enrichR_pathway)
 
 #download dataset to process localy
 enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
 ################## DE Multiple ##################
-
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-
 
 ##slow version
 #de_list<-sapply(treatments,function(x){
@@ -151,9 +147,12 @@ treatments <- mac %>%
 #  cat(".")
 #})
 
+#update the mac object with differential expression
 num_cores <- detectCores() - 2
-de_list <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
-de_df <- do.call("rbind", de_list)
+mac <- multi_DE(mac, treatments, control_samples, num_cores=num_cores, method = "edgeR")
+
+#get all the differential expression information in a tabular format
+de_df <- bind_rows(mac@tools$diff_exprs)
 
 #load genesets for human MSigDB_Hallmark_2020
 file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")

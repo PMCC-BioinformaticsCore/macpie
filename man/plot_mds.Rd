@@ -15,6 +15,8 @@ color the samples.}
 
 \item{label}{A string specifying which column in data will be used to
 label a sample.}
+
+\item{max_overlaps}{Maximum number of overlaps for ggrepel}
 }
 \value{
 ggplot object

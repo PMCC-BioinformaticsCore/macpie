@@ -6,8 +6,6 @@
 #' @param db Valid name of an enrichR database
 #' @param genesets Named list of genes
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
-#' @importFrom httr2 request req_perform resp_body_string
-#' @importFrom purrr map list_rbind
 #' @importFrom dplyr filter distinct
 #' @returns Data frame of pathway-enrichment statistics
 #' @export
@@ -41,35 +39,11 @@ pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species
     if (is.null(species)) stop("Missing species information.")
   }
 
-  #download enrichr gene sets
-  geneset_download <- function(url, geneset) {
-    results_table <- request(paste0(url, "geneSetLibrary?mode=text&libraryName=", geneset)) %>%
-      req_perform() %>%           #perform request
-      resp_body_string() %>%      #extract body of the response
-      strsplit(split = "\n") %>%  #split by newline
-      .[[1]] %>%                #take the first element
-      map(~ {
-        x <- strsplit(.x, "\t")[[1]] #split each pathway into components
-        data.frame( # Convert to a tibble per list element for easier manipulation
-          pathway_name = x[1],
-          description = x[2],
-          gene = x[-(1:2)]
-        )
-      }) %>%
-      list_rbind() %>% #join into a data frame to
-      filter(.data$gene != "") %>% #eliminate empty genes per pathway
-      distinct(.data$pathway_name, .data$gene)
-
-    results_list <- split(results_table$gene, results_table$pathway_name)
-
-    return(results_list)
-  }
-
   validate_inputs(genes, db, genesets, species)
 
   if (length(db) > 0) {
     cat("Downloading gene sets from the Enrichr server.\n")
-    genesets <- geneset_download(url = paste0("https://maayanlab.cloud/", species, "Enrichr/"), db)
+    genesets <- download_geneset(species, db)
   }
 
   #perform enrichment analysis
