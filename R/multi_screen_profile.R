@@ -85,6 +85,6 @@ multi_screen_profile <- function(data = NULL,
     mutate(NES = -NES) %>%
     drop_na(NES)
 
-  mac@tools[["screen_profile"]] <- fgsea_df
+  data@tools[["screen_profile"]] <- fgsea_df
   return(data)
 }
