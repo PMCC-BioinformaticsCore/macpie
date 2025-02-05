@@ -155,8 +155,9 @@ enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
 mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets)
 mac <- multi_screen_profile(mac, target = "Staurosporine_10")
-mac <- multi_calculate_umap()
-mac <- multi_umap_clusters()
+mac <- multi_prepare_umap(mac)
+p<-multi_plot_umap(mac, max_overlaps = 10)
+girafe(ggobj = p)
 
 #get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
