@@ -21,7 +21,7 @@
 #' mac <- readRDS(file_path)[50:150]
 #' control_samples<-"DMSO_0"
 #' treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
-#' mac <- multi_DE(mac, treatment_samples, control_samples, num_cores = 2, method = "edgeR")
+#' mac <- multi_DE(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
 
 multi_DE <- function(data = NULL,
                      treatment_samples = NULL,
@@ -82,6 +82,6 @@ multi_DE <- function(data = NULL,
     return(result)
   }, mc.cores = num_cores)
   names(de_list) <- treatment_samples
-  mac@tools[["diff_exprs"]]<-de_list
-  return(mac)
+  data@tools[["diff_exprs"]]<-de_list
+  return(data)
 }

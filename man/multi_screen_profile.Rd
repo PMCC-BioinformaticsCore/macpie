@@ -31,15 +31,15 @@ profile: one of "up", "down" and "both", default both.}
 \item{num_cores}{Number of cores}
 }
 \value{
-Data frame with fgsea enrichment score
+A tidyseurat object with screen_profile data frame in slot tools
 }
 \description{
 Find similarities between expression profiles with fgsea
 }
 \examples{
 library(macpie)
-file_path <- system.file("extdata", "PMMSq033/de_screen.Rds", package = "macpie")
-de_list <- readRDS(file_path)
+file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+mac <- readRDS(file_path)
 mac <- multi_screen_profile(mac, target = "Staurosporine_10",
-n_genes_profile = 100, direction = "up", num_cores = 2)
+n_genes_profile = 100, direction = "up", num_cores = 1)
 }

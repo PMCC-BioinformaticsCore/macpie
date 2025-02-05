@@ -15,15 +15,15 @@
 #' @importFrom stats setNames
 #' @importFrom tidyr drop_na
 #'
-#' @returns Data frame with fgsea enrichment score
+#' @returns A tidyseurat object with screen_profile data frame in slot tools
 #' @export
 #'
 #' @examples
 #' library(macpie)
-#' file_path <- system.file("extdata", "PMMSq033/de_screen.Rds", package = "macpie")
-#' de_list <- readRDS(file_path)
+#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac <- readRDS(file_path)
 #' mac <- multi_screen_profile(mac, target = "Staurosporine_10",
-#' n_genes_profile = 100, direction = "up", num_cores = 2)
+#' n_genes_profile = 100, direction = "up", num_cores = 1)
 
 multi_screen_profile <- function(data = NULL,
                                  target = NULL,
@@ -35,7 +35,7 @@ multi_screen_profile <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
     if (!inherits(de_list, "list")) {
-      stop("Error: argument 'data' must be a list of DE comparisons vs DMSO.")
+      stop("Error: argument 'data' must be a list of DE comparisons.")
     }
     target <- if (is.null(target)) NULL else target
     geneset <- if (is.null(geneset)) NULL else geneset

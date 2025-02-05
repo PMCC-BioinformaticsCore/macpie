@@ -130,7 +130,6 @@ treatments <- mac %>%
 mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
 
 ## ----enriched_pathways, fig.width = 8, fig.height=8---------------------------
-
 #load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets)
@@ -144,6 +143,7 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
+
 pheatmap(enriched_pathways_mat)
 
 ## ----screen_profiles, fig.width = 8, fig.height=5-----------------------------
