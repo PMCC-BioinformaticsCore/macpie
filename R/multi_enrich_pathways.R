@@ -49,7 +49,7 @@ multi_enrich_pathways <- function(data,
     }
   }
 
-  species <- unique(mac$Species)
+  species <- unique(data$Species)
   validate_inputs(data, genesets, species, p_value_cutoff, n_distinct)
 
   #extract de information from the object data
@@ -61,6 +61,6 @@ multi_enrich_pathways <- function(data,
     filter(n_distinct(.data$gene) > .env$n_distinct) %>% #filter out samples with less than 5 DE genes
     reframe(enrichment = hyper_enrich_bg(.data$gene, genesets = .env$genesets, background = .env$species)) %>%
     unnest(enrichment)
-  mac@tools[["pathway_enrichment"]] <- enriched_pathways
-  return(mac)
+  data@tools[["pathway_enrichment"]] <- enriched_pathways
+  return(data)
 }
