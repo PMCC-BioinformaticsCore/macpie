@@ -8,6 +8,7 @@
 #' @param n_distinct Minimum number of genes in a geneset, default 5
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
 #' @importFrom dplyr reframe
+#' @importFrom tidyr unnest
 #'
 #' @returns A tidyseurat object with pathway_enrichment list in slot tools
 #' @export
