@@ -192,7 +192,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 ```
 ```{r enriched_pathways, fig.width = 8, fig.height=8}
 #load genesets from enrichr for a specific species or define your own
@@ -217,7 +217,7 @@ pheatmap(enriched_pathways_mat)
 
 ```{r screen_profiles, fig.width = 8, fig.height=5}
 
-mac <- multi_screen_profile(mac, target = "Staurosporine_10")
+mac <- multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac@tools$screen_profile %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
