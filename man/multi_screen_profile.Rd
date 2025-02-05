@@ -31,7 +31,7 @@ profile: one of "up", "down" and "both", default both.}
 \item{num_cores}{Number of cores}
 }
 \value{
-Data frame with fgsea enrichment score
+A tidyseurat object with screen_profile data frame in slot tools
 }
 \description{
 Find similarities between expression profiles with fgsea

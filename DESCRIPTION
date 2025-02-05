@@ -48,5 +48,6 @@ Imports:
     ggiraph,
     ggsci,
     fgsea,
-    tidyr
+    tidyr,
+    umap
 VignetteBuilder: knitr

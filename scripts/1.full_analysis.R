@@ -177,6 +177,7 @@ pheatmap(enriched_pathways_mat)
 
 ####### Screen for similarity of profiles
 
+#to-do add coloring by data type
 screen_profile_per_comparison %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%

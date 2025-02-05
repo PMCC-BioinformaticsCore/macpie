@@ -15,7 +15,7 @@
 #' @importFrom stats setNames
 #' @importFrom tidyr drop_na
 #'
-#' @returns Data frame with fgsea enrichment score
+#' @returns A tidyseurat object with screen_profile data frame in slot tools
 #' @export
 #'
 #' @examples
@@ -35,7 +35,7 @@ multi_screen_profile <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
     if (!inherits(de_list, "list")) {
-      stop("Error: argument 'data' must be a list of DE comparisons vs DMSO.")
+      stop("Error: argument 'data' must be a list of DE comparisons.")
     }
     target <- if (is.null(target)) NULL else target
     geneset <- if (is.null(geneset)) NULL else geneset
