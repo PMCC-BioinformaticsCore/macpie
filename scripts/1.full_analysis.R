@@ -210,7 +210,7 @@ screen_profile_per_comparison %>%
 #Code > Insert roxygen skeleton.
 #document()
 #check()
-# lint(filename="R/functionX.R",linters = custom_linters)
+# vvvaera
 #8. make the test
 #use_test("functionX")
 #test()
