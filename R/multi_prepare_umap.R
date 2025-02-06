@@ -28,8 +28,8 @@ multi_prepare_umap <- function(data = NULL) {
 
   df <- bind_rows(de_list)
   df_wide <- df %>%
-    select(.data$gene, .data$combined_id, .data$metric) %>%
-    pivot_wider(names_from = .data$combined_id, values_from = .data$metric)
+    select("gene", "combined_id", "metric") %>%
+    pivot_wider(names_from = "combined_id", values_from = "metric")
 
   set.seed(1)
   df_umap <- umap(t(df_wide[, -1]))

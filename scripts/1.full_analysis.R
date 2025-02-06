@@ -156,7 +156,8 @@ mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
 mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets)
 mac <- multi_screen_profile(mac, target = "Staurosporine_10")
 mac <- multi_prepare_umap(mac)
-p<-multi_plot_umap(mac, max_overlaps = 10)
+mac <- multi_cluster_umap(mac, k=3)
+p<-multi_plot_umap(mac, group_by = "cluster", max_overlaps = 5)
 girafe(ggobj = p)
 
 #get all the differential expression information in a tabular format

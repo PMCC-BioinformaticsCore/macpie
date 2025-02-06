@@ -1,0 +1,6 @@
+test_that("Results are a non-empty dataframe in seurat slot tools", {
+  file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+  mac <- readRDS(file_path)
+  mac <- multi_cluster_umap(mac)
+  expect_true(length(mac) > 0 && any(grepl("cluster", colnames(mac@meta.data))))
+})
