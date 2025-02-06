@@ -7,7 +7,7 @@
 #' @param k Parameter k for k-means clustering
 #' @importFrom scran buildSNNGraph
 
-#' @returns A tidyseurat object with umap_de data frame in slot tools
+#' @returns A tidyseurat object with cluster information in the metadata slot
 #' @export
 #'
 #' @examples
