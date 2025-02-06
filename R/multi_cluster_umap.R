@@ -15,7 +15,7 @@
 #' mac <- readRDS(file_path)
 #' mac <- multi_prepare_umap(mac)
 #' mac <- multi_cluster_umap(mac)
-#' p<-multi_plot_umap(mac, max_overlaps = 10)
+#' multi_plot_umap(mac, group_by = "cluster", max_overlaps = 10)
 multi_cluster_umap <- function(data = NULL, k = 10) {
 
   validate_inputs <- function(df_umap_data) {
@@ -43,6 +43,8 @@ multi_cluster_umap <- function(data = NULL, k = 10) {
   # Add cluster information to the UMAP data frame
   df_umap_data$cluster <- as.character(clus)
 
-  data@tools[["umap_de_clusters"]] <- df_umap_data
+  data@meta.data <- data@meta.data %>%
+    left_join(.,df_umap_data, join_by("combined_id"))
+
   return(data)
 }
