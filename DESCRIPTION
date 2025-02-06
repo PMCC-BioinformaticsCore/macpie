@@ -49,5 +49,6 @@ Imports:
     ggsci,
     fgsea,
     tidyr,
-    umap
+    umap,
+    scran
 VignetteBuilder: knitr
