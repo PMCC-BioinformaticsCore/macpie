@@ -22,6 +22,9 @@ multi_cluster_umap <- function(data = NULL, k = 10) {
     if (!inherits(df_umap_data, "data.frame") && length(df_umap_data) > 0) {
       stop("Error: argument 'data' must contain a data frame of UMAP coordinates in the slot tool.")
     }
+    if (!inherits(k, "numeric")) {
+      stop("Error: argument 'k' must contain be numeric.")
+    }
   }
 
   #fetch data from the tidyseurat object
@@ -32,7 +35,6 @@ multi_cluster_umap <- function(data = NULL, k = 10) {
   ## Set seed
   set.seed(1)
   ## Set number of Nearest-Neighbours (NNs)
-  k <- 10
   ## Build the k-NN graph
   g <- buildSNNGraph(t(df_umap_data[, 2:3]), k = k)
   ## Run walktrap clustering
@@ -43,6 +45,7 @@ multi_cluster_umap <- function(data = NULL, k = 10) {
   # Add cluster information to the UMAP data frame
   df_umap_data$cluster <- as.character(clus)
 
+  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("cluster","UMAP_1","UMAP_2"))))
   data@meta.data <- data@meta.data %>%
     left_join(.,df_umap_data, join_by("combined_id"))
 

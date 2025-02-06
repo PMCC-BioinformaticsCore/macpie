@@ -47,19 +47,20 @@ multi_plot_umap <- function(data = NULL, group_by = NULL, label = NULL, max_over
   data <- validated$data
 
   df_umap_data <- data@tools[["umap_de"]]
+  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAP_1","UMAP_2"))))
   df_umap_data <- df_umap_data %>%
     left_join(., data@meta.data, join_by("combined_id"))
 
   p <- ggplot(df_umap_data, aes(x = .data$UMAP_1,
                                 y = .data$UMAP_2,
-                                color = .data$Sample_type,
+                                color = !!rlang::sym(group_by),
                                 label = !!rlang::sym(label))) +
     geom_point_interactive(aes(x = .data$UMAP_1,
                                y = .data$UMAP_2,
-                               color = .data$Sample_type,
+                               color = !!rlang::sym(group_by),
                                tooltip = !!rlang::sym(label),
                                data_id = !!rlang::sym(label))) +
-    geom_text_repel(aes(label = .data$combined_id),                    # Smart label repulsion
+    geom_text_repel(aes(label = !!rlang::sym(label)),                    # Smart label repulsion
                     size = 3.5,
                     max.overlaps = max_overlaps) +        # Add sample labels
     theme_minimal() +                             # Minimal theme
