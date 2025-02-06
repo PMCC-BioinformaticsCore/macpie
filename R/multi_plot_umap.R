@@ -47,9 +47,11 @@ multi_plot_umap <- function(data = NULL, group_by = NULL, label = NULL, max_over
   data <- validated$data
 
   df_umap_data <- data@tools[["umap_de"]]
-  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAP_1","UMAP_2"))))
+  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAP_1", "UMAP_2"))))
   df_umap_data <- df_umap_data %>%
-    left_join(., data@meta.data, join_by("combined_id"))
+    left_join(., data@meta.data, join_by("combined_id")) %>%
+    select(!!rlang::sym(group_by), !!rlang::sym(label), "UMAP_1", "UMAP_2") %>%
+    unique()
 
   p <- ggplot(df_umap_data, aes(x = .data$UMAP_1,
                                 y = .data$UMAP_2,

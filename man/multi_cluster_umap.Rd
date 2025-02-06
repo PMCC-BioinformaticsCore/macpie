@@ -10,10 +10,11 @@ multi_cluster_umap(data = NULL, k = 10)
 \item{data}{tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column".}
 
-\item{k}{Parameter k for k-means clustering}
+\item{k}{Number of nearest neighbors in buildSNNGraph used to construct a
+shared nearest-neighbor (SNN) graph}
 }
 \value{
-A tidyseurat object with umap_de data frame in slot tools
+A tidyseurat object with cluster information in the metadata slot
 }
 \description{
 Calculate clusters for umap based on DE analysis
@@ -23,5 +24,5 @@ file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
 mac <- multi_prepare_umap(mac)
 mac <- multi_cluster_umap(mac)
-p<-multi_plot_umap(mac, max_overlaps = 10)
+multi_plot_umap(mac, group_by = "cluster", max_overlaps = 10)
 }
