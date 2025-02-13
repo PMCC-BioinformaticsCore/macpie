@@ -175,6 +175,24 @@ fetch_normalised_counts <- function(data = NULL,
     normCounts(set)
   }
 
+  normalize_zinb <- function(data, batch) {
+    if (ncol(data) > 100) {
+      print("Warning: zinb with over 100 samples takes a long time. Consider reducing the number of samples or genes.")
+    }
+
+    data_sce<-as.SingleCellExperiment(data)
+    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 50, ]
+
+    system.time(zinb <- zinbwave(filtered_sce, K = 2,
+                                 epsilon=1000,
+                                 BPPARAM = p,
+                                 normalizedValues=TRUE,
+                                 residuals = TRUE))
+    normalised_values <- zinb@assays@data$normalizedValues
+    return(normalised_values)
+  }
+
+
   # Main function logic
   validated <- validate_inputs(data, method, batch, k)
   data <- validated$data

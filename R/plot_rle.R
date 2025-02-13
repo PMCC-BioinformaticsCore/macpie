@@ -167,6 +167,7 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
     RUVg = fetch_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes),
     RUVs = fetch_normalised_counts(data, method = "RUVs", batch = batch),
     RUVr = fetch_normalised_counts(data, method = "RUVr", batch = batch),
+    zinb = fetch_normalised_counts(data, method = "zinb", batch = batch),
     stop("Unsupported normalization method.")
   )
 

@@ -286,6 +286,42 @@ run_differential_expression <- function(data = NULL,
     return(as.data.frame(top_table))
   }
 
+  de_zinb <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
+
+    data_sce<-as.SingleCellExperiment(data)
+    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 20, ]
+
+    system.time(zinb <- zinbwave(filtered_sce, K = 2,
+                     epsilon=1000,
+                     BPPARAM = p,
+                     observationalWeights = TRUE))
+
+    weights <- assay(zinb, "weights")
+    dge <- DGEList(assay(zinb))
+    dge <- calcNormFactors(dge, method = "TMMwsp")
+
+    dge$weights <- weights
+    combined_id <- data$combined_id
+    design <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+
+    dge <- estimateDisp(dge, design)
+    fit <- glmQLFit(dge, design)
+    myargs <- list(paste0("combined_id",
+                          treatment_samples, "-",
+                          paste0("combined_id", control_samples)),
+                   levels = model_matrix)
+    contrasts <- do.call(makeContrasts, myargs)
+    qlf <- glmQLFTest(fit, contrast = contrasts)
+
+    top_table <- topTags(qlf, n = nrow(data)) %>%
+      as.data.frame() %>%
+      select("logFC", "F", "PValue", "FDR") %>%
+      rename("log2FC" = "logFC", "metric" = "F", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
+      rownames_to_column("gene")
+    return(as.data.frame(top_table))
+  }
+
 
   # Main function
   validate_inputs(data, method, treatment_samples, control_samples)
@@ -303,6 +339,7 @@ run_differential_expression <- function(data = NULL,
     RUVg = de_ruvg(data, pheno_data, treatment_samples, control_samples, batch, spikes, k),
     RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, batch, k),
     RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, batch, k),
+    zinb = de_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
     stop("Unsupported DE method.")
   )
   return(de_data)
