@@ -11,11 +11,16 @@
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma voom
+#' @importFrom Seurat as.SingleCellExperiment
 #' @import DESeq2
 #' @import RUVSeq
+#' @importFrom SingleCellExperiment counts
 #' @importFrom EDASeq newSeqExpressionSet normCounts
 #' @importFrom Biobase pData
 #' @importFrom stats model.matrix residuals
+#' @importFrom parallel makeCluster
+#' @importFrom BiocParallel DoparParam
+
 #'
 #' @returns Data frame of normalised counts
 #' @export
@@ -39,7 +44,7 @@ fetch_normalised_counts <- function(data = NULL,
                        "cpm", "clr", "SCT",
                        "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom")) {
+                       "limma_voom", "zinb")) {
       stop("Your normalization method is not available.")
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
@@ -176,22 +181,31 @@ fetch_normalised_counts <- function(data = NULL,
   }
 
   normalize_zinb <- function(data, batch) {
-    if (ncol(data) > 100) {
-      print("Warning: zinb with over 100 samples takes a long time. Consider reducing the number of samples or genes.")
+
+    print("Warning: zinb (zero-inflated negative binomial) mode takes a couple of minutes.
+    Please allow extra time.")
+    if (ncol(data) > 50) {
+      print("Warning: zinb with over 50 samples takes a long time. Consider reducing the number of samples or genes.")
     }
-
-    data_sce<-as.SingleCellExperiment(data)
-    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 50, ]
-
+    #cat(class(data))
+    data_sce <- as.SingleCellExperiment(data)
+    counts <- counts(data_sce)
+    counts <- as.data.frame(counts)
+    filtered_sce <- subset(data_sce,rowSums(counts) > 50)
+    num_cores <- 8 # Change this based on your system
+    cl <- makeCluster(num_cores)
+    registerDoParallel(cl)
+    p <- DoparParam()
     system.time(zinb <- zinbwave(filtered_sce, K = 2,
                                  epsilon=1000,
                                  BPPARAM = p,
                                  normalizedValues=TRUE,
                                  residuals = TRUE))
     normalised_values <- zinb@assays@data$normalizedValues
+    stopCluster(cl)
+    registerDoParallel()
     return(normalised_values)
   }
-
 
   # Main function logic
   validated <- validate_inputs(data, method, batch, k)
@@ -214,6 +228,7 @@ fetch_normalised_counts <- function(data = NULL,
     RUVg = normalize_ruvg(data, batch, spikes, k),
     RUVs = normalize_ruvs(data, batch, k),
     RUVr = normalize_ruvr(data, batch, k),
+    zinb = normalize_zinb(data, batch),
     stop("Unsupported normalization method.")
   )
   return(norm_data)
