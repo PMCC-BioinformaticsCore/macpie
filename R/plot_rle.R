@@ -127,7 +127,7 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
                        ~ sd(.x, na.rm = TRUE) / mean(.x, na.rm = TRUE),
                        .names = "CV_{.col}"))
 
-    avg_cv<- mean(as.numeric(cv_df), na.rm = TRUE)
+    avg_cv <- mean(as.numeric(cv_df), na.rm = TRUE)
 
     return(avg_cv)
   }
@@ -158,7 +158,7 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
         ggtitle(paste0("Normalisation method: ",
                        normalisation,
                        "\naverage Coef of Variation:",
-                       sprintf("%.2f",compute_cv(count_matrix)))) +
+                       sprintf("%.2f", compute_cv(count_matrix)))) +
         ylab("Log expression deviation")
 
     }, error = function(e) {
