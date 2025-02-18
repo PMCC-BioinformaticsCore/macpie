@@ -33,9 +33,10 @@ fetch_normalised_counts <- function(data = NULL,
                                     method = NULL,
                                     batch = NULL,
                                     k = NULL,
-                                    spikes = NULL) {
+                                    spikes = NULL,
+                                    max_counts = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(data, method, batch, k) {
+  validate_inputs <- function(data, method, batch, k, max_counts) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -49,6 +50,7 @@ fetch_normalised_counts <- function(data = NULL,
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
     k <- if (is.null(k)) 2 else k
+    max_counts <- if (is.null(max_counts)) 100 else as.numeric(max_counts)
     list(data = data, batch = batch, k = k, method = method)
   }
 
@@ -182,16 +184,16 @@ fetch_normalised_counts <- function(data = NULL,
 
   normalize_zinb <- function(data, batch) {
 
-    print("Warning: zinb (zero-inflated negative binomial) mode takes a couple of minutes.
-    Please allow extra time.")
+    print("Warning: zinb mode takes a couple of minutes. Please allow extra time.")
+    print("Default uses genes with max_counts > 100 reads across all treatments.")
+    print("reducing the parameter max_counts may increase the compute time and memory required.")
+
     if (ncol(data) > 50) {
       print("Warning: zinb with over 50 samples takes a long time. Consider reducing the number of samples or genes.")
     }
     #cat(class(data))
     data_sce <- as.SingleCellExperiment(data)
-    counts <- counts(data_sce)
-    counts <- as.data.frame(counts)
-    filtered_sce <- subset(data_sce,rowSums(counts) > 50)
+    filtered_sce <- subset(data_sce,rowSums(counts) > 10)
     num_cores <- 8 # Change this based on your system
     cl <- makeCluster(num_cores)
     registerDoParallel(cl)
@@ -208,7 +210,7 @@ fetch_normalised_counts <- function(data = NULL,
   }
 
   # Main function logic
-  validated <- validate_inputs(data, method, batch, k)
+  validated <- validate_inputs(data, method, batch, k, max_counts)
   data <- validated$data
   batch <- validated$batch
   k <- validated$k

@@ -289,8 +289,11 @@ run_differential_expression <- function(data = NULL,
   de_zinb <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
 
     data_sce<-as.SingleCellExperiment(data)
-    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 20, ]
-
+    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 50, ]
+    num_cores <- 8 # Change this based on your system
+    cl <- makeCluster(num_cores)
+    registerDoParallel(cl)
+    p <- DoparParam()
     system.time(zinb <- zinbwave(filtered_sce, K = 2,
                      epsilon=1000,
                      BPPARAM = p,
@@ -319,6 +322,8 @@ run_differential_expression <- function(data = NULL,
       select("logFC", "F", "PValue", "FDR") %>%
       rename("log2FC" = "logFC", "metric" = "F", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
       rownames_to_column("gene")
+    stopCluster(cl)
+    registerDoParallel()
     return(as.data.frame(top_table))
   }
 

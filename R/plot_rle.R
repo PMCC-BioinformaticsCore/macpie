@@ -15,7 +15,7 @@
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples.
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to raw.
 #' @param spikes List of genes to use as spike controls in RUVg
 #'
 #' @details
@@ -115,6 +115,24 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
     return(rledf)
   }
 
+  # Compute average correlation coefficient
+  compute_cv <- function(count_matrix) {
+
+    # Convert to tibble for dplyr processing
+    expression_df <- as.data.frame(count_matrix) %>% tibble::as_tibble()
+
+    # Compute CV per sample (column-wise)
+    cv_df <- expression_df %>%
+      summarise(across(everything(),
+                       ~ sd(.x, na.rm = TRUE) / mean(.x, na.rm = TRUE),
+                       .names = "CV_{.col}"))
+
+    avg_cv<- mean(as.numeric(cv_df), na.rm = TRUE)
+
+    return(avg_cv)
+  }
+
+
   # Helper function to create the plot
   create_rle_plot <- function(rledf, normalisation) {
 
@@ -136,7 +154,11 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
         scale_fill_manual(values = fill_palette) +
         scale_color_manual(values = outline_palette) +
         # Titles
-        ggtitle(paste0("Normalisation method: ", normalisation)) +
+        geom_hline(yintercept = 0, linetype = "dotted", col = "red", linewidth = 1) +
+        ggtitle(paste0("Normalisation method: ",
+                       normalisation,
+                       "\naverage Coef of Variation:",
+                       sprintf("%.2f",compute_cv(count_matrix)))) +
         ylab("Log expression deviation")
 
     }, error = function(e) {
