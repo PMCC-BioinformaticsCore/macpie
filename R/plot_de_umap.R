@@ -66,7 +66,6 @@ multi_plot_umap <- function(data = NULL, group_by = NULL, label = NULL, max_over
                     size = 3.5,
                     max.overlaps = max_overlaps) +        # Add sample labels
     theme_minimal() +                             # Minimal theme
-    scale_color_npg() +
     labs(
       title = "UMAP plot",
       x = "Dimension 1",
