@@ -35,7 +35,7 @@ MAC-seq data shares similarities with single-cell RNA-seq data as it derives gen
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
 
 ```{r load_metadata}
-library(macpie)
+# library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
@@ -49,7 +49,10 @@ library(ggiraph)
 library(pheatmap)
 library(tidyr)
 library(tibble)
-
+library(enrichR)
+library(variancePartition)
+library(glmGamPoi)
+library(PoiClaClu)
 #load all functions
 devtools::load_all()
 
@@ -124,7 +127,7 @@ Visualise grouping of samples on an interactive plot.
 
 ```{r mds_plot, fig.width = 8}
 #example of MDS function 
-p<-plot_mds(mac)
+p<-plot_mds(mac,group_by = "combined_id", label="combined_id")
 girafe(ggobj = p)
 ```
 
@@ -141,6 +144,37 @@ rle_plot(mac_dmso, label_column = "Row")
 rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
 rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
+
+QC metrics for each condition 
+
+Box plot to show distribution of read counts from all wells that belong to one treatment condition
+
+```{r, fig.width=8, fig.height=6}
+qc_stats <- QC_metrics(mac, "combined_id")
+qc_stats$stats_summary
+```
+
+```{r, fig.height=8, fig.width=6}
+plot_QC_metrics(qc_stats, "combined_id", "sd_value")
+plot_QC_metrics(qc_stats, "combined_id", "z_score")
+plot_QC_metrics(qc_stats, "combined_id", "mad_value")
+plot_QC_metrics(qc_stats, "combined_id", "IQR")
+```
+
+Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
+
+```{r, fig.width=8, fig.height=6}
+plot_distance(mac, "combined_id", "Staurosporine_10")
+plot_distance(mac, "combined_id", "DMSO_0")
+
+plot_distance(mac, "combined_id", "SN01005979_10")
+
+
+```
+
+
+
+
 
 ### 3. Differential gene expression
 #### 3.1. Single comparison
@@ -192,7 +226,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 ```
 ```{r enriched_pathways, fig.width = 8, fig.height=8}
 #load genesets from enrichr for a specific species or define your own
@@ -217,7 +251,7 @@ pheatmap(enriched_pathways_mat)
 
 ```{r screen_profiles, fig.width = 8, fig.height=5}
 
-mac <- multi_screen_profile(mac, target = "Staurosporine_10")
+mac <- multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac@tools$screen_profile %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%

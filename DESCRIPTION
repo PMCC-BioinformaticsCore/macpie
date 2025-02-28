@@ -50,5 +50,12 @@ Imports:
     fgsea,
     tidyr,
     umap,
-    scran
+    scran,
+    PoiClaClu,
+    pheatmap,
+    reshape2,
+    enrichR,
+    glmGamPoi,
+    gridExtra,
+    variancePartition
 VignetteBuilder: knitr

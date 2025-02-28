@@ -13,6 +13,7 @@
 #' @param num_cores Number of cores
 #' @importFrom parallel detectCores
 #' @importFrom mcprogress pmclapply
+#' @import glmGamPoi
 #' @returns List of DE counts vs control
 #' @export
 #'
