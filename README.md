@@ -57,11 +57,31 @@ mac <- CreateSeuratObject(counts = raw_counts,
 #join with metadata
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
+  
+#add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))  
 
 #example of MDS function, using limma
 plot_mds(mac, "Sample_type")
 
 #RLE function
 rle_plot(mac, label_column = "Row")
+
+#Calculate qc metrics for each condition
+qc_stats <- QC_metrics(mac, "combined_id")
+qc_stats$stats_summary
+
+#Plot qc metrics 
+plot_QC_metrics(qc_stats, "combined_id", "z_score")
+
+#Plot distance matrix in a heatmap for condition and control with high varibility from previous qc metrics step 
+plot_distance(mac, "combined_id", "Staurosporine_10")
+plot_distance(mac, "combined_id", "DMSO_0")
+
+
+
+
 
 ```
