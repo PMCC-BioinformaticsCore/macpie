@@ -35,7 +35,6 @@ differential_expression <- function(data = NULL,
                                     batch = 1,
                                     k = 2,
                                     spikes = NULL) {
-
   # Helper function to validate input data
   validate_inputs <- function(data, method, treatment_samples, control_samples) {
     if (!inherits(data, "Seurat")) {
