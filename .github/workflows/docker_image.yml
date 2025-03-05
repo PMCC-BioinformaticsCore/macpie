@@ -22,4 +22,4 @@ jobs:
         with:
           push: true
           tags: xliu/macpie:latest
-          file: ./dockers/macpie/Dockerfile
+          file: ./dockers/dockerfile
