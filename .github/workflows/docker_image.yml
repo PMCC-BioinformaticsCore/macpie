@@ -23,5 +23,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: xliu/macpie:latest
+	  context: ./dockers
+          tags: xliu81/macpie:latest
           file: ./dockers/dockerfile

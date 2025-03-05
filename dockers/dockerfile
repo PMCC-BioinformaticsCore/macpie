@@ -46,7 +46,7 @@ RUN R -e "library(MOFA2); file <- system.file(\"extdata\", \"test_data.RData\", 
 
 
 # 3. Copy your renv.lock file into the container
-COPY renv.lock renv.lock
+COPY renv.lock /renv.lock
 ENV renv=renv/
 
 # 4. Restore R packages from renv.lock
