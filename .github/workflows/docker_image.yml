@@ -3,7 +3,7 @@ name: Build a docker image of R packages for macpie
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
