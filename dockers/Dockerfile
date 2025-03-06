@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     libfribidi-dev \
     libtiff5-dev \
     libgit2-dev \
+    libglpk-dev \
     && rm -rf /var/lib/apt/lists/*
 
 
