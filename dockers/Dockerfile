@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     libtiff5-dev \
     libgit2-dev \
     libglpk-dev \
+    liblapack-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Install renv from CRAN
