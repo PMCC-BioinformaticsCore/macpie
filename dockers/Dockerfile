@@ -40,10 +40,10 @@ RUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf 
     echo "CXX17FLAGS = -std=c++17 -fPIC"        >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXXFLAGS = -std=c++17 -fPIC"          >> /usr/local/lib/R/etc/Makeconf
 
-    
-RUN R -e "library(MOFA2); file <- system.file(\"extdata\", \"test_data.RData\", package = \"MOFA2\"); load(file); MOFAmodel <- create_mofa(dt); MOFAmodel <- prepare_mofa(MOFAmodel); run_mofa(MOFAmodel, use_basilisk = TRUE, save_data = FALSE)"
 
-
+# Install MOFA2 and Dependencies
+RUN R -e "install.packages('BiocManager', repos = 'https://cloud.r-project.org')"
+RUN R -e "BiocManager::install('MOFA2')"
 
 # 3. Copy your renv.lock file into the container
 COPY renv.lock /renv.lock
@@ -51,3 +51,7 @@ ENV renv=renv/
 
 # 4. Restore R packages from renv.lock
 RUN R -e "renv::restore()"
+
+# Run MOFA2 to check installation
+RUN R -e "library(MOFA2); file <- system.file(\"extdata\", \"test_data.RData\", package = \"MOFA2\"); load(file); MOFAmodel <- create_mofa(dt); MOFAmodel <- prepare_mofa(MOFAmodel); run_mofa(MOFAmodel, use_basilisk = TRUE, save_data = FALSE)"
+
