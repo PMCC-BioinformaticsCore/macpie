@@ -25,4 +25,5 @@ jobs:
           push: true
           context: ./dockers
           tags: xliu81/macpie:latest
+          platforms: linux/amd64,linux/arm64
           file: ./dockers/Dockerfile
