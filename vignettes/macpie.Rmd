@@ -71,7 +71,7 @@ validate_metadata(metadata)
 We recommend that the users first visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
-metadata_heatmap(metadata)
+plot_metadata_heatmap(metadata)
 
 ```
 
