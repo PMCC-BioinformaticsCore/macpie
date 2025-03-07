@@ -190,7 +190,7 @@ the results on the volcano plots.
 treatment_samples="Staurosporine_0.1"
 control_samples<-"DMSO_0"
 
-top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
+top_table_edgeR <- run_differential_expression(mac, treatment_samples, control_samples, method = "edgeR")
 
 plot_volcano(top_table_edgeR)
 
