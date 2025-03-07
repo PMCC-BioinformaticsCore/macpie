@@ -78,7 +78,7 @@ multi_DE <- function(data = NULL,
   num_cores <- validated$num_cores
 
   de_list <- pmclapply(treatment_samples, function(x) {
-    result <- differential_expression(data, x, control_samples, method, batch, k, spikes)
+    result <- run_differential_expression(data, x, control_samples, method, batch, k, spikes)
     result$combined_id <- x
     return(result)
   }, mc.cores = num_cores)
