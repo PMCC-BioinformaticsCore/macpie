@@ -11,6 +11,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.event.head_commit.modified && contains(join(github.event.head_commit.modified, ' '), 'dockers/')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
