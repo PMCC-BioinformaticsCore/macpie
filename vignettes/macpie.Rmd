@@ -226,7 +226,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
+mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 ```
 ```{r enriched_pathways, fig.width = 8, fig.height=8}
 #load genesets from enrichr for a specific species or define your own
