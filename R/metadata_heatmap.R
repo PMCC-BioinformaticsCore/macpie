@@ -76,7 +76,8 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
 
   metadata <- metadata %>%
     mutate(
-      row = as.numeric(factor(str_extract(metadata$Well_ID, "^[A-P]"))),
+      # keep row as A-P instead of numeric 1-16
+      row = factor(str_extract(metadata$Well_ID, "^[A-P]")),
       col = as.numeric(str_extract(metadata$Well_ID, "\\d+"))
     )
 
@@ -107,7 +108,7 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
 
       legend_setting <- if (legend && !hide_legends[i]) "right" else "none"
 
-      ggplot(plate_data, aes(x = col, y = row, fill = .data[[annotation]])) +
+      ggplot(plate_data, aes(x = as_factor(col), y = fct_rev(as_factor(row)), fill = .data[[annotation]])) +
         geom_tile(color = "white") +
         scale_func +
         labs(title = annotation, x = "Column", y = "Row") +
@@ -115,8 +116,8 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
         theme_minimal(base_size = 8) +
         theme(
           plot.title = element_text(hjust = 0.5, size = 6, face = "bold"),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, size = 6),
-          axis.text.y = element_text(size = 5),
+          axis.text.x = element_text(angle = 90, vjust = 0.5, size = 5),
+          axis.text.y = element_text(size = 4),
           axis.title.x = element_text(size = 6),
           axis.title.y = element_text(size = 6),
           legend.title = element_text(size = 6),
