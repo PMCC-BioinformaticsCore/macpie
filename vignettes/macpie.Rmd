@@ -150,7 +150,7 @@ QC metrics for each condition
 Box plot to show distribution of read counts from all wells that belong to one treatment condition
 
 ```{r, fig.width=8, fig.height=6}
-qc_stats <- QC_metrics(mac, "combined_id")
+qc_stats <- calculate_QC_metrics(mac, "combined_id")
 qc_stats$stats_summary
 ```
 
