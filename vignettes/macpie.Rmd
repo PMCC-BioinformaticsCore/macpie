@@ -35,6 +35,14 @@ MAC-seq data shares similarities with single-cell RNA-seq data as it derives gen
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
 
 ```{r load_metadata}
+
+# Clean environment
+rm(list = ls(all.names = TRUE)) # will clear all objects including hidden objects
+gc() # free up memory and report the memory usage
+
+# Load all functions
+devtools::load_all()
+
 library(macpie)
 library(Seurat)
 library(edgeR)
@@ -53,9 +61,6 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
-
-# Load all functions
-devtools::load_all()
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -112,14 +117,16 @@ mac <- mac %>%
 
 # Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
-        ncol = 4, group.by="Sample_type")
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) &
+  macpie_theme(show_x_title = F, show_y_title = F, legend_position_ = 'none', x_labels_angle = 45)
 
 ```
 
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
-```{r subset_seurat, fig.width = 8}
+```{r subset_seurat, fig.width = 10, fig.height = 6}
 
 unique(mac$Project)
 mac <- mac %>%
@@ -132,17 +139,17 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 
 Visualise grouping of samples on an interactive plot.
 
-```{r mds_plot, fig.width = 8}
+```{r mds_plot, fig.width = 8, fig.height = 8}
 
 # Example of MDS function 
-p <- plot_mds(mac,group_by = "combined_id", label = "combined_id")
-girafe(ggobj = p)
+p <- plot_mds(mac, group_by = "combined_id", label = "combined_id", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
 
 Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
 
-```{r plot_rle, fig.width = 8, fig.height = 5}
+```{r plot_rle, fig.width = 8, fig.height = 7}
 
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
@@ -166,7 +173,7 @@ qc_stats$stats_summary
 
 ```
 
-```{r, fig.width = 6, fig.height = 8}
+```{r, fig.width = 8, fig.height = 15}
 
 plot_QC_metrics(qc_stats, "combined_id", "sd_value")
 plot_QC_metrics(qc_stats, "combined_id", "z_score")
@@ -194,10 +201,10 @@ Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero
 Let's first perform the differential expression analysis with a couple of methods and visualise
 the results on the volcano plots.
 
-```{r de_analysis, fig.width = 8, fig.height = 5}
+```{r de_analysis, fig.width = 8, fig.height = 6}
 
 # First perform the differential expression analysis
-treatment_samples = "Staurosporine_0.1"
+treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
 top_table_edgeR <- run_differential_expression(mac, treatment_samples, control_samples, method = "edgeR")
 
@@ -219,9 +226,12 @@ top_genes <- top_table_edgeR %>%
 
 enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-p1 <- enrichR::plotEnrich(enriched[[1]])
-p2 <- enrichR::plotEnrich(enriched[[2]])
-p3 <- enrichR::plotEnrich(enriched[[3]])
+p1 <- enrichR::plotEnrich(enriched[[1]]) + 
+  macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+p2 <- enrichR::plotEnrich(enriched[[2]]) + 
+   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+p3 <- enrichR::plotEnrich(enriched[[3]]) + 
+   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
 
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
@@ -242,7 +252,7 @@ mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "e
 
 ```
 
-```{r enriched_pathways, fig.width = 8, fig.height = 8}
+```{r enriched_pathways, fig.width = 8, fig.height = 12}
 
 # Load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
@@ -250,33 +260,31 @@ mac <- compute_enrichr_pathways(mac, genesets = enrichr_genesets)
 
 enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   select(combined_id, Term, Combined.Score) %>%
-  pivot_wider(
-    names_from = combined_id,
-    values_from = Combined.Score
-  ) %>%
+  pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat)
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_theme()
 
 ```
 
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
+```{r compute_multi_screen_profile, fig.width = 15, fig.height = 5}
 
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
-mac@tools$screen_profile %>%
+mac_screen_profile <- mac@tools$screen_profile %>%
   mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
-  mutate(target = factor(target, levels = unique(target))) %>%
-  ggplot(., aes(target, NES)) +
+  mutate(target = factor(target, levels = unique(target))) 
+
+ggplot(mac_screen_profile, aes(target, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
   facet_wrap(~pathway, scales = "free") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  macpie_theme(x_labels_angle = 45, show_x_title = F)
 
 ```
 
