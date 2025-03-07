@@ -39,10 +39,10 @@ plot_QC_metrics <- function(stats_summary, group_by, metrics) {
   p <- ggplot(var_stats, aes(x = reorder(.data[[group_by]], .data[[metrics]]), y = .data[[metrics]])) +
     geom_segment(aes(xend = .data[[group_by]], y = 0, yend = .data[[metrics]]),
                  color = "grey", size = 1) +
-    geom_point(color = "tomato", size = 2) +
+    geom_point(color = macpie_colours$discrete[[1]], size = 2) +
     coord_flip() +
     labs(x = group_by, y = metrics,
-         title = paste0(metrics, " by ", group_by, " (Lollipop Chart)")) +
-    theme_minimal()
+         title = '') +
+    macpie_theme(show_x_title = TRUE, show_y_title = FALSE, legend_position_ = 'bottom', x_labels_angle = 0)
   p
 }
