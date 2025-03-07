@@ -35,7 +35,7 @@ MAC-seq data shares similarities with single-cell RNA-seq data as it derives gen
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
 
 ```{r load_metadata}
-# library(macpie)
+library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
@@ -53,7 +53,8 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
-#load all functions
+
+# Load all functions
 devtools::load_all()
 
 # Define project variables
@@ -66,11 +67,13 @@ colnames(metadata)
 
 # Validate metadata
 validate_metadata(metadata)
+
 ```
 
-We recommend that the users first visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
+First, let's visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
+
 plot_metadata_heatmap(metadata)
 
 ```
@@ -79,12 +82,13 @@ plot_metadata_heatmap(metadata)
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
 
 ```{r load_data}
+
 project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
 raw_counts_total <- Read10X(data.dir = project_rawdata)
 keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
 raw_counts <- raw_counts_total[keep, ]
 
-#create tidySeurat object
+# Create tidySeurat object
 mac <- CreateSeuratObject(counts = raw_counts,
                           project = project_name,
                           min.cells = 1,
@@ -93,42 +97,47 @@ mac <- CreateSeuratObject(counts = raw_counts,
 ```
 
 ```{r violin_plot, fig.width = 8}
-#calculate percent of mitochondrial and ribosomal genes
+# Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-#join with metadata
+# Join with metadata
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
-#add unique identifier
+# Add unique identifier
 mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
 
-#example of a function from Seurat QC 
+# Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
         ncol = 4, group.by="Sample_type")
+
 ```
 
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
 ```{r subset_seurat, fig.width = 8}
+
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
 
-#QC plot plate layout (all metadata columns can be used):
+# QC plot plate layout (all metadata columns can be used):
 plot_plate_layout(mac, "nCount_RNA", "Sample_type")
+
 ```
 
 Visualise grouping of samples on an interactive plot.
 
 ```{r mds_plot, fig.width = 8}
-#example of MDS function 
-p<-plot_mds(mac,group_by = "combined_id", label="combined_id")
+
+# Example of MDS function 
+p <- plot_mds(mac,group_by = "combined_id", label = "combined_id")
 girafe(ggobj = p)
+
 ```
 
 Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
@@ -139,10 +148,11 @@ Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
-#RLE function
+# Run the RLE function
 create_rle_plot(mac_dmso, label_column = "Row")
 create_rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
 create_rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
+
 ```
 
 QC metrics for each condition 
@@ -150,30 +160,30 @@ QC metrics for each condition
 Box plot to show distribution of read counts from all wells that belong to one treatment condition
 
 ```{r, fig.width=8, fig.height=6}
+
 qc_stats <- calculate_QC_metrics(mac, "combined_id")
 qc_stats$stats_summary
+
 ```
 
 ```{r, fig.height=8, fig.width=6}
+
 plot_QC_metrics(qc_stats, "combined_id", "sd_value")
 plot_QC_metrics(qc_stats, "combined_id", "z_score")
 plot_QC_metrics(qc_stats, "combined_id", "mad_value")
 plot_QC_metrics(qc_stats, "combined_id", "IQR")
+
 ```
 
 Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
 
 ```{r, fig.width=8, fig.height=6}
+
 plot_distance(mac, "combined_id", "Staurosporine_10")
 plot_distance(mac, "combined_id", "DMSO_0")
-
 plot_distance(mac, "combined_id", "SN01005979_10")
 
-
 ```
-
-
-
 
 
 ### 3. Differential gene expression
@@ -184,14 +194,14 @@ Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero
 Let's first perform the differential expression analysis with a couple of methods and visualise
 the results on the volcano plots.
 
-```{r de_analysis, fig.width = 8, fig.height=5}
+```{r de_analysis, fig.width = 8, fig.height = 5}
 
 # First perform the differential expression analysis
-treatment_samples="Staurosporine_0.1"
-control_samples<-"DMSO_0"
-
+treatment_samples = "Staurosporine_0.1"
+control_samples <- "DMSO_0"
 top_table_edgeR <- run_differential_expression(mac, treatment_samples, control_samples, method = "edgeR")
 
+# Let's visualise the results with a volcano plot
 plot_volcano(top_table_edgeR)
 
 ```
@@ -200,36 +210,41 @@ plot_volcano(top_table_edgeR)
 
 Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, the effect of Staurosporine on breast cancer cells through Myc inactivation can be observed through pathway enrichment analyses.
 
-```{r pathway_analysis_single, fig.width = 8, fig.height=15}
+```{r pathway_analysis_single, fig.width = 8, fig.height = 15}
 
-top_genes<-top_table_edgeR %>%
-  filter(p_value_adj<0.05) %>%
+top_genes <- top_table_edgeR %>%
+  filter(p_value_adj < 0.05) %>%
   select(gene) %>%
   pull()
 
 enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-p1<-enrichR::plotEnrich(enriched[[1]])
-p2<-enrichR::plotEnrich(enriched[[2]])
-p3<-enrichR::plotEnrich(enriched[[3]])
+p1 <- enrichR::plotEnrich(enriched[[1]])
+p2 <- enrichR::plotEnrich(enriched[[2]])
+p3 <- enrichR::plotEnrich(enriched[[3]])
 
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
+
 ```
 
 #### 3.3. Differential gene expression - multiple comparisons
 
 On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised.
 
-```{r de_multi, fig.width = 8, fig.height=5}
+```{r de_multi, fig.width = 8, fig.height = 5}
+
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
 mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
+
 ```
-```{r enriched_pathways, fig.width = 8, fig.height=8}
-#load genesets from enrichr for a specific species or define your own
+
+```{r enriched_pathways, fig.width = 8, fig.height = 8}
+
+# Load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- compute_enrichr_pathways(mac, genesets = enrichr_genesets)
 
@@ -244,23 +259,24 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   as.matrix()
 
 pheatmap(enriched_pathways_mat)
+
 ```
 
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r compute_multi_screen_profile, fig.width = 8, fig.height=5}
+```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac@tools$screen_profile %>%
-  mutate(logPadj=c(-log10(padj))) %>%
+  mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
   mutate(target = factor(target, levels = unique(target))) %>%
-  ggplot(.,aes(target,NES))+
+  ggplot(., aes(target, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
-  facet_wrap(~pathway,scales = "free") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  facet_wrap(~pathway, scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 ```
 
