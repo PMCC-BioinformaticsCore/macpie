@@ -45,7 +45,7 @@
 #' @export
 
 # Main function
-create_rle_plot <- function(data, barcodes = NULL, label_column = NULL,
+plot_rle <- function(data, barcodes = NULL, label_column = NULL,
                             labels = NULL, log = TRUE,
                             batch = NULL, normalisation = NULL,
                             spikes = NULL) {
