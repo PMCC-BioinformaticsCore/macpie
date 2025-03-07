@@ -9,6 +9,7 @@
 #'   color the samples.
 #' @param label A string specifying which column in data will be used to
 #'   label a sample.
+#' @param n_labels An integer specifying number of labels to show, based on PC1 and PC2 extremeness. Default set to 50
 #' @param max_overlaps Maximum number of overlaps for ggrepel
 #' @importFrom limma plotMDS
 #' @importFrom utils head
@@ -16,15 +17,14 @@
 #' @importFrom ggiraph geom_point_interactive girafe
 #' @import edgeR
 #' @import ggrepel
-
 #' @return ggplot object
-#'
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
 #' plot_mds(mac)
 #' @export
-plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
+#'
+plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL, n_labels = 50) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, label, max_overlaps) {
@@ -51,6 +51,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
   data <- validated$data
 
   dge <- edgeR::DGEList(counts = data@assays$RNA$counts)
+
   # Extract MDS coordinates without plotting
   #use gene.selection = "commmon" to increase speed
   mds_result <- limma::plotMDS(dge,
@@ -59,29 +60,26 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
 
   data$PCA1 <- mds_result$x
   data$PCA2 <- mds_result$y
+
+  data <- data %>%
+    mutate(extremeness = abs(PCA1) + abs(PCA2))
+
+  # Select the top 50 most extreme points
+  top_n_data <- data@meta.data %>%  # Sort by extremeness in descending order
+    arrange(desc(extremeness)) %>% head(n_labels)
+
   # Plot the results
   tryCatch({
-    p <- ggplot(data, aes(x = .data$PCA1,
-                          y = .data$PCA2,
-                          color = .data$Sample_type,
-                          label = !!rlang::sym(label))) +
+    p <- ggplot(data, aes(x = .data$PCA1, y = .data$PCA2, color = .data$Sample_type, label = !!rlang::sym(label))) +
       #geom_point(size = 2) +
-      geom_point_interactive(aes(x = .data$PCA1,
-                                 y = .data$PCA2,
-                                 color = .data$Sample_type,
-                                 tooltip = !!rlang::sym(label),
-                                 data_id = !!rlang::sym(label))) +
-      geom_text_repel(aes(label = .data$combined_id),                    # Smart label repulsion
-                      size = 3.5,
-                      max.overlaps = max_overlaps) +        # Add sample labels
-      theme_minimal() +                             # Minimal theme
-      scale_color_npg() +
-      labs(
-        title = "MDS plot",
-        x = "Dimension 1",
-        y = "Dimension 2"
-      ) +
-      theme_minimal()
+      geom_point_interactive(aes(x = .data$PCA1, y = .data$PCA2,
+                                 color = .data$Sample_type, tooltip = !!rlang::sym(label), data_id = !!rlang::sym(label))) +
+      geom_text_repel(data = top_n_data, aes(label = .data$combined_id), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
+      scale_color_manual(values = macpie_colours$discrete) +
+      labs(title = "MDS plot",
+           x = "Dimension 1",
+           y = "Dimension 2") +
+      macpie_theme()
     p
   }, error = function(e) {
     stop("Error in plotting: ", e$message)
