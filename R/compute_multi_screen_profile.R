@@ -1,4 +1,3 @@
-
 #' Find similarities between expression profiles with fgsea
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns
@@ -25,12 +24,12 @@
 #' mac <- multi_screen_profile(mac, target = "Staurosporine_10",
 #' n_genes_profile = 100, direction = "up", num_cores = 1)
 
-multi_screen_profile <- function(data = NULL,
-                                 target = NULL,
-                                 geneset = NULL,
-                                 n_genes_profile = 200,
-                                 direction = "both",
-                                 num_cores = parallel::detectCores() - 1) {
+compute_multi_screen_profile <- function(data = NULL,
+                                         target = NULL,
+                                         geneset = NULL,
+                                         n_genes_profile = 200,
+                                         direction = "both",
+                                         num_cores = parallel::detectCores() - 1) {
 
   # Helper function to validate input data
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
@@ -86,5 +85,6 @@ multi_screen_profile <- function(data = NULL,
     drop_na(NES)
 
   data@tools[["screen_profile"]] <- fgsea_df
+
   return(data)
 }
