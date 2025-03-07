@@ -28,7 +28,7 @@ utils::globalVariables(c(".data", "Plate_ID"))
 #' @export
 
 
-metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRUE, output_file = NULL) {
+plot_metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRUE, output_file = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, metadata_file, legend, output_file) {
