@@ -45,10 +45,10 @@
 #' @export
 
 # Main function
-rle_plot <- function(data, barcodes = NULL, label_column = NULL,
-                     labels = NULL, log = TRUE,
-                     batch = NULL, normalisation = NULL,
-                     spikes = NULL) {
+create_rle_plot <- function(data, barcodes = NULL, label_column = NULL,
+                            labels = NULL, log = TRUE,
+                            batch = NULL, normalisation = NULL,
+                            spikes = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
