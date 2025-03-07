@@ -120,7 +120,7 @@ mac <- mac %>%
   filter(Project == "Current")
 
 #QC plot plate layout (all metadata columns can be used):
-plate_layout(mac, "nCount_RNA", "Sample_type")
+plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
 
 Visualise grouping of samples on an interactive plot.
