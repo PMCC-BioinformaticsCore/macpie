@@ -68,16 +68,12 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
                           fill = !!rlang::sym(metric))) +
       geom_tile() +
       scale_x_discrete(position = "top") +
-      scale_fill_gradient2(high = "#E64B35FF",
-                           mid = "white",
-                           low = "#3C5488FF",
+      scale_fill_gradient2(high = macpie_colours$scale_3[[1]],
+                           mid = macpie_colours$scale_3[[2]],
+                           low = macpie_colours$scale_3[[3]],
                            midpoint = unique(data$median_value),
                            name = {{metric}}) +
-      theme(
-        panel.grid = element_blank(),
-        axis.title.y = element_blank(),
-        axis.title.x = element_blank()
-      ) +
+      macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right', x_labels_angle = 0) +
       geom_text(aes(label = !!rlang::sym(annotation)), size = 1.5)
     p
   }, error = function(e) {
