@@ -24,7 +24,7 @@
 #' mac <- readRDS(file_path)
 #' plate_layout(mac,"nCount_RNA","Treatment_1")
 
-plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
+plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, metric, annotation) {
