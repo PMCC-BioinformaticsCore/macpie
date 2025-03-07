@@ -249,9 +249,9 @@ pheatmap(enriched_pathways_mat)
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r screen_profiles, fig.width = 8, fig.height=5}
+```{r compute_multi_screen_profile, fig.width = 8, fig.height=5}
 
-mac <- multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
+mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac@tools$screen_profile %>%
   mutate(logPadj=c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
