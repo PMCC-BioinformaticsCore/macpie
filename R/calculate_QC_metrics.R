@@ -13,7 +13,7 @@
 #' @import Seurat reshape2 tidyseurat
 #' @export
 
-QC_metrics <- function(data = NULL, group_by = NULL) {
+calculate_QC_metrics <- function(data = NULL, group_by = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(data, group_by) {
     if (!inherits(data, "Seurat")) {

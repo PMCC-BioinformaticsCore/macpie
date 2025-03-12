@@ -28,7 +28,7 @@ utils::globalVariables(c(".data", "Plate_ID"))
 #' @export
 
 
-metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRUE, output_file = NULL) {
+plot_metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRUE, output_file = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, metadata_file, legend, output_file) {
@@ -38,11 +38,13 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
       stop("No metadata found and no file provided. Please provide a CSV file.")
     }
     #If metadata object present but wrong format
-    if (!inherits(as.data.frame(data), "data.frame") && !is.null(data)) {
+    if (!inherits(as.data.frame(data), "data.frame") && !is.null(data)){
       stop("Metdata object cannot be read into a data frame.")
+
     } else if (nrow(as.data.frame(data)) > 0 && !is.null(data)) {
       #If metadata object present but right format
       metadata <- data
+
     } else if (!is.null(metadata_file)) {
       #If metadata file present
       if (inherits(metadata_file, "character") && file.exists(metadata_file) && length(metadata_file) == 1) {
@@ -101,9 +103,13 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
     heatmaps <- lapply(seq_along(annotation_cols), function(i) {
       annotation <- annotation_cols[i]
       scale_func <- if (is.numeric(plate_data[[annotation]])) {
-        scale_fill_viridis_c(option = "C", na.value = "grey80")
+        #scale_fill_viridis_c(option = "C", na.value = "grey80")
+        scale_fill_gradientn(colors = macpie_colours$continuous)
+      } else if (length(unique(plate_data[[annotation]])) < 40) {
+        #scale_fill_viridis_d(option = "C", na.value = "grey80")
+        scale_fill_manual(values = macpie_colours$discrete)
       } else {
-        scale_fill_viridis_d(option = "C", na.value = "grey80")
+        scale_fill_manual(values = macpie_colours$discrete_400)
       }
 
       legend_setting <- if (legend && !hide_legends[i]) "right" else "none"
@@ -155,6 +161,7 @@ metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRU
       message("Saving plot to: ", file_name)
       ggsave(file_name, combined_plot, width = 10, height = 6 * ceiling(length(heatmaps) / 3), units = "in")
       message("Saved plot for Plate ID: ", plate_id, " to ", file_name)
+
     } else {
       return(combined_plot)
     }

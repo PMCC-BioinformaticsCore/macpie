@@ -28,13 +28,13 @@
 #' control_samples<-"DMSO_0"
 #' top_table <- differential_expression(mac, treatment_samples, control_samples, method = "limma_voom")
 
-differential_expression <- function(data = NULL,
-                                    treatment_samples = NULL,
-                                    control_samples = NULL,
-                                    method = NULL,
-                                    batch = 1,
-                                    k = 2,
-                                    spikes = NULL) {
+run_differential_expression <- function(data = NULL,
+                                        treatment_samples = NULL,
+                                        control_samples = NULL,
+                                        method = NULL,
+                                        batch = 1,
+                                        k = 2,
+                                        spikes = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(data, method, treatment_samples, control_samples) {
     if (!inherits(data, "Seurat")) {

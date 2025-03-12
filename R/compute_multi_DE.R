@@ -1,4 +1,3 @@
-
 #' Perform DE of multiple samples in a screen vs control
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns
@@ -20,11 +19,11 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)[50:150]
-#' control_samples<-"DMSO_0"
+#' control_samples <- "DMSO_0"
 #' treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
 #' mac <- multi_DE(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
 
-multi_DE <- function(data = NULL,
+compute_multi_DE <- function(data = NULL,
                      treatment_samples = NULL,
                      control_samples = NULL,
                      method = "edgeR",
@@ -78,11 +77,12 @@ multi_DE <- function(data = NULL,
   num_cores <- validated$num_cores
 
   de_list <- pmclapply(treatment_samples, function(x) {
-    result <- differential_expression(data, x, control_samples, method, batch, k, spikes)
+    result <- run_differential_expression(data, x, control_samples, method, batch, k, spikes)
     result$combined_id <- x
     return(result)
   }, mc.cores = num_cores)
   names(de_list) <- treatment_samples
-  data@tools[["diff_exprs"]]<-de_list
+  data@tools[["diff_exprs"]] <- de_list
+
   return(data)
 }

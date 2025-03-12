@@ -19,7 +19,7 @@
 #' file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
 #' genesets <- readRDS(file_path)
 #' multi_enrich_pathways(mac, genesets = genesets)
-multi_enrich_pathways <- function(data,
+compute_enrichr_pathways <- function(data,
                                   genesets = enrichr_genesets,
                                   species = NULL,
                                   p_value_cutoff = 0.01,

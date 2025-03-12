@@ -45,10 +45,10 @@
 #' @export
 
 # Main function
-rle_plot <- function(data, barcodes = NULL, label_column = NULL,
-                     labels = NULL, log = TRUE,
-                     batch = NULL, normalisation = NULL,
-                     spikes = NULL) {
+plot_rle <- function(data, barcodes = NULL, label_column = NULL,
+                            labels = NULL, log = TRUE,
+                            batch = NULL, normalisation = NULL,
+                            spikes = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
@@ -117,35 +117,32 @@ rle_plot <- function(data, barcodes = NULL, label_column = NULL,
 
   # Helper function to create the plot
   create_rle_plot <- function(rledf, normalisation) {
+
     tryCatch({
       # Generate a color palette for fill
-      fill_palette <- colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
+      fill_palette <- macpie_colours$discrete #colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
 
       # Darken the palette for outlines
       outline_palette <- darken(fill_palette, amount = 0.1)
 
       ggplot(rledf, aes(x = .data$sample, fill = .data$feature, color = .data$feature)) +
-        geom_boxplot(
-          aes(
-            ymin = .data$ymin,
-            lower = .data$lower,
-            middle = .data$middle,
-            upper = .data$upper,
-            ymax = .data$ymax
-          ),
-          stat = "identity"
-        ) +
-        theme_bw() +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 4)) +
+        geom_boxplot(aes(ymin = .data$ymin, lower = .data$lower, middle = .data$middle,
+            upper = .data$upper, ymax = .data$ymax), stat = "identity") +
+        geom_hline(yintercept = 0, linetype = "dotted", col = "red", linewidth = 1) +
+        # Theme
+        macpie_theme(show_x_title = TRUE, show_y_title = TRUE, legend_position_ = 'bottom', x_labels_angle = 45) +
+        # Colours
         scale_x_discrete(limits = rledf$sample) +
         scale_fill_manual(values = fill_palette) +
         scale_color_manual(values = outline_palette) +
-        geom_hline(yintercept = 0, linetype = "dotted", col = "red", linewidth = 1) +
+        # Titles
         ggtitle(paste0("Normalisation method: ", normalisation)) +
         ylab("Log expression deviation")
+
     }, error = function(e) {
       stop("Error in plotting: ", e$message)
     })
+
   }
 
   # Validate inputs
