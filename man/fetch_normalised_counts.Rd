@@ -9,7 +9,8 @@ fetch_normalised_counts(
   method = NULL,
   batch = NULL,
   k = NULL,
-  spikes = NULL
+  spikes = NULL,
+  max_counts = NULL
 )
 }
 \arguments{

@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 )
 
 ## ----load_metadata------------------------------------------------------------
-library(macpie)
+#library(macpie)
 library(Seurat)
 library(edgeR)
 library(dplyr)
@@ -67,8 +67,8 @@ mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
 
-#example of a function from Seurat QC 
-VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+#example of a function from Seurat QC
+VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
         ncol = 4, group.by="Sample_type")
 
 ## ----subset_seurat, fig.width = 8---------------------------------------------
@@ -80,7 +80,7 @@ mac <- mac %>%
 plate_layout(mac, "nCount_RNA", "Sample_type")
 
 ## ----mds_plot, fig.width = 8--------------------------------------------------
-#example of MDS function 
+#example of MDS function
 p<-plot_mds(mac)
 girafe(ggobj = p)
 
@@ -91,9 +91,9 @@ mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
 #RLE function
-rle_plot(mac_dmso, label_column = "Row")
+rle_plot(mac_dmso, label_column = "Column")
 rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
-rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
+rle_plot(mac_dmso, label_column = "Column", normalisation = "edgeR")
 
 ## ----de_analysis, fig.width = 8, fig.height=5---------------------------------
 

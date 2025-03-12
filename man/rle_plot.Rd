@@ -34,7 +34,7 @@ Defaults to \code{TRUE}.}
 number of samples.}
 
 \item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom". If empty, defaults to raw.}
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to raw.}
 
 \item{spikes}{List of genes to use as spike controls in RUVg}
 }

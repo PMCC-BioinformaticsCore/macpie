@@ -29,6 +29,10 @@ library(clusterProfiler)
 library(ggsci)
 library(pheatmap)
 library(umap)
+library(doParallel)
+library(pbapply)
+library(zinbwave)
+library(SingleCellExperiment)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -38,6 +42,7 @@ custom_linters <- lintr::linters_with_defaults(
 # Load all previous libraries
 load_all()
 
+<<<<<<< HEAD
 # Select which sample dataset to use
 project_name <- "PMMSq033"
 
@@ -48,6 +53,17 @@ data_dir <- "inst/extdata"
 # Load metadata
 project_metadata <- file.path(data_dir, project_name, paste0(project_name, "_metadata.csv"))
 metadata <- read_metadata(project_metadata)
+=======
+#select which sample dataset to use
+project_name <- "PMMSq033"
+
+#directory with data
+data_dir <- "inst/extdata/"
+
+################## metadata ##################
+# Mark's load metadata
+project_metadata <- paste0(data_dir, project_name,"/",project_name,"_metadata.csv")
+metadata<-read_metadata(project_metadata)
 
 # Validate metadata
 validate_metadata(metadata)
@@ -85,6 +101,7 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[sl][[:digit:]]
 # Add metadata to the sequencing data and select only a specific project
 mac <- mac %>%
   inner_join(metadata,by = c(".cell" = "Barcode")) %>%
+  mutate("Barcode" = .cell) %>%
   filter(Project == "Current")
 
 # Create an ID that uniquely identifies samples based on the
@@ -174,7 +191,7 @@ girafe(ggobj = p)
 # Get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
 enriched_pathways_per_comparison <- mac@tools$pathway_enrichment
-screen_profile_per_comparison <- mac@tools$screen_profile
+screen_preeofile_per_comparison <- mac@tools$screen_profile
 
 ### Plot DGE results ------------------
 # Plot the results for pathways across all the comparisons
@@ -222,7 +239,7 @@ screen_profile_per_comparison %>%
 #Code > Insert roxygen skeleton.
 #document()
 #check()
-# vvvaera
+#lint(filename="R/multi_enrich_pathways.R",linters = custom_linters)
 #8. make the test
 #use_test("functionX")
 #test()
@@ -234,6 +251,5 @@ screen_profile_per_comparison %>%
 #git push origin function_author
 #git checkout main
 #git branch -d function_author
-
 
 
