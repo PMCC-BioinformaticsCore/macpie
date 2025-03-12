@@ -53,11 +53,6 @@ data_dir <- "inst/extdata"
 project_metadata <- file.path(data_dir, project_name, paste0(project_name, "_metadata.csv"))
 metadata <- read_metadata(project_metadata)
 
-################## metadata ##################
-# Mark's load metadata
-project_metadata <- paste0(data_dir, project_name,"/",project_name,"_metadata.csv")
-metadata<-read_metadata(project_metadata)
-
 # Validate metadata
 validate_metadata(metadata)
 
@@ -150,7 +145,7 @@ enrichr_results <- enrichr(top_genes, enrichR_pathway)
 plotEnrich(enrichr_results[[1]], title = enrichR_pathway)
 
 # Process locally
-enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
+enriched <- compute_pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
 ## Screen-level analysis --------------------------

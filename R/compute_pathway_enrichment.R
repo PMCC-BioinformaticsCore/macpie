@@ -21,7 +21,7 @@
 #' result <- pathway_enrichment(genes = top_genes, db = "MSigDB_Hallmark_2020", species = "human")
 #' head(result)
 
-pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species = NULL) {
+compute_pathway_enrichment <- function(genes = NULL, db = NULL, genesets = NULL, species = NULL) {
 
   #first validate the inputs
   validate_inputs <- function(genes, db, genesets, species) {
