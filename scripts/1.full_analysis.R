@@ -42,7 +42,6 @@ custom_linters <- lintr::linters_with_defaults(
 # Load all previous libraries
 load_all()
 
-<<<<<<< HEAD
 # Select which sample dataset to use
 project_name <- "PMMSq033"
 
@@ -53,12 +52,6 @@ data_dir <- "inst/extdata"
 # Load metadata
 project_metadata <- file.path(data_dir, project_name, paste0(project_name, "_metadata.csv"))
 metadata <- read_metadata(project_metadata)
-=======
-#select which sample dataset to use
-project_name <- "PMMSq033"
-
-#directory with data
-data_dir <- "inst/extdata/"
 
 ################## metadata ##################
 # Mark's load metadata
