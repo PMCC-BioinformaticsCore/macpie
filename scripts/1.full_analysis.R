@@ -100,7 +100,7 @@ mac <- mac %>%
 
 # QC ===================================================
 # QC plot plate layout (all metadata columns can be used):
-plot_plot_plate_layout(mac,"nCount_RNA","Sample_type")
+plot_plate_layout(mac,"nCount_RNA","Sample_type")
 
 # Example of Seurat function being used
 VlnPlot(mac,
