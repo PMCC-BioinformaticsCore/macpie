@@ -25,5 +25,5 @@ Plot MAC-seq data on a plate layout
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plate_layout(mac,"nCount_RNA","Treatment_1")
+plot_plate_layout(mac,"nCount_RNA","Treatment_1")
 }

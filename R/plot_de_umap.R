@@ -18,9 +18,9 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' mac <- multi_prepare_umap(mac)
-#' multi_plot_umap(mac)
-multi_plot_umap <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
+#' mac <- compute_de_umap(mac)
+#' plot_de_umap(mac)
+plot_de_umap <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, label, max_overlaps) {

@@ -74,7 +74,7 @@ qc_stats <- QC_metrics(mac, "combined_id")
 qc_stats$stats_summary
 
 #Plot qc metrics 
-plot_QC_metrics(qc_stats, "combined_id", "z_score")
+plot_qc_metrics(qc_stats, "combined_id", "z_score")
 
 #Plot distance matrix in a heatmap for condition and control with high varibility from previous qc metrics step 
 plot_distance(mac, "combined_id", "Staurosporine_10")

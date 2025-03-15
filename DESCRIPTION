@@ -59,5 +59,7 @@ Imports:
     gridExtra,
     variancePartition,
     BiocParallel,
-    SingleCellExperiment
+    SingleCellExperiment,
+    doParallel,
+    zinbwave
 VignetteBuilder: knitr

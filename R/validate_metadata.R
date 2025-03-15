@@ -1,4 +1,3 @@
-
 #'Check and clean the metadata file generated from findmetadata function
 #'
 #'This function validates a metadata dataset, cleans specific fields, checks for

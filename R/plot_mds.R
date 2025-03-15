@@ -62,11 +62,11 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
   data$PCA2 <- mds_result$y
 
   data <- data %>%
-    mutate(extremeness = abs(PCA1) + abs(PCA2))
+    mutate(extremeness = abs(.data$PCA1) + abs(.data$PCA2))
 
   # Select the top 50 most extreme points
   top_n_data <- data@meta.data %>%  # Sort by extremeness in descending order
-    arrange(desc(extremeness)) %>% head(n_labels)
+    arrange(desc(.data$extremeness)) %>% head(n_labels)
 
   # Plot the results
   tryCatch({

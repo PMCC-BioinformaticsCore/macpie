@@ -9,10 +9,11 @@
 #' @param metrics to specify one of the QC metrics from stats_summary calculated from QC_metrics
 #'
 #' @import ggplot2
+#' @importFrom stats reorder mad sd
 #' @export
 
 
-plot_QC_metrics <- function(stats_summary, group_by, metrics) {
+plot_qc_metrics <- function(stats_summary, group_by, metrics) {
   # Helper function to validate input data
   validate_inputs <- function(stats_summary, group_by, metrics) {
     if (!inherits(stats_summary, "list")) {

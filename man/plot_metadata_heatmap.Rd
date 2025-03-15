@@ -31,5 +31,5 @@ object or from a CSV file.
 #Example
 metadata_file_path <- system.file("extdata", "PMMSq033/PMMSq033_metadata.csv", package = "macpie")
 metadata<-read_metadata(metadata_file_path)
-metadata_heatmap(metadata=metadata)
+plot_metadata_heatmap(metadata=metadata)
 }
