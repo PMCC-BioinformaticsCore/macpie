@@ -57,5 +57,9 @@ Imports:
     enrichR,
     glmGamPoi,
     gridExtra,
-    variancePartition
+    variancePartition,
+    BiocParallel,
+    SingleCellExperiment,
+    doParallel,
+    zinbwave
 VignetteBuilder: knitr

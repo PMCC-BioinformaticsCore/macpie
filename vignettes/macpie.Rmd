@@ -168,17 +168,17 @@ Box plot to show distribution of read counts from all wells that belong to one t
 
 ```{r, fig.width = 8, fig.height = 6}
 
-qc_stats <- calculate_QC_metrics(mac, "combined_id")
+qc_stats <- compute_qc_metrics(mac, "combined_id")
 qc_stats$stats_summary
 
 ```
 
 ```{r, fig.width = 8, fig.height = 15}
 
-plot_QC_metrics(qc_stats, "combined_id", "sd_value")
-plot_QC_metrics(qc_stats, "combined_id", "z_score")
-plot_QC_metrics(qc_stats, "combined_id", "mad_value")
-plot_QC_metrics(qc_stats, "combined_id", "IQR")
+plot_qc_metrics(qc_stats, "combined_id", "sd_value")
+plot_qc_metrics(qc_stats, "combined_id", "z_score")
+plot_qc_metrics(qc_stats, "combined_id", "mad_value")
+plot_qc_metrics(qc_stats, "combined_id", "IQR")
 
 ```
 
@@ -206,7 +206,7 @@ the results on the volcano plots.
 # First perform the differential expression analysis
 treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
-top_table_edgeR <- run_differential_expression(mac, treatment_samples, control_samples, method = "edgeR")
+top_table_edgeR <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
 
 # Let's visualise the results with a volcano plot
 plot_volcano(top_table_edgeR)
@@ -248,7 +248,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 
 ```
 
@@ -256,7 +256,7 @@ mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "e
 
 # Load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
-mac <- compute_enrichr_pathways(mac, genesets = enrichr_genesets)
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
 enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   select(combined_id, Term, Combined.Score) %>%

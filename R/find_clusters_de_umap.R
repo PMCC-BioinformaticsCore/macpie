@@ -1,5 +1,3 @@
-
-
 #' Calculate clusters for umap based on DE analysis
 #'
 #' @param data tidyseurat object merged with metadata. Must contain columns
@@ -14,10 +12,10 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' mac <- multi_prepare_umap(mac)
-#' mac <- multi_cluster_umap(mac)
-#' multi_plot_umap(mac, group_by = "cluster", max_overlaps = 10)
-multi_cluster_umap <- function(data = NULL, k = 10) {
+#' mac <- compute_de_umap(mac)
+#' mac <- find_clusters_de_umap(mac)
+#' plot_de_umap(mac, group_by = "cluster", max_overlaps = 10)
+find_clusters_de_umap <- function(data = NULL, k = 10) {
 
   validate_inputs <- function(df_umap_data, k) {
     if (!inherits(df_umap_data, "data.frame") && length(df_umap_data) > 0) {

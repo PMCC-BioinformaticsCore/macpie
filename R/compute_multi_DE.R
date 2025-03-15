@@ -21,9 +21,9 @@
 #' mac <- readRDS(file_path)[50:150]
 #' control_samples <- "DMSO_0"
 #' treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
-#' mac <- multi_DE(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
+#' mac <- compute_multi_de(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
 
-compute_multi_DE <- function(data = NULL,
+compute_multi_de <- function(data = NULL,
                      treatment_samples = NULL,
                      control_samples = NULL,
                      method = "edgeR",
@@ -56,7 +56,7 @@ compute_multi_DE <- function(data = NULL,
       warn("Missing treatment samples, using all that differ from control.")
       treatment_samples <- data %>%
         select(.data$combined_id) %>%
-        filter(!grepl(control_samples, combined_id)) %>%
+        filter(!grepl(control_samples, .data$combined_id)) %>%
         pull() %>%
         unique()
     }
@@ -77,7 +77,7 @@ compute_multi_DE <- function(data = NULL,
   num_cores <- validated$num_cores
 
   de_list <- pmclapply(treatment_samples, function(x) {
-    result <- run_differential_expression(data, x, control_samples, method, batch, k, spikes)
+    result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
     result$combined_id <- x
     return(result)
   }, mc.cores = num_cores)

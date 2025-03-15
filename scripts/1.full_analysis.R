@@ -29,6 +29,10 @@ library(clusterProfiler)
 library(ggsci)
 library(pheatmap)
 library(umap)
+library(doParallel)
+library(pbapply)
+library(zinbwave)
+library(SingleCellExperiment)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -53,7 +57,7 @@ metadata <- read_metadata(project_metadata)
 validate_metadata(metadata)
 
 # Heatmap visualisation of metadata
-plot_metadata_heatmap(metadata)
+plot_plot_metadata_heatmap(metadata)
 
 # Only create an id if there are multiple plates
 #TODO: test multiple plates
@@ -85,6 +89,7 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[sl][[:digit:]]
 # Add metadata to the sequencing data and select only a specific project
 mac <- mac %>%
   inner_join(metadata,by = c(".cell" = "Barcode")) %>%
+  mutate("Barcode" = .cell) %>%
   filter(Project == "Current")
 
 # Create an ID that uniquely identifies samples based on the
@@ -95,7 +100,7 @@ mac <- mac %>%
 
 # QC ===================================================
 # QC plot plate layout (all metadata columns can be used):
-plot_plate_layout(mac,"nCount_RNA","Sample_type")
+plot_plot_plate_layout(mac,"nCount_RNA","Sample_type")
 
 # Example of Seurat function being used
 VlnPlot(mac,
@@ -125,7 +130,7 @@ treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
 
 # Perform differential expression
-top_table <- run_differential_expression(mac, treatment_samples, control_samples, method = "edgeR")
+top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
 plot_volcano(top_table)
 
 # Perform pathway enrichment
@@ -140,7 +145,7 @@ enrichr_results <- enrichr(top_genes, enrichR_pathway)
 plotEnrich(enrichr_results[[1]], title = enrichR_pathway)
 
 # Process locally
-enriched <- pathway_enrichment(top_genes, "MSigDB_Hallmark_2020", species = "human")
+enriched <- compute_single_enrichr(top_genes, "MSigDB_Hallmark_2020", species = "human")
 plotEnrich(enriched)
 
 ## Screen-level analysis --------------------------
@@ -155,7 +160,7 @@ treatments <- mac %>%
 
 ##slow version
 #de_list<-sapply(treatments,function(x){
-#  differential_expression(mac, x, control_samples,method = "edgeR");
+#  compute_single_de(mac, x, control_samples,method = "edgeR");
 #  cat(".")
 #})
 
@@ -163,18 +168,18 @@ treatments <- mac %>%
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 
 # Update the mac object with differential expression
-mac <- compute_multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
-mac <- compute_enrichr_pathways(mac, genesets = enrichr_genesets)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
-mac <- prepare_de_umap(mac)
+mac <- compute_de_umap(mac)
 mac <- find_clusters_de_umap(mac, k = 3)
-p <- multi_plot_umap(mac, group_by = "cluster", max_overlaps = 5)
+p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
 girafe(ggobj = p)
 
 # Get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
 enriched_pathways_per_comparison <- mac@tools$pathway_enrichment
-screen_profile_per_comparison <- mac@tools$screen_profile
+screen_preeofile_per_comparison <- mac@tools$screen_profile
 
 ### Plot DGE results ------------------
 # Plot the results for pathways across all the comparisons
@@ -215,14 +220,14 @@ screen_profile_per_comparison %>%
 #4. edit script
 #load_all()
 #5. check if the function exists in the global environment
-#exists("plote_plate_layout", where = globalenv(), inherits = FALSE)
+#exists("plote_plot_plate_layout", where = globalenv(), inherits = FALSE)
 #6. check and document
 #check()
 #7. click inside the function and
 #Code > Insert roxygen skeleton.
 #document()
 #check()
-# vvvaera
+#lint(filename="R/multi_enrich_pathways.R",linters = custom_linters)
 #8. make the test
 #use_test("functionX")
 #test()
@@ -234,6 +239,5 @@ screen_profile_per_comparison %>%
 #git push origin function_author
 #git checkout main
 #git branch -d function_author
-
 
 

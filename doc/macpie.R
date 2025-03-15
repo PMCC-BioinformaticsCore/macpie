@@ -7,6 +7,14 @@ knitr::opts_chunk$set(
 )
 
 ## ----load_metadata------------------------------------------------------------
+
+# Clean environment
+rm(list = ls(all.names = TRUE)) # will clear all objects including hidden objects
+gc() # free up memory and report the memory usage
+
+# Load all functions
+devtools::load_all()
+
 library(macpie)
 library(Seurat)
 library(edgeR)
@@ -21,9 +29,10 @@ library(ggiraph)
 library(pheatmap)
 library(tidyr)
 library(tibble)
-
-#load all functions
-devtools::load_all()
+library(enrichR)
+library(variancePartition)
+library(glmGamPoi)
+library(PoiClaClu)
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -36,127 +45,165 @@ colnames(metadata)
 # Validate metadata
 validate_metadata(metadata)
 
+
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
-metadata_heatmap(metadata)
+
+plot_metadata_heatmap(metadata)
 
 
 ## ----load_data----------------------------------------------------------------
+
 project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
 raw_counts_total <- Read10X(data.dir = project_rawdata)
 keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
 raw_counts <- raw_counts_total[keep, ]
 
-#create tidySeurat object
+# Create tidySeurat object
 mac <- CreateSeuratObject(counts = raw_counts,
                           project = project_name,
                           min.cells = 1,
                           min.features = 1)
 
 
-## ----violin_plot, fig.width = 8-----------------------------------------------
-#calculate percent of mitochondrial and ribosomal genes
+## ----violin_plot, fig.width = 8, fig.height = 6-------------------------------
+# Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-#join with metadata
+# Join with metadata
 mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
-#add unique identifier
+# Add unique identifier
 mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
 
-#example of a function from Seurat QC 
+# Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
-        ncol = 4, group.by="Sample_type")
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) &
+  macpie_theme(show_x_title = F, show_y_title = F, legend_position_ = 'none', x_labels_angle = 45)
 
-## ----subset_seurat, fig.width = 8---------------------------------------------
+
+## ----subset_seurat, fig.width = 10, fig.height = 6----------------------------
+
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
 
-#QC plot plate layout (all metadata columns can be used):
-plate_layout(mac, "nCount_RNA", "Sample_type")
+# QC plot plate layout (all metadata columns can be used):
+plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 
-## ----mds_plot, fig.width = 8--------------------------------------------------
-#example of MDS function 
-p<-plot_mds(mac)
-girafe(ggobj = p)
 
-## ----rle_plot, fig.width = 8, fig.height=5------------------------------------
+## ----mds_plot, fig.width = 8, fig.height = 8----------------------------------
+
+# Example of MDS function 
+p <- plot_mds(mac, group_by = "combined_id", label = "combined_id", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
+
+
+## ----plot_rle, fig.width = 8, fig.height = 7----------------------------------
 
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
-#RLE function
-rle_plot(mac_dmso, label_column = "Row")
-rle_plot(mac_dmso, label_column = "Row", normalisation = "SCT")
-rle_plot(mac_dmso, label_column = "Row", normalisation = "edgeR")
+# Run the RLE function
+plot_rle(mac_dmso, label_column = "Row")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "SCT")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
 
-## ----de_analysis, fig.width = 8, fig.height=5---------------------------------
+
+## ----fig.width = 8, fig.height = 6--------------------------------------------
+
+qc_stats <- compute_qc_metrics(mac, "combined_id")
+qc_stats$stats_summary
+
+
+## ----fig.width = 8, fig.height = 15-------------------------------------------
+
+plot_qc_metrics(qc_stats, "combined_id", "sd_value")
+plot_qc_metrics(qc_stats, "combined_id", "z_score")
+plot_qc_metrics(qc_stats, "combined_id", "mad_value")
+plot_qc_metrics(qc_stats, "combined_id", "IQR")
+
+
+## ----fig.width = 8, fig.height = 6--------------------------------------------
+
+plot_distance(mac, "combined_id", "Staurosporine_10")
+plot_distance(mac, "combined_id", "DMSO_0")
+plot_distance(mac, "combined_id", "SN01005979_10")
+
+
+## ----de_analysis, fig.width = 8, fig.height = 6-------------------------------
 
 # First perform the differential expression analysis
-treatment_samples="Staurosporine_0.1"
-control_samples<-"DMSO_0"
+treatment_samples <- "Staurosporine_0.1"
+control_samples <- "DMSO_0"
+top_table_edgeR <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
 
-top_table_edgeR<-differential_expression(mac, treatment_samples, control_samples,method = "edgeR")
-
+# Let's visualise the results with a volcano plot
 plot_volcano(top_table_edgeR)
 
 
-## ----pathway_analysis_single, fig.width = 8, fig.height=15--------------------
+## ----pathway_analysis_single, fig.width = 8, fig.height = 15------------------
 
-top_genes<-top_table_edgeR %>%
-  filter(p_value_adj<0.05) %>%
+top_genes <- top_table_edgeR %>%
+  filter(p_value_adj < 0.05) %>%
   select(gene) %>%
   pull()
 
 enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
-p1<-enrichR::plotEnrich(enriched[[1]])
-p2<-enrichR::plotEnrich(enriched[[2]])
-p3<-enrichR::plotEnrich(enriched[[3]])
+p1 <- enrichR::plotEnrich(enriched[[1]]) + 
+  macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+p2 <- enrichR::plotEnrich(enriched[[2]]) + 
+   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+p3 <- enrichR::plotEnrich(enriched[[3]]) + 
+   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
 
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
-## ----de_multi, fig.width = 8, fig.height=5------------------------------------
+
+## ----de_multi, fig.width = 8, fig.height = 5----------------------------------
+
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- multi_DE(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 
-## ----enriched_pathways, fig.width = 8, fig.height=8---------------------------
-#load genesets from enrichr for a specific species or define your own
+
+## ----enriched_pathways, fig.width = 8, fig.height = 12------------------------
+
+# Load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
-mac <- multi_enrich_pathways(mac, genesets = enrichr_genesets)
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
 enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   select(combined_id, Term, Combined.Score) %>%
-  pivot_wider(
-    names_from = combined_id,
-    values_from = Combined.Score
-  ) %>%
+  pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat)
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_theme()
 
-## ----screen_profiles, fig.width = 8, fig.height=5-----------------------------
 
-mac <- multi_screen_profile(mac, target = "Staurosporine_10")
-mac@tools$screen_profile %>%
-  mutate(logPadj=c(-log10(padj))) %>%
+## ----compute_multi_screen_profile, fig.width = 15, fig.height = 5-------------
+
+mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
+mac_screen_profile <- mac@tools$screen_profile %>%
+  mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
-  mutate(target = factor(target, levels = unique(target))) %>%
-  ggplot(.,aes(target,NES))+
+  mutate(target = factor(target, levels = unique(target))) 
+
+ggplot(mac_screen_profile, aes(target, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
-  facet_wrap(~pathway,scales = "free") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  facet_wrap(~pathway, scales = "free") +
+  macpie_theme(x_labels_angle = 45, show_x_title = F)
 
 

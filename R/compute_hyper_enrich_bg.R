@@ -15,15 +15,15 @@
 #' mac <- readRDS(file_path)
 #' treatment_samples="Staurosporine_0.1"
 #' control_samples<-"DMSO_0"
-#' top_table <- differential_expression(mac, treatment_samples, control_samples,
+#' top_table <- compute_single_de(mac, treatment_samples, control_samples,
 #' method = "limma_voom")
 #' top_genes <- top_table$gene[top_table$p_value_adj<0.01]
 #' file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
 #' genesets <- readRDS(file_path)
-#' results <- hyper_enrich_bg(top_genes, genesets)
+#' results <- compute_hyper_enrich_bg(top_genes, genesets)
 #' head(results)
 
-hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
+compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
                             genesets = NULL, #pathway from enrichr
                             background = "human"
 ) {
@@ -91,6 +91,6 @@ hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
   )
 
   res_data <- res_data %>%
-    arrange(.,.data$P.value)
+    arrange(.data$P.value)
   return(results = res_data)
 }

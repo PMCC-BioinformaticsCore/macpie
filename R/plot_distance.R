@@ -12,8 +12,6 @@
 #' @import pheatmap
 #' @export
 
-
-
 plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
 
   validate_inputs <- function(data, group_by, treatment) {

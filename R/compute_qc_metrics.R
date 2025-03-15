@@ -1,0 +1,67 @@
+#' Calculate QC metrics
+#'
+#' To calculate QC metrics such as standard deviation (sd), median absolute deviation (MAD),
+#' interquartile range (IQR), and Z score
+#' for read counts per condition/group of interest
+
+#' @param data A tidyseurat object merged with metadata. Must contain columns
+#'   "Well_ID", "Row", "Column".
+#' @param group_by A metadata column name to group data
+#'
+#' @return a list with a data frame with QC metrics and a box plot showing read counts per condition
+#'
+#' @import Seurat reshape2 tidyseurat
+#' @export
+
+compute_qc_metrics <- function(data = NULL, group_by = NULL) {
+  # Helper function to validate input data
+  validate_inputs <- function(data, group_by) {
+    if (!inherits(data, "Seurat")) {
+      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+    }
+    group_by <- if (is.null(group_by)) "combined_id" else group_by
+
+    column_names <- data %>%
+      head() %>%
+      colnames()
+    if (!all(c(group_by) %in% column_names)) {
+      stop("Your column names are not present in the data or metadata.")
+    }
+    list(data = data, group_by = group_by)
+  }
+
+  validated <- validate_inputs(data, group_by)
+  group_by <- validated$group_by
+  meta <- validated$data@meta.data
+
+  # Group by the specified column and assign replicate numbers
+  meta <- meta %>%
+    group_by(across(all_of(validated$group_by))) %>%
+    mutate(Replicate = row_number())
+
+  #global median and MAD
+  global_median <- median(meta$nCount_RNA)
+  global_mad <- mad(meta$nCount_RNA)
+
+  stats_summary <- meta %>%
+    group_by(across(all_of(validated$group_by))) %>%
+    summarise(sd_value = round(sd(.data$nCount_RNA, na.rm = TRUE), 3),
+              mad_value = round(mad(.data$nCount_RNA, na.rm = TRUE), 3),
+              group_median = round(median(.data$nCount_RNA), 3),
+              z_score = round((.data$group_median - global_median) / global_mad, 3),
+              IQR = round(stats::IQR(.data$nCount_RNA), 3),
+              .groups = "drop")# Calculate qc metrics per group
+
+
+  p <- ggplot(meta, aes(.data[[group_by]], .data$nCount_RNA)) + 
+    geom_boxplot(outlier.colour = "NA") +
+    geom_jitter(width = 0.1, aes(color = .data[[group_by]])) + 
+    theme_minimal() +
+    labs(x = group_by, y = "Read counts") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
+
+  print(p)
+
+  return(list(stats_summary = stats_summary, plot = p))
+
+}
