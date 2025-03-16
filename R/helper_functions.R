@@ -47,7 +47,7 @@ macpie_colours <- list(
 )
 
 macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_position_ = 'bottom', x_labels_angle = 0) {
-
+  
   # Set axis label alignment based on the x_labels_angle
   if(x_labels_angle != 0){
     hjust_ <- 1
@@ -56,7 +56,7 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
     hjust_ <- 0.5
     vjust_ <- 0.5
   }
-
+  
   # Apply the theme with the customizations
   theme_bw(base_size = 20) +
     theme(

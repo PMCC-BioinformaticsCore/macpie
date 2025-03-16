@@ -33,7 +33,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
     }
     group_by <- if (is.null(group_by)) "Sample_type" else group_by
     label <- if (is.null(label)) "combined_id" else label
-    max_overlaps <- if (is.null(max_overlaps)) 20 else max_overlaps
+    max_overlaps <- if (is.null(max_overlaps)) 10 else max_overlaps
     column_names <- data %>%
       head() %>%
       colnames()
@@ -78,10 +78,10 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
 
   # Plot the results
   tryCatch({
-    p <- ggplot(data, aes(x = .data$PCA1, y = .data$PCA2, color = .data$group_by, label = !!rlang::sym(label))) +
+    p <- ggplot(data, aes(x = .data$PCA1, y = .data$PCA2, color = .data$group, label = !!rlang::sym(label))) +
       #geom_point(size = 2) +
       geom_point_interactive(aes(x = .data$PCA1, y = .data$PCA2,
-                                 color = .data$group_by, 
+                                 color = .data$group, 
                                  tooltip = !!rlang::sym(label), 
                                  data_id = !!rlang::sym(label))) +
       geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
