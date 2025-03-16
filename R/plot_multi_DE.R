@@ -20,10 +20,10 @@ utils::globalVariables(c(".data"))
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_multi_DE(mac, p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0")
+#' plot_multi_de(mac, p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0")
 
 
-plot_multi_DE <- function(data,
+plot_multi_de <- function(data,
                                   p_value_cutoff = 0.01,
                                   direction = "up", n_genes =10, control="DMSO_0" ) {
   
