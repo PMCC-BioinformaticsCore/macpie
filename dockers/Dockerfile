@@ -57,3 +57,4 @@ RUN R -e "renv::restore()"
 # Run MOFA2 to check installation
 RUN R -e "library(MOFA2); file <- system.file(\"extdata\", \"test_data.RData\", package = \"MOFA2\"); load(file); MOFAmodel <- create_mofa(dt); MOFAmodel <- prepare_mofa(MOFAmodel); run_mofa(MOFAmodel, use_basilisk = TRUE, save_data = FALSE)"
 
+# Trigger Docker build
