@@ -42,9 +42,10 @@ RUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf 
     echo "CXXFLAGS = -std=c++17 -fPIC"          >> /usr/local/lib/R/etc/Makeconf
 
 
-# Install MOFA2 and Dependencies
+# Install more packages
 RUN R -e "install.packages('BiocManager', repos = 'https://cloud.r-project.org')"
 RUN R -e "BiocManager::install('MOFA2')"
+RUN R -e "BiocManager::install('zinbwave')"
 
 # 3. Copy your renv.lock file into the container
 COPY renv.lock /renv.lock
