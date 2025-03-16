@@ -262,7 +262,7 @@ PMMSq033,K20,K,20,human,MCF10A,2D-adherent,24,h,SN01731137,1,uM,Sample,GTTCGTCGA
 PMMSq033,K21,K,21,human,MCF10A,2D-adherent,24,h,Thapsigargin,1,uM,Sample,TCCTAAGAGA,Current
 PMMSq033,K22,K,22,human,MCF10A,2D-adherent,24,h,SN02370314,10,uM,Sample,TCGAAGCATT,Current
 PMMSq033,K23,K,23,human,MCF10A,2D-adherent,24,h,DMSO,0,uM,Vehicle_control,TTATGCCGCG,Current
-PMMSq033,K24,K,24,human,KL475,3D_co_culture,24,h,CART_Medium_Dostar,1,uM,Sample,TTCAGGAGTA,Trial
+PMMSq033,K24,K,24,human,KL476,3D_co_culture,24,h,CART_Medium_Dostar,1,uM,Sample,TTCAGGAGTA,Trial
 PMMSq033,L01,L,1,human,KL476,3D_co_culture,24,h,CART_Medium_Dostar,1,uM,Sample,AAGCGTTCAG,Trial
 PMMSq033,L02,L,2,human,MCF10A,2D-adherent,24,h,SN01004272,1,uM,Sample,AAGGCATGCG,Current
 PMMSq033,L03,L,3,human,MCF10A,2D-adherent,24,h,SN02370733,1,uM,Sample,ACCATAACAC,Current
