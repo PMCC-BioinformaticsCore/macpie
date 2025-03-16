@@ -124,7 +124,7 @@ girafe(ggobj = p) %>%
 # RLE plot
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
-plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 # Differential expression ===================================================
 
