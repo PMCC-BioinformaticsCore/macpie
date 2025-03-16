@@ -34,7 +34,6 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
   if (!is(genesets, "list")) {
     stop("Genesets expected to be a list of non-null names\n")
   }
-
   if (typeof(background) != "integer") {
     #set background/universe gene number
     background <- switch(background,

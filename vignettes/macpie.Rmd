@@ -142,7 +142,7 @@ Visualise grouping of samples on an interactive plot.
 ```{r mds_plot, fig.width = 8, fig.height = 8}
 
 # Example of MDS function 
-p <- plot_mds(mac, group_by = "combined_id", label = "combined_id", n_labels = 30)
+p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```

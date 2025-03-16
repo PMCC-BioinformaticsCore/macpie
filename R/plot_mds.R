@@ -33,7 +33,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
     }
     group_by <- if (is.null(group_by)) "Sample_type" else group_by
     label <- if (is.null(label)) "combined_id" else label
-    max_overlaps <- if (is.null(max_overlaps)) 20 else max_overlaps
+    max_overlaps <- if (is.null(max_overlaps)) 10 else max_overlaps
     column_names <- data %>%
       head() %>%
       colnames()
@@ -64,17 +64,27 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
   data <- data %>%
     mutate(extremeness = abs(.data$PCA1) + abs(.data$PCA2))
 
+  data$group <- data %>%
+    select(!!rlang::sym(group_by)) %>%
+    pull()
+  
+  data$label <- data %>%
+    select(!!rlang::sym(label)) %>%
+    pull()
+  
   # Select the top 50 most extreme points
   top_n_data <- data@meta.data %>%  # Sort by extremeness in descending order
     arrange(desc(.data$extremeness)) %>% head(n_labels)
 
   # Plot the results
   tryCatch({
-    p <- ggplot(data, aes(x = .data$PCA1, y = .data$PCA2, color = .data$Sample_type, label = !!rlang::sym(label))) +
+    p <- ggplot(data, aes(x = .data$PCA1, y = .data$PCA2, color = .data$group, label = !!rlang::sym(label))) +
       #geom_point(size = 2) +
       geom_point_interactive(aes(x = .data$PCA1, y = .data$PCA2,
-                                 color = .data$Sample_type, tooltip = !!rlang::sym(label), data_id = !!rlang::sym(label))) +
-      geom_text_repel(data = top_n_data, aes(label = .data$combined_id), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
+                                 color = .data$group, 
+                                 tooltip = !!rlang::sym(label), 
+                                 data_id = !!rlang::sym(label))) +
+      geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
       scale_color_manual(values = macpie_colours$discrete) +
       labs(title = "MDS plot",
            x = "Dimension 1",

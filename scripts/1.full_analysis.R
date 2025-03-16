@@ -33,6 +33,7 @@ library(doParallel)
 library(pbapply)
 library(zinbwave)
 library(SingleCellExperiment)
+library(gdtools)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -57,7 +58,7 @@ metadata <- read_metadata(project_metadata)
 validate_metadata(metadata)
 
 # Heatmap visualisation of metadata
-plot_plot_metadata_heatmap(metadata)
+plot_metadata_heatmap(metadata)
 
 # Only create an id if there are multiple plates
 #TODO: test multiple plates
@@ -100,7 +101,7 @@ mac <- mac %>%
 
 # QC ===================================================
 # QC plot plate layout (all metadata columns can be used):
-plot_plot_plate_layout(mac,"nCount_RNA","Sample_type")
+plot_plate_layout(mac,"nCount_RNA","Sample_type")
 
 # Example of Seurat function being used
 VlnPlot(mac,
@@ -110,7 +111,10 @@ VlnPlot(mac,
 
 # Example of MDS function, using limma
 p <- plot_mds(mac)
-girafe(ggobj = p)
+girafe(ggobj = p) %>%
+  girafe_options(
+  opts_tooltip(css = "font-family: 'Arial', sans-serif; font-size: 14px; background: white; border-radius: 5px; padding: 5px;")
+)
 
 # Compare normalisation methods using the RLE function
 #To-do: verify that different plates would be plotted side-by-side
@@ -174,7 +178,7 @@ mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 mac <- compute_de_umap(mac)
 mac <- find_clusters_de_umap(mac, k = 3)
 p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
-girafe(ggobj = p)
+girafe(ggobj = p, fonts = list(sans = "Open Sans"))
 
 # Get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
