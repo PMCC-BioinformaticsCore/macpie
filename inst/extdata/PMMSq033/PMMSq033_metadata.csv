@@ -70,8 +70,8 @@ PMMSq033,C20,C,20,human,MCF10A,2D-adherent,24,h,SN01731137,10,uM,Sample,GTAAGGCT
 PMMSq033,C21,C,21,human,MCF10A,2D-adherent,24,h,SN02373365,0.1,uM,Sample,TAGTAGTCTC,Current
 PMMSq033,C22,C,22,human,MCF10A,2D-adherent,24,h,SN01731137,0.1,uM,Sample,TAGTGGAACT,Current
 PMMSq033,C23,C,23,human,MCF10A,2D-adherent,24,h,Media,0,uM,Vehicle_control,TGAGCGTTCC,Current
-PMMSq033,C24,C,24,human,CART,suspension,24,h,CART_Low,NA,uM,Sample,TGCGCTCATT,Trial
-PMMSq033,D01,D,1,human,KL476,3D_co_culture,24,h,CART_Low,NA,uM,Sample,AACATTACCG,Trial
+PMMSq033,C24,C,24,human,CART,suspension,24,h,CART_Low,0,uM,Sample,TGCGCTCATT,Trial
+PMMSq033,D01,D,1,human,KL476,3D_co_culture,24,h,CART_Low,0,uM,Sample,AACATTACCG,Trial
 PMMSq033,D02,D,2,human,MCF10A,2D-adherent,24,h,DMSO,0,uM,Vehicle_control,AACCAGTTGA,Current
 PMMSq033,D03,D,3,human,MCF10A,2D-adherent,24,h,SN01004236,10,uM,Sample,AATGTCAGTG,Current
 PMMSq033,D04,D,4,human,MCF10A,2D-adherent,24,h,SN02370733,0.1,uM,Sample,AATTGCGATG,Current
@@ -119,7 +119,7 @@ PMMSq033,E21,E,21,human,MCF10A,2D-adherent,24,h,SN02370003,0.1,uM,Sample,TATCGTT
 PMMSq033,E22,E,22,human,MCF10A,2D-adherent,24,h,SN01731255,0.1,uM,Sample,TCACAGATAC,Current
 PMMSq033,E23,E,23,human,MCF10A,2D-adherent,24,h,Media,0,uM,Vehicle_control,TGGAATGGAG,Current
 PMMSq033,E24,E,24,human,CART,suspension,24,h,CART_Low,0,uM,Sample,TGTGACGTGC,Trial
-PMMSq033,F01,F,1,human,CART,suspension,24,h,CART_Low,0,uM,NA,AACCGGAAGG,Trial
+PMMSq033,F01,F,1,human,CART,suspension,24,h,CART_Low,0,uM,Sample,AACCGGAAGG,Trial
 PMMSq033,F02,F,2,human,MCF10A,2D-adherent,24,h,Paclitaxel,10,uM,Sample,AACCTAGTCC,Current
 PMMSq033,F03,F,3,human,MCF10A,2D-adherent,24,h,SN01004272,10,uM,Sample,ACAACCATAC,Current
 PMMSq033,F04,F,4,human,MCF10A,2D-adherent,24,h,SN02370733,0.1,uM,Sample,ACAAGCGCGA,Current
@@ -358,7 +358,7 @@ PMMSq033,O20,O,20,human,MCF10A,2D-adherent,24,h,SN02369800,1,uM,Sample,TACTACCGC
 PMMSq033,O21,O,21,human,MCF10A,2D-adherent,24,h,Paclitaxel,1,uM,Sample,TCTACATCCG,Current
 PMMSq033,O22,O,22,human,MCF10A,2D-adherent,24,h,SN02370728,10,uM,Sample,TCTCTCCTAT,Current
 PMMSq033,O23,O,23,human,MCF10A,2D-adherent,24,h,Media,0,uM,Vehicle_control,TTGGTAACAG,Current
-PMMSq033,O24,O,24,human,CART,suspension,24,h,CART_UltraHigh,NA,uM,Sample,TTGTCGGCCA,Trial
+PMMSq033,O24,O,24,human,CART,suspension,24,h,CART_UltraHigh,0,uM,Sample,TTGTCGGCCA,Trial
 PMMSq033,P01,P,1,human,CART,suspension,24,h,CART_Low,1,uM,Sample,AATCACGCGA,Trial
 PMMSq033,P02,P,2,human,CART,suspension,24,h,CART_Low,1,uM,Sample,AATCCGCTCC,Trial
 PMMSq033,P03,P,3,human,CART,suspension,24,h,CART_Low,1,uM,Sample,ACCTTATGTG,Trial
