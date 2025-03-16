@@ -8,6 +8,7 @@ compute_multi_enrichr(
   data,
   genesets = NULL,
   species = NULL,
+  direction = "both",
   p_value_cutoff = 0.01,
   n_distinct = 5
 )
@@ -19,6 +20,9 @@ compute_multi_enrichr(
 \item{genesets}{Named list of genes}
 
 \item{species}{One of "human", "mouse", "fly", "yeast", "worm" or "fish"}
+
+\item{direction}{Direction of the differentially expressed genes,
+one of "up", "down", "both" (default).}
 
 \item{p_value_cutoff}{Cutoff for adjusted p-value (column p_value_adj), default 0.01}
 
