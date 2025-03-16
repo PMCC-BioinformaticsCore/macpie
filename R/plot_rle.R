@@ -45,10 +45,13 @@
 #' @export
 
 # Main function
-plot_rle <- function(data, barcodes = NULL, label_column = NULL,
-                            labels = NULL, log = TRUE,
-                            batch = NULL, normalisation = NULL,
-                            spikes = NULL) {
+plot_rle <- function(data, barcodes = NULL, 
+                     label_column = NULL,
+                     labels = NULL, 
+                     log = TRUE,
+                     batch = NULL, 
+                     normalisation = NULL,
+                     spikes = NULL) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
@@ -105,9 +108,13 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
     rledf <- as.data.frame(rledf)
     colnames(rledf) <- c("ymin", "lower", "middle", "upper", "ymax")
 
+    # Map barcodes to well IDs using metadata
+    barcode_to_well <- data@meta.data[colnames(rle), "Well_ID", drop = TRUE]  # Extract well IDs
+    names(barcode_to_well) <- colnames(rle)
+    
     # Add feature and sample information
     rledf$feature <- labels[sort_index]
-    rledf$sample <- colnames(rle)
+    rledf$sample <- barcode_to_well[colnames(rle)]
 
     # Reorder samples for plotting
     rledf$sample <- factor(rledf$sample, levels = unique(rledf$sample))
@@ -164,7 +171,6 @@ plot_rle <- function(data, barcodes = NULL, label_column = NULL,
     }, error = function(e) {
       stop("Error in plotting: ", e$message)
     })
-
   }
 
   # Validate inputs

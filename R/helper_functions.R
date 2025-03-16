@@ -60,7 +60,7 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
   # Apply the theme with the customizations
   theme_bw(base_size = 20) +
     theme(
-      plot.title = element_text(face = 'bold', size = rel(0.9), hjust = 0.5),
+      plot.title = element_text(face = 'plain', size = rel(0.9), hjust = 0.5),
       panel.grid.major.y = element_blank(), #element_line(colour = 'gray'),
       panel.grid.minor.y = element_blank(), #element_line(colour = 'gray'),
       panel.grid.major.x = element_blank(),
@@ -69,7 +69,7 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
       panel.background = element_rect(fill = 'white'),
       # Axis stuff
       axis.line = element_line(colour = 'black', linewidth = 1),
-      axis.text = element_text(colour = "black", face = 'bold'),
+      axis.text = element_text(colour = "black", face = 'plain'),
       axis.text.x = element_text(size = rel(0.75), angle = x_labels_angle, hjust = hjust_, vjust = vjust_),
       axis.text.y = element_text(size = rel(0.75)),
       axis.title.x = element_text(size = rel(ifelse(show_x_title, 1, 0))),
@@ -78,7 +78,7 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
       # Legend stuff
       legend.position = legend_position_,
       legend.margin = margin(6, 6, 6, 6),
-      legend.title = element_text(face = 'bold', size = rel(0.6)),
+      legend.title = element_text(face = 'plain', size = rel(0.6)),
       legend.text = element_text(size = rel(0.5)),
       legend.background = element_blank(),
       # legend.box.background = element_rect(colour = "black")
