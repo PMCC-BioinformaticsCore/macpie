@@ -252,6 +252,13 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "e
 
 ```
 
+```{r plot_multi_de, fig.width=10, fig.height=5}
+plot_multi_de(mac, group_by = "combined_id",p_value_cutoff = 0.01, direction="both", n_genes = 5, control = "DMSO_0", by="fc")
+
+```
+
+
+
 ```{r enriched_pathways, fig.width = 8, fig.height = 12}
 
 # Load genesets from enrichr for a specific species or define your own
