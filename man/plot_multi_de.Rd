@@ -5,7 +5,8 @@
 \title{Generate heatmap of DE genes from multiple treatments}
 \usage{
 plot_multi_de(
-  data,
+  data = NULL,
+  group_by = NULL,
   p_value_cutoff = 0.01,
   direction = "up",
   n_genes = 10,
@@ -16,6 +17,8 @@ plot_multi_de(
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column".}
+
+\item{group_by}{A column that specifies the treatment group in the input data}
 
 \item{p_value_cutoff}{Cutoff for adjusted p-value (column p_value_adj), default 0.01}
 
@@ -28,7 +31,7 @@ plot_multi_de(
 \item{by}{Extract top n genes by either absolute fold change or by adjusted p-value}
 }
 \value{
-a heatmap by pheatmap
+a pheatmap object
 }
 \description{
 This is the function to generate a heatmap of DE genes from running compute_multi_DE
