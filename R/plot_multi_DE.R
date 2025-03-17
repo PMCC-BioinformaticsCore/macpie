@@ -2,14 +2,16 @@ utils::globalVariables(c(".data"))
 #' Generate heatmap of DE genes from multiple treatments
 #' 
 #' This is the function to generate a heatmap of DE genes from running compute_multi_DE 
-#' that shared by more than one treatment group. 
+#' that shared by more than one treatment group. There are a few options available 
+#' to help you to extract shared DE genes. 
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column".
 #' @param p_value_cutoff Cutoff for adjusted p-value (column p_value_adj), default 0.01
-#' @param direction Direction to select up or down regulated genes indicating by log2FC > 0 or < 0  
-#' @param n_genes Top n genes (ordered by Log2FC) to be extracted from each treatment comparison
+#' @param direction Direction to select up or down regulated genes or in both directions
+#' @param n_genes Top n genes to be extracted from each treatment comparison
 #' @param control The control group to be included in the final heatmap, usually DMSO_0
+#' @param by Extract top n genes by either absolute fold change or by adjusted p-value 
 #' 
 #' @import pheatmap
 #' @import dplyr 
@@ -24,8 +26,11 @@ utils::globalVariables(c(".data"))
 
 
 plot_multi_de <- function(data,
-                                  p_value_cutoff = 0.01,
-                                  direction = "up", n_genes =10, control="DMSO_0" ) {
+                          p_value_cutoff = 0.01,
+                          direction = "up",
+                          n_genes =10,
+                          control="DMSO_0",
+                          by="fc") {
   
   # Helper function to validate input data
   validate_inputs <- function(data, p_value_cutoff, direction, n_genes, control) {
@@ -35,14 +40,17 @@ plot_multi_de <- function(data,
     if (!inherits(p_value_cutoff, "numeric")) {
       stop("Error: argument 'p_value_cutoff' must be numeric.")
     }
-    if (!inherits(direction, "character")) {
-      stop("Error: argument 'direction' must be characters either up or down.")
+    if (!is.null(direction) && !direction %in% c("up", "down", "both")) {
+      stop("Value of the direction paramater should be up, down or both.")
     }
     if (!inherits(n_genes, "numeric")) {
       stop("Error: argument 'n_genes' must be numeric.")
     }
     if (!inherits(control, "character")) {
       stop("Error: argument 'control' must be control group in same format as combined_id.")
+    }
+    if (!is.null(by) && !by %in%c("fc","adj_p_val")){
+      stop("Value of the by parameter show be either fc or adj_p_val.")
     }
     
     if (length(data@tools$diff_exprs) == 0) {
@@ -58,24 +66,36 @@ plot_multi_de <- function(data,
   all_de <- mac@tools$diff_exprs
   de_df <- bind_rows(all_de)
   
-  #filter DE on adjusted p value and log fold-change direction
+  
   filtered_de_df <- de_df %>%
     filter(.data$p_value_adj < .env$p_value_cutoff) %>%
-    filter(if(direction=="up") .data$log2FC > 0 else .data$log2FC <0)
+    filter(direction == "both" | (direction == "up" & .data$log2FC > 0) | (direction == "down" & .data$log2FC < 0))
+  
+  
+  # top_genes_per_combined_id <- filtered_de_df %>%
+  #   group_by(.data$combined_id) %>%
+  #   slice_max(order_by =abs(.data$log2FC), n = n_genes)
   
   
   top_genes_per_combined_id <- filtered_de_df %>%
-    group_by(.data$combined_id) %>%
-    slice_max(order_by = .data$log2FC, n = n_genes)
+    group_by(.data$combined_id) %>%{
+      if (by == "fc") {
+      slice_max(., order_by = abs(.data$log2FC), n = n_genes)
+      } else{
+        slice_min(., order_by = .data$p_value_adj, n = n_genes)
+      }
+      }
   
+  
+
   common_genes <- top_genes_per_combined_id %>%
-    group_by(.data$gene) %>%
-    filter(n_distinct(.data$combined_id) > 1)
+  group_by(.data$gene) %>%
+  filter(n_distinct(.data$combined_id) > 1)
   
-  features <- common_genes$gene
+  features <- unique(common_genes$gene)
   
   common_genes_treatments <- common_genes %>% dplyr::distinct(combined_id) %>%pull()%>%unique()
-  #add dmso
+  #add control group
   common_genes_treatments <- c(common_genes_treatments, control)
     
   #calculate cpm on full samples
@@ -83,7 +103,6 @@ plot_multi_de <- function(data,
   combined_id_barcodes <- mac@meta.data$combined_id
   names(combined_id_barcodes)<-rownames(mac@meta.data)
   colnames(lcpm) <- combined_id_barcodes[colnames(lcpm)]
-  
   sub_lcpm <- lcpm[features, colnames(lcpm) %in% common_genes_treatments]
     
 

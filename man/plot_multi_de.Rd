@@ -9,7 +9,8 @@ plot_multi_de(
   p_value_cutoff = 0.01,
   direction = "up",
   n_genes = 10,
-  control = "DMSO_0"
+  control = "DMSO_0",
+  by = "fc"
 )
 }
 \arguments{
@@ -18,18 +19,21 @@ plot_multi_de(
 
 \item{p_value_cutoff}{Cutoff for adjusted p-value (column p_value_adj), default 0.01}
 
-\item{direction}{Direction to select up or down regulated genes indicating by log2FC > 0 or < 0}
+\item{direction}{Direction to select up or down regulated genes or in both directions}
 
-\item{n_genes}{Top n genes (ordered by Log2FC) to be extracted from each treatment comparison}
+\item{n_genes}{Top n genes to be extracted from each treatment comparison}
 
 \item{control}{The control group to be included in the final heatmap, usually DMSO_0}
+
+\item{by}{Extract top n genes by either absolute fold change or by adjusted p-value}
 }
 \value{
 a heatmap by pheatmap
 }
 \description{
 This is the function to generate a heatmap of DE genes from running compute_multi_DE
-that shared by more than one treatment group.
+that shared by more than one treatment group. There are a few options available
+to help you to extract shared DE genes.
 }
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
