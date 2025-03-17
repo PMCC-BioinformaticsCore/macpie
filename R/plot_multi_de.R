@@ -29,7 +29,7 @@ utils::globalVariables(c(".data"))
 plot_multi_de <- function(data = NULL,
                           group_by = NULL, 
                           p_value_cutoff = 0.01,
-                          direction = "up",
+                          direction = "both",
                           n_genes =10,
                           control="DMSO_0",
                           by="fc") {
@@ -44,7 +44,7 @@ plot_multi_de <- function(data = NULL,
       stop("Error: argument 'p_value_cutoff' must be numeric.")
     }
     if (!is.null(direction) && !direction %in% c("up", "down", "both")) {
-      stop("Value of the direction paramater should be up, down or both.")
+      stop("Value of the direction paramater should be up, down or both. Default is both.")
     }
     if (!inherits(n_genes, "numeric")) {
       stop("Error: argument 'n_genes' must be numeric.")
@@ -85,10 +85,14 @@ plot_multi_de <- function(data = NULL,
       }
   
   
-
+  #find genes shared by at least 2 different treatment groups
   common_genes <- top_genes_per_combined_id %>%
   group_by(.data$gene) %>%
   filter(n_distinct(.data[[group_by]]) > 1)
+  if (length(common_genes)==0){
+    stop("No genes are shared by at least 2 different treatment groups.")
+  }
+  
   
   features <- unique(common_genes$gene)
   
@@ -107,8 +111,8 @@ plot_multi_de <- function(data = NULL,
   
   col_colors <- colorRampPalette(brewer.pal(12, "Paired"))(length(common_genes_treatments))
   p <- pheatmap(sub_lcpm, 
-           cexRow=0.3,
-           cexCol=0.4, 
+           cexRow=0.1,
+           cexCol=0.2, 
            col = macpie_colours$continuous) 
   
   return(p)
