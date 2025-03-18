@@ -2,11 +2,15 @@
 % Please edit documentation in R/plot_multi_de.R
 \name{plot_multi_de}
 \alias{plot_multi_de}
-\title{Generate heatmap of DE genes from multiple treatments}
+\title{Generate heatmap of DE genes from multiple treatments
+This is the function to generate a heatmap of DE genes from running compute_multi_DE
+that shared by more than one treatment group. There are a few options available
+to help you to extract shared DE genes.}
 \usage{
 plot_multi_de(
   data = NULL,
   group_by = NULL,
+  value = NULL,
   p_value_cutoff = 0.01,
   direction = "both",
   n_genes = 10,
@@ -19,6 +23,8 @@ plot_multi_de(
 "Well_ID", "Row", "Column".}
 
 \item{group_by}{A column that specifies the treatment group in the input data}
+
+\item{value}{To use logCPM, log2FC or metric in the heatmap}
 
 \item{p_value_cutoff}{Cutoff for adjusted p-value (column p_value_adj), default 0.01}
 
@@ -34,6 +40,7 @@ plot_multi_de(
 a pheatmap object
 }
 \description{
+Generate heatmap of DE genes from multiple treatments
 This is the function to generate a heatmap of DE genes from running compute_multi_DE
 that shared by more than one treatment group. There are a few options available
 to help you to extract shared DE genes.
@@ -41,5 +48,5 @@ to help you to extract shared DE genes.
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plot_multi_de(mac, group_by = "combined_id", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0")
+plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
 }

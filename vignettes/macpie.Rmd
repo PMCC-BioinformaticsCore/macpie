@@ -262,9 +262,15 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "e
 
 ```
 
-```{r plot_multi_de, fig.width=10, fig.height=5}
-plot_multi_de(mac, group_by = "combined_id",p_value_cutoff = 0.01, direction="both", n_genes = 5, control = "DMSO_0", by="fc")
 
+To show log CPM or log2FC or test metric values of the shared DE genes among different treatment groups
+
+Top 10 DE genes from each treatment comparison that are found in at least 2 different treatment groups
+
+```{r plot_multi_de, fig.width=10, fig.height=5}
+plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+
+plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
 ```
 
 
