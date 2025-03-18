@@ -23,7 +23,7 @@ utils::globalVariables(c(".data"))
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_multi_de(mac, p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0")
+#' plot_multi_de(mac, group_by = "combined_id", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0")
 
 
 plot_multi_de <- function(data = NULL,
@@ -66,7 +66,7 @@ plot_multi_de <- function(data = NULL,
 
   
   #extract de information from the object data
-  all_de <- mac@tools$diff_exprs
+  all_de <- data@tools$diff_exprs
   de_df <- bind_rows(all_de)
   
   
@@ -101,9 +101,9 @@ plot_multi_de <- function(data = NULL,
   common_genes_treatments <- c(common_genes_treatments, control)
     
   #calculate cpm on full samples
-  lcpm <- cpm(mac@assays$RNA$counts, log = T)
-  combined_id_barcodes <- mac@meta.data[[group_by]]
-  names(combined_id_barcodes)<-rownames(mac@meta.data)
+  lcpm <- cpm(data@assays$RNA$counts, log = T)
+  combined_id_barcodes <- data@meta.data[[group_by]]
+  names(combined_id_barcodes)<-rownames(data@meta.data)
   colnames(lcpm) <- combined_id_barcodes[colnames(lcpm)]
   sub_lcpm <- lcpm[features, colnames(lcpm) %in% common_genes_treatments]
     

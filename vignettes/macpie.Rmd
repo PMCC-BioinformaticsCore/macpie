@@ -213,6 +213,16 @@ plot_volcano(top_table_edgeR)
 
 ```
 
+Based on the results, we can quickly check CPM levels of selected genes between treatment and control samples.
+
+```{r plot_cpm, fig.width = 8, fig.height = 6}
+genes <- top_table_edgeR$gene[1:6]
+group_by <- "combined_id"
+plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
+```
+
+
+
 #### 3.2. Pathway analysis, single comparison
 
 Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, the effect of Staurosporine on breast cancer cells through Myc inactivation can be observed through pathway enrichment analyses.
