@@ -67,7 +67,7 @@ project_name <- "PMMSq033"
 project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
 
 # Load metadata
-metadata <- read_metadata(project_metadata)
+metadata <- read_metadata(file_path = project_metadata)
 colnames(metadata)
 
 # Validate metadata
@@ -168,17 +168,17 @@ Box plot to show distribution of read counts from all wells that belong to one t
 
 ```{r, fig.width = 8, fig.height = 6}
 
-qc_stats <- compute_qc_metrics(mac, "combined_id")
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id")
 qc_stats$stats_summary
 
 ```
 
 ```{r, fig.width = 8, fig.height = 15}
 
-plot_qc_metrics(qc_stats, "combined_id", "sd_value")
-plot_qc_metrics(qc_stats, "combined_id", "z_score")
-plot_qc_metrics(qc_stats, "combined_id", "mad_value")
-plot_qc_metrics(qc_stats, "combined_id", "IQR")
+plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "sd_value")
+plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "z_score")
+plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "mad_value")
+plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "IQR")
 
 ```
 
@@ -186,9 +186,9 @@ Calculate poisson distance for treatment group that with high sd value or z scor
 
 ```{r, fig.width = 8, fig.height = 6}
 
-plot_distance(mac, "combined_id", "Staurosporine_10")
-plot_distance(mac, "combined_id", "DMSO_0")
-plot_distance(mac, "combined_id", "SN01005979_10")
+plot_distance(mac, group_by = "combined_id", treatment = "Staurosporine_10")
+plot_distance(mac, group_by = "combined_id", treatment = "DMSO_0")
+plot_distance(mac, group_by ="combined_id", treatment = "SN01005979_10")
 
 ```
 
