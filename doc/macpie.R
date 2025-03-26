@@ -48,7 +48,7 @@ validate_metadata(metadata)
 
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
 
-plot_metadata_heatmap(metadata)
+plot_metadata_heatmap(metadata%>%select(!c(Unit, Unit_1, Barcode)))
 
 
 ## ----load_data----------------------------------------------------------------
@@ -145,6 +145,9 @@ plot_volcano(top_table_edgeR)
 genes <- top_table_edgeR$gene[1:6]
 group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
+
+## ----de_single_summary--------------------------------------------------------
+summarise_de(top_table_edgeR)
 
 ## ----pathway_analysis_single, fig.width = 8, fig.height = 15------------------
 
