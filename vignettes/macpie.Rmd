@@ -227,8 +227,7 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 Summarise the outputs from single comparison in a table
 
 ```{r de_single_summary}
-single_de_summary <- summarise_de(top_table_edgeR)
-single_de_summary
+summarise_de(top_table_edgeR)
 ```
 
 
