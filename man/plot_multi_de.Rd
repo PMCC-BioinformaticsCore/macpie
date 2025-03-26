@@ -8,7 +8,7 @@ plot_multi_de(
   data = NULL,
   group_by = NULL,
   p_value_cutoff = 0.01,
-  direction = "up",
+  direction = "both",
   n_genes = 10,
   control = "DMSO_0",
   by = "fc"

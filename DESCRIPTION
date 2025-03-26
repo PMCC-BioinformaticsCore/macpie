@@ -61,5 +61,6 @@ Imports:
     BiocParallel,
     SingleCellExperiment,
     doParallel,
-    zinbwave
+    zinbwave,
+    scales
 VignetteBuilder: knitr

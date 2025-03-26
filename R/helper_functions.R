@@ -13,7 +13,7 @@ selected_indices <- seq(1, length(unikn_colors), length.out = n_colors)  # Even 
 distinct_colors <- unikn_colors[selected_indices]  # Pick spaced-out colors
 
 # Shuffle slightly to break clusters (optional)
-set.seed(42)
+set.seed(2)
 distinct_colors <- sample(distinct_colors)
 
 pal1 <- c(rev(pal_seeblau), "white", pal_bordeaux)

@@ -74,8 +74,10 @@ compute_multi_enrichr <- function(data,
     ) %>%
     group_by(.data$combined_id) %>%
     filter(n_distinct(.data$gene) > .env$n_distinct) %>% #filter out samples with less than 5 DE genes
-    reframe(enrichment = compute_hyper_enrich_bg(.data$gene, genesets = .env$genesets, background = .env$species)) %>%
+    reframe(enrichment = compute_hyper_enrich_bg(.data$gene, 
+                                                 genesets = .env$genesets, 
+                                                 background = .env$species)) %>%
     unnest(enrichment)
-  data@tools[["pathway_enrichment"]] <- enriched_pathways
+  data@tools[["pathway_enrichment"]] <- c(unique(data@tools[["pathway_enrichment"]]),enriched_pathways)
   return(data)
 }
