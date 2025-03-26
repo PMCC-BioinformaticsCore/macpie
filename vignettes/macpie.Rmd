@@ -79,7 +79,7 @@ First, let's visually inspect the large number of experimental variables, in ord
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 
-plot_metadata_heatmap(metadata)
+plot_metadata_heatmap(metadata%>%select(!c(Unit, Unit_1, Barcode)))
 
 ```
 
@@ -166,31 +166,31 @@ QC metrics for each condition
 
 Box plot to show distribution of read counts from all wells that belong to one treatment condition
 
-```{r, fig.width = 8, fig.height = 6}
+```{r qc_stats, fig.width = 8, fig.height = 6}
 
 qc_stats <- compute_qc_metrics(mac, "combined_id")
 qc_stats$stats_summary
 
 ```
 
-```{r, fig.width = 8, fig.height = 15}
+By indicating one of the metrics in sd_value, mad_value, group_median, z_score, and IQR, we can use lollipop chart to show the variability in terms of z score:
 
-plot_qc_metrics(qc_stats, "combined_id", "sd_value")
+```{r z_score_lollipop, fig.width = 8, fig.height = 10}
+
 plot_qc_metrics(qc_stats, "combined_id", "z_score")
-plot_qc_metrics(qc_stats, "combined_id", "mad_value")
-plot_qc_metrics(qc_stats, "combined_id", "IQR")
-
 ```
+
 
 Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
 
-```{r, fig.width = 8, fig.height = 6}
+For example, Staurosporine_10 in three wells B02, I21 and N12, I21 is showed with the biggest distance, and it's showed in the raw reads I21 is the one with highest RNA reads. Staurosporine as a positive control is expected to have low RNA reads. So, by combing both raw read count metrics and poisson distances, we're more confident to say Staurosporine_10_I21 could be flagged as a potential outlier. 
+
+```{r distance_plot, fig.width = 8, fig.height = 6}
 
 plot_distance(mac, "combined_id", "Staurosporine_10")
-plot_distance(mac, "combined_id", "DMSO_0")
-plot_distance(mac, "combined_id", "SN01005979_10")
 
 ```
+
 
 
 ### 3. Differential gene expression
@@ -215,11 +215,22 @@ plot_volcano(top_table_edgeR)
 
 Based on the results, we can quickly check CPM levels of selected genes between treatment and control samples.
 
+To show gene expression (in CPM) of the top 6 differentially expressed genes in this single drug comparison. 
+
 ```{r plot_cpm, fig.width = 8, fig.height = 6}
 genes <- top_table_edgeR$gene[1:6]
 group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 ```
+
+
+Summarise the outputs from single comparison in a table
+
+```{r de_single_summary}
+single_de_summary <- summarise_de(top_table_edgeR)
+single_de_summary
+```
+
 
 
 
@@ -263,17 +274,24 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "e
 ```
 
 
-To show log CPM or log2FC or test metric values of the shared DE genes among different treatment groups
+We often want to ask what are the genes are differentially expressed in more than one treatment group. 
 
-Top 10 DE genes from each treatment comparison that are found in at least 2 different treatment groups
+Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
 
-```{r plot_multi_de, fig.width=10, fig.height=5}
-plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+This heatmap shows shared differentially expressed genes with corresponding log2FC values. We can see that three doses of compound SN02370554 have been grouped together. 
 
-plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+```{r plot_multi_de, fig.width=10, fig.height=6}
+plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+```
+If you prefer to see at the expression level for each replicate, you can do it by specifying "lcpm". 
+
+```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
+plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
 
 
+Pathway enrichment analysis is done by using enrichR. 
 
 ```{r enriched_pathways, fig.width = 8, fig.height = 12}
 
