@@ -85,6 +85,7 @@ First, let's visually inspect the large number of experimental variables, in ord
 
 plot_metadata_heatmap(metadata)
 
+
 ```
 
 ### 2. Sequencing data import and QC 
@@ -229,12 +230,10 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 Summarise the outputs from single comparison in a table
 
 ```{r de_single_summary}
-datatable(summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05))
+
+summarise_de(top_table_edgeR)
+
 ```
-
-
-
-
 
 #### 3.2. Pathway analysis, single comparison
 
@@ -280,6 +279,7 @@ We often want to ask what are the genes are differentially expressed in more tha
 
 Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
 
+
 This heatmap shows shared differentially expressed genes with corresponding log2FC values. We can see that three doses of compound Luminespib have been grouped together on the left, and Trametinib also grouped together on the right. 
 
 
@@ -292,6 +292,7 @@ If you prefer to see at the expression level for each replicate, you can do it b
 ```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
+
 
 Pathway enrichment analysis is done by using enrichR. 
 
