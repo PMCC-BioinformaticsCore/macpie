@@ -44,6 +44,7 @@ plot_multi_de <- function(data = NULL,
         stop("Error: argument 'p_value_cutoff' must be numeric.")
       }
 
+
     if (!is.null(direction) && !direction %in% c("up", "down", "both")) {
       stop("Value of the direction paramater should be up, down or both. Default is both.")
     }
@@ -67,7 +68,8 @@ plot_multi_de <- function(data = NULL,
   #extract de information from the object data
   all_de <- data@tools$diff_exprs
   de_df <- unique(map2_dfr(all_de, names(all_de), ~ mutate(.x, source = .y)))
-  
+
+
   filtered_de_df <- de_df %>%
     filter(.data$p_value_adj < .env$p_value_cutoff) %>%
     filter(direction == "both" | (direction == "up" & .data$log2FC > 0) | (direction == "down" & .data$log2FC < 0))
@@ -79,6 +81,7 @@ plot_multi_de <- function(data = NULL,
         slice_min(., order_by = .data$p_value_adj, n = n_genes)
       }
     }
+
 
   #find genes shared by at least 2 different treatment groups
   common_genes <- top_genes_per_combined_id %>%
@@ -92,6 +95,7 @@ plot_multi_de <- function(data = NULL,
   } else {
     features <- unique(gene_list)
   }
+
 
   common_genes_treatments <- common_genes %>% dplyr::distinct(.data[[group_by]]) %>% pull() %>% unique()
   #add control group
@@ -116,7 +120,6 @@ plot_multi_de <- function(data = NULL,
       pivot_wider(names_from = source, values_from = log2FC, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene 
-
     storage.mode(fc_matrix) <- "numeric"
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
@@ -131,7 +134,7 @@ plot_multi_de <- function(data = NULL,
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
-    storage.mode(fc_matrix) <- "numeric"
+    storage.mode(fc_matrix) <- "numeric
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
