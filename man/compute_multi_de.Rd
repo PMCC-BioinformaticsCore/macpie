@@ -46,5 +46,4 @@ mac <- readRDS(file_path)[50:150]
 control_samples <- "DMSO_0"
 treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
 mac <- compute_multi_de(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
-Perform DE of multiple samples in a screen vs control (Windows-compatible)
 }
