@@ -64,7 +64,7 @@ library(PoiClaClu)
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
@@ -79,7 +79,7 @@ First, let's visually inspect the large number of experimental variables, in ord
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 
-plot_metadata_heatmap(metadata%>%select(!c(Unit, Unit_1, Barcode)))
+plot_metadata_heatmap(metadata)
 
 ```
 
@@ -287,6 +287,7 @@ On the other hand, we often want to compare multiple samples in a screen vs the 
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
 mac$combined_id <- make.names(mac$combined_id)
+
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
@@ -301,8 +302,8 @@ We often want to ask what are the genes are differentially expressed in more tha
 
 Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
 
+This heatmap shows shared differentially expressed genes with corresponding log2FC values. We can see that three doses of compound Luminespib have been grouped together on the left, and Trametinib also grouped together on the right. 
 
-This heatmap shows shared differentially expressed genes with corresponding log2FC values. We can see that three doses of compound Luminespib have been grouped together on the left, and Trametinib also grouped together on the right.
 
 ```{r plot_multi_de, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
@@ -313,6 +314,15 @@ If you prefer to see at the expression level for each replicate, you can do it b
 ```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
+
+
+
+Summarise the outputs from multi de comparison in a table
+
+```{r de_multi_summary}
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+```
+
 
 
 Pathway enrichment analysis is done by using enrichR. 

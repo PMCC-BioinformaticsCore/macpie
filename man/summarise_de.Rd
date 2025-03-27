@@ -5,14 +5,22 @@
 \title{Generate a table to summarise gene numbers from a differential
 expression test.}
 \usage{
-summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.01)
+summarise_de(
+  top_table,
+  lfc_threshold = 1,
+  padj_threshold = 0.01,
+  multi = FALSE,
+  group_by = "combined_id"
+)
 }
 \arguments{
 \item{top_table}{A data table showing results from compute_single_de}
 
 \item{lfc_threshold}{Threshold of log2FC}
 
-\item{padj_threshold}{threshold of adjusted p value}
+\item{padj_threshold}{Threshold of adjusted p value}
+
+\item{multi}{To indicate to summarise for single de comparison or multi de comparison}
 }
 \value{
 a data table
@@ -29,4 +37,5 @@ control_samples <- "DMSO_0"
 group_by <- "combined_id"
 top_table_edgeR <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
 summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05)
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
 }
