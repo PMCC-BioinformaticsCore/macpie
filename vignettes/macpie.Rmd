@@ -82,7 +82,6 @@ First, let's visually inspect the large number of experimental variables, in ord
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 
-
 plot_metadata_heatmap(metadata)
 
 
@@ -265,6 +264,7 @@ On the other hand, we often want to compare multiple samples in a screen vs the 
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
 mac$combined_id <- make.names(mac$combined_id)
+
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
@@ -277,8 +277,7 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "e
 
 We often want to ask what are the genes are differentially expressed in more than one treatment group. 
 
-Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
-
+Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment group.
 
 This heatmap shows shared differentially expressed genes with corresponding log2FC values. We can see that three doses of compound Luminespib have been grouped together on the left, and Trametinib also grouped together on the right. 
 
@@ -292,6 +291,15 @@ If you prefer to see at the expression level for each replicate, you can do it b
 ```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
+
+
+
+Summarise the outputs from multi de comparison in a table
+
+```{r de_multi_summary}
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+```
+
 
 
 Pathway enrichment analysis is done by using enrichR. 
