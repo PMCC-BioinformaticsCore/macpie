@@ -36,7 +36,7 @@ library(PoiClaClu)
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
@@ -48,7 +48,7 @@ validate_metadata(metadata)
 
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
 
-plot_metadata_heatmap(metadata%>%select(!c(Unit, Unit_1, Barcode)))
+plot_metadata_heatmap(metadata)
 
 
 ## ----load_data----------------------------------------------------------------
@@ -169,6 +169,8 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 
 ## ----de_multi, fig.width = 8, fig.height = 5----------------------------------
+
+mac$combined_id <- make.names(mac$combined_id)
 
 treatments <- mac %>%
   select(combined_id) %>%
