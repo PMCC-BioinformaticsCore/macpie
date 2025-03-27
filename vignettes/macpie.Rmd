@@ -288,7 +288,7 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_theme()
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev) + macpie_theme()
 
 ```
 
