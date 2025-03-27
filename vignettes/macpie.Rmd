@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+options(progressr.enable = FALSE)
 ```
 
 ## Introduction
@@ -252,13 +253,12 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised.
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
-
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 2)
 
 ```
 
@@ -288,7 +288,7 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_theme()
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev) + macpie_theme()
 
 ```
 

@@ -13,76 +13,104 @@
 #' @importFrom parallel detectCores
 #' @importFrom mcprogress pmclapply
 #' @import glmGamPoi
+#' @import doParallel
+#' @import progressr
+#' @import furrr
+#' @import future
 #' @returns List of DE counts vs control
 #' @export
 #'
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)[50:120]
+#' mac <- readRDS(file_path)[50:150]
 #' control_samples <- "DMSO_0"
 #' treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
 #' mac <- compute_multi_de(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
-
+#' @export
 compute_multi_de <- function(data = NULL,
-                     treatment_samples = NULL,
-                     control_samples = NULL,
-                     method = "edgeR",
-                     num_cores = 2,
-                     batch = 1,
-                     k = 2,
-                     spikes = NULL) {
-
-  # Helper function to validate input data
+                             treatment_samples = NULL,
+                             control_samples = NULL,
+                             method = "edgeR",
+                             num_cores = 2,
+                             batch = 1,
+                             k = 2,
+                             spikes = NULL) {
+  # Validate input
   validate_inputs <- function(data, treatment_samples, control_samples, method, num_cores) {
-    if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
-    }
+    if (!inherits(data, "Seurat")) stop("data must be a Seurat or TidySeurat object.")
     if (!"combined_id" %in% colnames(data@meta.data)) {
-      data <- data %>%
-        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
-                                   1, paste, collapse = "_")) %>%
-        mutate(combined_id = gsub(" ", "", .data$combined_id))
+      data@meta.data$combined_id <- apply(
+        dplyr::select(data@meta.data, dplyr::starts_with("Treatment_") | dplyr::starts_with("Concentration_")),
+        1, paste, collapse = "_"
+      ) |> gsub(" ", "", x = _)
     }
-    method <- if (is.null(method)) "edgeR" else method
-    if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
-                       "RUVg", "RUVs", "RUVr",
-                       "limma_voom")) {
-      stop("Your normalization method is not available.")
-    }
-    if (is.null(control_samples)) {
-      stop("Missing control samples.")
-    }
+    if (is.null(control_samples)) stop("Missing control samples.")
     if (is.null(treatment_samples)) {
-      warn("Missing treatment samples, using all that differ from control.")
-      treatment_samples <- data %>%
-        select(.data$combined_id) %>%
-        filter(!grepl(control_samples, .data$combined_id)) %>%
-        pull() %>%
+      message("Missing treatment samples — inferring from data.")
+      treatment_samples <- data@meta.data %>%
+        dplyr::filter(!grepl(control_samples, .data$combined_id)) %>%
+        dplyr::pull(.data$combined_id) %>%
         unique()
     }
-    if (length(treatment_samples) == 1 && length(control_samples) == 1) {
-      treatment_samples_list <- grepl(treatment_samples, data$combined_id)
-      control_samples_list <- grepl(control_samples, data$combined_id)
-      if (any(sum(treatment_samples_list) == 0, sum(control_samples_list) == 0)) {
-        stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
-      }
-    }
-    num_cores <- if (is.null(num_cores)) (detectCores() - 1) else num_cores
-    return(list(data = data, treatment_samples = treatment_samples, num_cores = num_cores))
+    num_cores <- if (is.null(num_cores)) max(1, parallel::detectCores() - 1) else num_cores
+    method <- match.arg(method, choices = c("Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"))
+    list(data = data, treatment_samples = treatment_samples, num_cores = num_cores)
   }
-
   validated <- validate_inputs(data, treatment_samples, control_samples, method, num_cores)
   data <- validated$data
   treatment_samples <- validated$treatment_samples
   num_cores <- validated$num_cores
-
-  de_list <- pmclapply(treatment_samples, function(x) {
-    result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
-    result$combined_id <- x
-    return(result)
-  }, mc.cores = num_cores)
+  
+  # Setup parallel backend 
+  future::plan(future::multisession, workers = num_cores)
+  
+  if (interactive()) {
+    progressr::handlers(global = TRUE)
+    progressr::handlers("progress")
+    options(progressr.clear = FALSE)
+    
+    de_list <- suppressWarnings(
+      progressr::with_progress({
+        p <- progressr::progressor(steps = length(treatment_samples))
+        furrr::future_map(
+          treatment_samples,
+          function(x) {
+            result <- tryCatch({
+              out <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
+              out$combined_id <- x
+              out
+            }, error = function(e) {
+              message("Error in sample ", x, ": ", e$message)
+              tibble(log2FC = NA_real_, metric = NA_real_, p_value = NA_real_, p_value_adj = NA_real_, combined_id = x)
+            })
+            p()  # progress tick
+            result
+          },
+          .options = furrr::furrr_options(seed = TRUE)
+        )
+      })
+    )
+  } else {
+    # Fallback with no progress bars for knitting/building
+    local_compute_single_de <- compute_single_de  # capture in closure
+    
+    de_list <- furrr::future_map(
+      treatment_samples,
+      function(x) {
+        result <- tryCatch({
+          out <- local_compute_single_de(data, x, control_samples, method, batch, k, spikes)
+          out$combined_id <- x
+          out
+        }, error = function(e) {
+          message("Error in sample ", x, ": ", e$message)
+          tibble(log2FC = NA_real_, metric = NA_real_, p_value = NA_real_, p_value_adj = NA_real_, combined_id = x)
+        })
+        result
+      },
+      .options = furrr::furrr_options(seed = TRUE)
+    )
+  }
   names(de_list) <- treatment_samples
   data@tools[["diff_exprs"]] <- de_list
-
   return(data)
 }
