@@ -85,9 +85,11 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
                                  tooltip = !!rlang::sym(label), 
                                  data_id = !!rlang::sym(label))) +
       geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
+      scale_color_manual(values = macpie_colours$discrete) +
       labs(title = "MDS plot",
            x = "Dimension 1",
-           y = "Dimension 2")
+           y = "Dimension 2") +
+      macpie_theme()
     p
   }, error = function(e) {
     stop("Error in plotting: ", e$message)

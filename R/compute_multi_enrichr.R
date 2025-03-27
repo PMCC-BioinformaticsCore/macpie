@@ -56,7 +56,7 @@ compute_multi_enrichr <- function(data,
     }
   }
 
-  species <- tolower(unique(data$Species))
+  species <- unique(data$Species)
   validate_inputs(data, genesets, species, direction, p_value_cutoff, n_distinct)
 
   #extract de information from the object data

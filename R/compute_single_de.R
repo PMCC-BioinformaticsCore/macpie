@@ -19,6 +19,7 @@
 #' @importFrom dplyr rename select
 #'
 #' @returns Data frame of DE counts
+#' @export
 #'
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
@@ -26,7 +27,7 @@
 #' treatment_samples="Staurosporine_0.1"
 #' control_samples<-"DMSO_0"
 #' top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
-#' @export
+
 compute_single_de <- function(data = NULL,
                                         treatment_samples = NULL,
                                         control_samples = NULL,
@@ -58,7 +59,7 @@ compute_single_de <- function(data = NULL,
       treatment_samples_list <- grepl(treatment_samples, data$combined_id)
       control_samples_list <- grepl(control_samples, data$combined_id)
       if (any(sum(treatment_samples_list) == 0, sum(control_samples_list) == 0)) {
-        stop("Your treatment and control samples are not in your combined_id column.")
+        stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
       }
     }
   }

@@ -62,8 +62,5 @@ Imports:
     SingleCellExperiment,
     doParallel,
     zinbwave,
-    scales,
-    furrr,
-    progressr,
-    future
+    scales
 VignetteBuilder: knitr

@@ -32,9 +32,8 @@ library(umap)
 library(doParallel)
 library(pbapply)
 library(zinbwave)
-#library(SingleCellExperiment)
+library(SingleCellExperiment)
 library(gdtools)
-library(ggiraph)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
