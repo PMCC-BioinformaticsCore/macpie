@@ -60,7 +60,7 @@ summarise_de <- function(top_table,
     validate_inputs_single(top_table, lfc_threshold, padj_threshold)
     total_genes <- nrow(top_table)
     up <- top_table %>% filter(log2FC >= lfc_threshold & p_value_adj <= padj_threshold) %>% nrow()
-    down <-  top_table %>% filter(log2FC <= -lfc_threshold & p_value_adj <= padj_threshold) %>% nrow()
+    down <-  top_table %>% filter(log2FC < -lfc_threshold & p_value_adj <= padj_threshold) %>% nrow()
     n_sig <- up + down
     summary_tbl <- tibble(
       Total_genes_tested = total_genes,
@@ -78,7 +78,7 @@ summarise_de <- function(top_table,
       summarise(
         Total_genes_tested = n(),
         Significantly_upregulated = sum(log2FC >= lfc_threshold & p_value_adj <= padj_threshold, na.rm = TRUE),
-        Significantly_downregulated = sum(log2FC <= -lfc_threshold & p_value_adj <= padj_threshold, na.rm = TRUE),
+        Significantly_downregulated = sum(log2FC < -lfc_threshold & p_value_adj <= padj_threshold, na.rm = TRUE),
         Total_significant = Significantly_upregulated + Significantly_downregulated,
         padj_threshold = padj_threshold,
         Log2FC_threshold = lfc_threshold,
