@@ -33,6 +33,7 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
+library(DT)
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -40,6 +41,8 @@ project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.cs
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
 colnames(metadata)
 
 # Validate metadata
@@ -47,6 +50,7 @@ validate_metadata(metadata)
 
 
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
+
 
 plot_metadata_heatmap(metadata)
 
@@ -147,7 +151,7 @@ group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 
 ## ----de_single_summary--------------------------------------------------------
-summarise_de(top_table_edgeR)
+datatable(summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05))
 
 ## ----pathway_analysis_single, fig.width = 8, fig.height = 15------------------
 
@@ -169,7 +173,6 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 
 ## ----de_multi, fig.width = 8, fig.height = 5----------------------------------
-
 mac$combined_id <- make.names(mac$combined_id)
 
 treatments <- mac %>%
@@ -186,6 +189,9 @@ plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 
 
 ## ----plot_multi_de_lcpm, fig.width=10, fig.height=6---------------------------
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+## ----de_multi_summary---------------------------------------------------------
+datatable(summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE))
 
 ## ----enriched_pathways, fig.width = 8, fig.height = 12------------------------
 

@@ -61,6 +61,7 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
+library(DT)
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -68,6 +69,8 @@ project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.cs
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
 colnames(metadata)
 
 # Validate metadata
@@ -78,6 +81,7 @@ validate_metadata(metadata)
 First, let's visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
+
 
 plot_metadata_heatmap(metadata)
 
@@ -227,8 +231,9 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 Summarise the outputs from single comparison in a table
 
 ```{r de_single_summary}
-summarise_de(top_table_edgeR)
+datatable(summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05))
 ```
+
 
 
 
@@ -294,8 +299,9 @@ plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.
 
 Summarise the outputs from multi de comparison in a table
 
+
 ```{r de_multi_summary}
-summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+datatable(summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE))
 ```
 
 
