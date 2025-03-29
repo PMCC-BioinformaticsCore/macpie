@@ -62,6 +62,7 @@ library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
 
+
 # Define project variables
 project_name <- "PMMSq033"
 project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
@@ -228,9 +229,7 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 Summarise the outputs from single comparison in a table
 
 ```{r de_single_summary}
-
-summarise_de(top_table_edgeR)
-
+summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05)
 ```
 
 #### 3.2. Pathway analysis, single comparison
@@ -307,7 +306,7 @@ Summarise the outputs from multi de comparison in a table
 
 
 ```{r de_multi_summary}
-datatable(summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE))
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
 ```
 
 
@@ -385,10 +384,15 @@ mac_pmm33[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm33, pattern = "^Rp[sl
 mac_pmm33 <- mac_pmm33 %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
+mac_pmm33 <- mac_pmm33%>%
+  filter(Project == "Current")
+
 #add unique identifier
 mac_pmm33 <- mac_pmm33 %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+mac_pmm33$combined_id <- make.names(mac_pmm33$combined_id)
 ```
 
 
@@ -406,9 +410,6 @@ mac_pmm34 <- CreateSeuratObject(counts = raw_counts,
                           min.cells = 1,
                           min.features = 1)
 
-```
-
-```{r violin_plot, fig.width = 8}
 #calculate percent of mitochondrial and ribosomal genes
 mac_pmm34[["percent.mt"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^mt-|^MT-")
 mac_pmm34[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
@@ -417,12 +418,16 @@ mac_pmm34[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^Rp[sl
 mac_pmm34 <- mac_pmm34 %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
 
+mac_pmm34 <- mac_pmm34%>%
+  filter(Project == "Current")
+
 #add unique identifier
 mac_pmm34 <- mac_pmm34 %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
-
+mac_pmm34$combined_id <- make.names(mac_pmm34$combined_id)
 ```
+
 
 ```{r}
 
@@ -463,17 +468,138 @@ combined@assays$RNA$counts.PMMSq033 <- NULL
 combined@assays$RNA$counts.PMMSq034 <- NULL
 
 
-mac_dmso <- combined %>%
+combined_dmso <- combined %>%
   filter(Treatment_1 == "DMSO")
 
-mac_dmso@assays$RNA$counts.PMMSq033 <- NULL
-mac_dmso@assays$RNA$counts.PMMSq034 <- NULL
-mac_dmso@assays$RNA$counts <- mac_dmso_counts
-mac_dmso$combined_raw <- paste0(mac_dmso$orig.ident,"_", mac_dmso$Row)
 
-plot_mds(combined, group_by = "Sample_type", label = "orig.ident", n_labels = 30)
-plot_mds(mac_dmso, group_by = "Sample_type", label = "orig.ident", n_labels = 30)
-plot_rle(mac_dmso, label_column = "orig.ident")
+```
 
+```{r multi_plates_plot_mds, fig.width = 8, fig.height = 4}
+plot_mds(combined, group_by = "orig.ident", label = "combined_id", n_labels = 30)
+plot_mds(combined_dmso, group_by = "orig.ident", label = "combined_id", n_labels = 30)
+
+```
+
+
+```{r multi_plates_plot_rle, fig.width = 8, fig.height = 4}
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r multi_plates_compute_single_de}
+treatment_samples <- "Staurosporine_0.1"
+control_samples <- "DMSO_0"
+subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
+batch <- subset$orig.ident
+combined_edgeR <- compute_single_de(combined, treatment_samples, control_samples, method = "edgeR", batch = batch)
+plot_volcano(combined_edgeR)
+
+```
+
+```{r}
+genes <- combined_edgeR$gene[1:6]
+group_by <- "combined_id"
+plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
+```
+
+
+```{r}
+summarise_de(combined_edgeR, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
+```
+
+
+
+```{r}
+compute_multi_de_test <- function(data = NULL,
+                     treatment_samples = NULL,
+                     control_samples = NULL,
+                     method = "edgeR",
+                     num_cores = 2,
+                     batch = 1,
+                     k = 2,
+                     spikes = NULL) {
+
+  # Helper function to validate input data
+  validate_inputs <- function(data, treatment_samples, control_samples, method, num_cores) {
+    if (!inherits(data, "Seurat")) {
+      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+    }
+    if (!"combined_id" %in% colnames(data@meta.data)) {
+      data <- data %>%
+        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
+                                   1, paste, collapse = "_")) %>%
+        mutate(combined_id = gsub(" ", "", .data$combined_id))
+    }
+    method <- if (is.null(method)) "edgeR" else method
+    if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
+                       "RUVg", "RUVs", "RUVr",
+                       "limma_voom")) {
+      stop("Your normalization method is not available.")
+    }
+    if (is.null(control_samples)) {
+      stop("Missing control samples.")
+    }
+    if (is.null(treatment_samples)) {
+      warn("Missing treatment samples, using all that differ from control.")
+      treatment_samples <- data %>%
+        select(.data$combined_id) %>%
+        filter(!grepl(control_samples, .data$combined_id)) %>%
+        pull() %>%
+        unique()
+    }
+    if (length(treatment_samples) == 1 && length(control_samples) == 1) {
+      treatment_samples_list <- grepl(treatment_samples, data$combined_id)
+      control_samples_list <- grepl(control_samples, data$combined_id)
+      if (any(sum(treatment_samples_list) == 0, sum(control_samples_list) == 0)) {
+        stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
+      }
+    }
+    num_cores <- if (is.null(num_cores)) (detectCores() - 1) else num_cores
+    return(list(data = data, treatment_samples = treatment_samples, num_cores = num_cores))
+  }
+
+  validated <- validate_inputs(data, treatment_samples, control_samples, method, num_cores)
+  data <- validated$data
+  treatment_samples <- validated$treatment_samples
+  num_cores <- validated$num_cores
+
+  de_list <- pmclapply(treatment_samples, function(x) {
+    if (length(batch) == 1){
+      result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
+      result$combined_id <- x
+    } else {
+      data_subset <- data[, grepl(paste0(x, "|", control_samples), data$combined_id)]
+      batch_new <- data_subset$orig.ident
+      result <- compute_single_de(data, x, control_samples, method, batch_new, k, spikes)
+      result$combined_id <- x
+      
+    }
+    return(result)
+  }, mc.cores = num_cores)
+  names(de_list) <- treatment_samples
+  data@tools[["diff_exprs"]] <- de_list
+
+  return(data)
+}
+```
+
+
+```{r}
+treatments <- combined %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+
+
+combined <- compute_multi_de_test(combined, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 2, batch = batch)
+```
+
+```{r}
+
+summarise_de(combined, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
 ```
 
