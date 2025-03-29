@@ -12,11 +12,10 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param n_genes Top n genes to be extracted from each treatment comparison
 #' @param control The control group to be included in the final heatmap, usually DMSO_0
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
-#' @param gene_list Exernal list of genes to plot the heatmap on
-
-
+#' @param gene_list External list of genes to plot the heatmap on
 #' @import pheatmap
 #' @import dplyr
+#' @importFrom purrr map2_dfr
 #' @returns a pheatmap object
 #' @export
 #' @examples
@@ -60,7 +59,7 @@ plot_multi_de <- function(data = NULL,
     if (length(data@tools$diff_exprs) == 0) {
       stop("Missing information on DE genes. Run compute_multi_de first.")
     }
-    if (!inherits(gene_list, "character")) {
+    if (!is.null(gene_list) && !inherits(gene_list, "character")) {
       stop("Error: argument 'gene_list' must be a vector of characters.")
     }
   }
@@ -111,7 +110,6 @@ plot_multi_de <- function(data = NULL,
                   col = macpie_colours$continuous)
   } else if (value == "log2FC") {
     # plot log2fc
-    de_df$source <-factor(de_df$source,levels=c("IL2_D3","IL15_D3","IL36_D3","IL2_D5","IL15_D5","IL36_D5"))
     fc_common_genes <- de_df %>% 
       filter(gene %in% features) %>%
       select(gene, log2FC, source) %>%
@@ -130,7 +128,6 @@ plot_multi_de <- function(data = NULL,
     fc_common_genes <- de_df %>% 
       filter(gene %in% features) %>%
       select(gene, metric, any_of(group_by)) %>%
-
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
