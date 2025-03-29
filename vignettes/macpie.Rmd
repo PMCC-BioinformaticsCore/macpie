@@ -127,7 +127,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
-```{r subset_seurat, fig.width = 8, fig.height = 6}
+```{r subset_seurat, fig.width = 8, fig.height = 5}
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
