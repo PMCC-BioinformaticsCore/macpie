@@ -7,15 +7,22 @@
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column".
 #' @param group_by A metadata column name to group data
+#' @param order_by A column name or "median" for median of read counts.
 #'
 #' @return a list with a data frame with QC metrics and a box plot showing read counts per condition
 #'
 #' @import Seurat reshape2 tidyseurat
+#' @examples
+#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac<-readRDS(rds_file)
+#' compute_qc_metrics(data = mac, group_by = "combined_id", order_by = "median")
+#' 
+#' 
 #' @export
 
-compute_qc_metrics <- function(data = NULL, group_by = NULL) {
+compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(data, group_by) {
+  validate_inputs <- function(data, group_by, order_by) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -24,13 +31,13 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL) {
     column_names <- data %>%
       head() %>%
       colnames()
-    if (!all(c(group_by) %in% column_names)) {
-      stop("Your column names are not present in the data or metadata.")
+    if (!is.null(group_by) & !any(c(group_by) %in% c(colnames(mac@meta.data), "median"))) {
+      stop("Your parameter group_by is not a metadata column or 'median'.")
     }
-    list(data = data, group_by = group_by)
+    list(data = data, group_by = group_by, order_by = order_by)
   }
 
-  validated <- validate_inputs(data, group_by)
+  validated <- validate_inputs(data, group_by, order_by)
   group_by <- validated$group_by
   meta <- validated$data@meta.data
 
@@ -51,7 +58,24 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL) {
               z_score = round((.data$group_median - global_median) / global_mad, 3),
               IQR = round(stats::IQR(.data$nCount_RNA), 3),
               .groups = "drop")# Calculate qc metrics per group
-
+  
+  
+  if (order_by == "median") {
+    meta[[group_by]] <- fct_reorder(meta[[group_by]], meta$nCount_RNA, median)
+  } else if (order_by %in% colnames(stats_summary)) {
+    # Order by a group-level summary metric
+    ordering <- stats_summary %>%
+      arrange(.data[[order_by]]) %>%
+      pull(!!sym(group_by))
+    
+    meta[[group_by]] <- factor(meta[[group_by]], levels = ordering)
+  } else if (order_by %in% colnames(meta)) {
+    # Order by a per-cell metadata column (like Row, Column, Time, etc.)
+    meta[[group_by]] <- fct_reorder(meta[[group_by]], meta[[order_by]], median)
+  } else {
+    stop(glue::glue("`order_by` = '{order_by}' not found in stats_summary or metadata"))
+  }
+  
 
   p <- ggplot(meta, aes(.data[[group_by]], .data$nCount_RNA)) + 
     geom_boxplot(outlier.colour = "NA") +

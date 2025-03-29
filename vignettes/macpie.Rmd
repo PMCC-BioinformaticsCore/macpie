@@ -103,7 +103,7 @@ mac <- CreateSeuratObject(counts = raw_counts,
 
 ```
 
-```{r violin_plot, fig.width = 8, fig.height = 6}
+```{r violin_plot, fig.width = 8, fig.height = 4}
 # Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
@@ -141,19 +141,16 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
 
 ```{r mds_plot, fig.width = 8, fig.height = 6}
-
-# Example of MDS function 
 p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
+
 Box plot to show distribution of read counts from all wells that belong to one treatment condition
 
-```{r, fig.width = 8, fig.height = 6}
-
-qc_stats <- compute_qc_metrics(mac, "combined_id")
+```{r qc_stats_plot, fig.width = 8, fig.height = 6}
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
-
 ```
 
 ```{r, fig.width = 8, fig.height = 15}

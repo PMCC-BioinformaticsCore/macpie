@@ -59,7 +59,7 @@ The function performs the following steps:
 # Example Data
 rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)
-rle_plot(data = mac, label_column = "Row", log=TRUE)
+plot_rle(data = mac, label_column = "Row", log=TRUE)
 }
 
 }
