@@ -139,7 +139,7 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 
 Visualise grouping of samples on an interactive plot.
 
-```{r mds_plot, fig.width = 8, fig.height = 8}
+```{r mds_plot, fig.width = 8, fig.height = 6}
 
 # Example of MDS function 
 p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
