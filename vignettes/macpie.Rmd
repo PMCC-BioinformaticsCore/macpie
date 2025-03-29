@@ -155,7 +155,7 @@ mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
 # Run the RLE function
-plot_rle(mac_dmso, label_column = "Row", normalisation = "SCT")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "raw")
 plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
 
