@@ -33,13 +33,16 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
+library(DT)
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
 colnames(metadata)
 
 # Validate metadata
@@ -47,6 +50,7 @@ validate_metadata(metadata)
 
 
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
+
 
 plot_metadata_heatmap(metadata)
 
@@ -99,7 +103,7 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 ## ----mds_plot, fig.width = 8, fig.height = 8----------------------------------
 
 # Example of MDS function 
-p <- plot_mds(mac, group_by = "combined_id", label = "combined_id", n_labels = 30)
+p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 
@@ -115,25 +119,19 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "SCT")
 plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
 
 
-## ----fig.width = 8, fig.height = 6--------------------------------------------
+## ----qc_stats, fig.width = 8, fig.height = 6----------------------------------
 
 qc_stats <- compute_qc_metrics(mac, "combined_id")
 qc_stats$stats_summary
 
 
-## ----fig.width = 8, fig.height = 15-------------------------------------------
+## ----z_score_lollipop, fig.width = 8, fig.height = 10-------------------------
 
-plot_qc_metrics(qc_stats, "combined_id", "sd_value")
 plot_qc_metrics(qc_stats, "combined_id", "z_score")
-plot_qc_metrics(qc_stats, "combined_id", "mad_value")
-plot_qc_metrics(qc_stats, "combined_id", "IQR")
 
-
-## ----fig.width = 8, fig.height = 6--------------------------------------------
+## ----distance_plot, fig.width = 8, fig.height = 6-----------------------------
 
 plot_distance(mac, "combined_id", "Staurosporine_10")
-plot_distance(mac, "combined_id", "DMSO_0")
-plot_distance(mac, "combined_id", "SN01005979_10")
 
 
 ## ----de_analysis, fig.width = 8, fig.height = 6-------------------------------
@@ -146,6 +144,14 @@ top_table_edgeR <- compute_single_de(mac, treatment_samples, control_samples, me
 # Let's visualise the results with a volcano plot
 plot_volcano(top_table_edgeR)
 
+
+## ----plot_cpm, fig.width = 8, fig.height = 6----------------------------------
+genes <- top_table_edgeR$gene[1:6]
+group_by <- "combined_id"
+plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
+
+## ----de_single_summary--------------------------------------------------------
+datatable(summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05))
 
 ## ----pathway_analysis_single, fig.width = 8, fig.height = 15------------------
 
@@ -167,6 +173,7 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 
 ## ----de_multi, fig.width = 8, fig.height = 5----------------------------------
+mac$combined_id <- make.names(mac$combined_id)
 
 treatments <- mac %>%
   select(combined_id) %>%
@@ -175,6 +182,16 @@ treatments <- mac %>%
   unique()
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
 
+
+## ----plot_multi_de, fig.width=10, fig.height=6--------------------------------
+plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+
+## ----plot_multi_de_lcpm, fig.width=10, fig.height=6---------------------------
+plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+## ----de_multi_summary---------------------------------------------------------
+datatable(summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE))
 
 ## ----enriched_pathways, fig.width = 8, fig.height = 12------------------------
 
