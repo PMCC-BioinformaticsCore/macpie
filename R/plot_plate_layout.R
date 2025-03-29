@@ -73,6 +73,7 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
                            low = macpie_colours$scale_3[[3]],
                            midpoint = unique(data$median_value),
                            name = {{metric}}) +
+      ylab("Row") +
       macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right', x_labels_angle = 0) +
       geom_text(aes(label = !!rlang::sym(annotation)), size = 1.5)
     p
