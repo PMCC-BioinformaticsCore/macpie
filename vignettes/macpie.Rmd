@@ -131,6 +131,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
+
 ```{r subset_seurat, fig.width = 8, fig.height = 5}
 unique(mac$Project)
 mac <- mac %>%
@@ -142,6 +143,7 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 
 #### 2.2 Basic QC metrics
 ##### 2.2.1 Sample grouping with MDS plot
+
 
 As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
 
@@ -192,34 +194,6 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "raw")
 plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
 ```
 
-QC metrics for each condition 
-
-Box plot to show distribution of read counts from all wells that belong to one treatment condition
-
-```{r qc_stats, fig.width = 8, fig.height = 6}
-
-qc_stats <- compute_qc_metrics(mac, "combined_id")
-qc_stats$stats_summary
-
-```
-
-By indicating one of the metrics in sd_value, mad_value, group_median, z_score, and IQR, we can use lollipop chart to show the variability in terms of z score:
-
-```{r z_score_lollipop, fig.width = 8, fig.height = 10}
-
-plot_qc_metrics(qc_stats, "combined_id", "z_score")
-```
-
-
-Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
-
-For example, Staurosporine_10 in three wells B02, I21 and N12, I21 is showed with the biggest distance, and it's showed in the raw reads I21 is the one with highest RNA reads. Staurosporine as a positive control is expected to have low RNA reads. So, by combing both raw read count metrics and poisson distances, we're more confident to say Staurosporine_10_I21 could be flagged as a potential outlier. 
-
-```{r distance_plot, fig.width = 8, fig.height = 6}
-
-plot_distance(mac, "combined_id", "Staurosporine_10")
-
-```
 
 ### 3. Differential gene expression
 #### 3.1. Single comparison
@@ -292,7 +266,6 @@ On the other hand, we often want to compare multiple samples in a screen vs the 
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
 mac$combined_id <- make.names(mac$combined_id)
-
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
@@ -320,7 +293,7 @@ If you prefer to see at the expression level for each replicate, you can do it b
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
 
-
+Pathway enrichment analysis is done by using enrichR. 
 
 Summarise the outputs from multi de comparison in a table
 
