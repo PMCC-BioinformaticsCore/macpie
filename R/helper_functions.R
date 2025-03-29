@@ -48,9 +48,9 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
       panel.grid.minor.x = element_blank(),
       plot.background = element_rect(fill = NULL, colour = "white"),
       panel.background = element_rect(fill = "white"),
-      
+      panel.border = element_blank(),
       # Axis settings
-      axis.line = element_line(colour = "black", linewidth = 1),
+      axis.line = element_line(colour = "black", linewidth = 0.5),
       axis.text.x = element_text(size = rel(0.8), angle = x_labels_angle, hjust = hjust_, vjust = vjust_),  # Keep x-axis ticks
       axis.text.y = element_text(size = rel(0.8)),  # Keep y-axis ticks
       #axis.title.x = element_blank(),  # Remove x-axis label

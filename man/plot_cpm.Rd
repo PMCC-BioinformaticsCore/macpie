@@ -11,7 +11,8 @@ plot_cpm(
   genes = NULL,
   group_by = NULL,
   treatment_samples = NULL,
-  control_samples = NULL
+  control_samples = NULL,
+  color_by = NULL
 )
 }
 \arguments{
@@ -20,7 +21,11 @@ plot_cpm(
 
 \item{genes}{Genes to be plotted}
 
+<<<<<<< HEAD
 \item{group_by}{A column that specifies the treatment group in the input data}
+=======
+\item{group_by}{A column that specifies the coloring for the data}
+>>>>>>> 446a7c0 (Fix border plots)
 
 \item{treatment_samples}{Value in the column "combined_id" representing replicates of treatment samples in the data}
 

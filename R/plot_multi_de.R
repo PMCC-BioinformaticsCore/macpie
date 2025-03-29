@@ -15,6 +15,7 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param gene_list External list of genes to plot the heatmap on
 #' @import pheatmap
 #' @import dplyr
+#' @importFrom purrr map2_dfr
 #' @returns a pheatmap object
 #' @export
 #' @examples
