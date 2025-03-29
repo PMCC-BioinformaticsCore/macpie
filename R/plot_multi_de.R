@@ -110,7 +110,6 @@ plot_multi_de <- function(data = NULL,
                   col = macpie_colours$continuous)
   } else if (value == "log2FC") {
     # plot log2fc
-    de_df$source <-factor(de_df$source,levels=c("IL2_D3","IL15_D3","IL36_D3","IL2_D5","IL15_D5","IL36_D5"))
     fc_common_genes <- de_df %>% 
       filter(gene %in% features) %>%
       select(gene, log2FC, source) %>%
@@ -129,7 +128,6 @@ plot_multi_de <- function(data = NULL,
     fc_common_genes <- de_df %>% 
       filter(gene %in% features) %>%
       select(gene, metric, any_of(group_by)) %>%
-
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
