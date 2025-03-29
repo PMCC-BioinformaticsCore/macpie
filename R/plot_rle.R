@@ -32,7 +32,7 @@
 #' # Example Data
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' rle_plot(data = mac, label_column = "Row", log=TRUE)
+#' plot_rle(data = mac, label_column = "Row", log=TRUE)
 #' }
 #'
 #' @importFrom Biobase rowMedians
@@ -145,7 +145,7 @@ plot_rle <- function(data, barcodes = NULL,
 
     tryCatch({
       # Generate a color palette for fill
-      fill_palette <- macpie_colours$discrete #colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
+      fill_palette <- macpie_colours$discrete_40 #colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
 
       # Darken the palette for outlines
       outline_palette <- darken(fill_palette, amount = 0.1)
