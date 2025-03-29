@@ -137,6 +137,7 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
 
 #### 2.2 Basic QC metrics
+##### 2.2.1 MDS plot
 
 As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
 
@@ -146,19 +147,21 @@ girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
 
-Box plot to show distribution of read counts from all wells that belong to one treatment condition
+##### 2.2.2 Box plot of read counts
+
+We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
 
 ```{r qc_stats_plot, fig.width = 8, fig.height = 6}
 qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
 ```
+##### 2.2.3 Collated QC metrics
 
-```{r, fig.width = 8, fig.height = 15}
+In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. To that end, we have allowed the user to have access to statistical metrics such as standard deviation (sd_value), z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap.
 
-plot_qc_metrics(qc_stats, "combined_id", "sd_value")
-plot_qc_metrics(qc_stats, "combined_id", "z_score")
-plot_qc_metrics(qc_stats, "combined_id", "mad_value")
-plot_qc_metrics(qc_stats, "combined_id", "IQR")
+```{r qc_metrics, fig.width = 8, fig.height = 15}
+
+plot_qc_metrics_heatmap()
 
 ```
 
