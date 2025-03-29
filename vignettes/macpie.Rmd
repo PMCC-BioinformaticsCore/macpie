@@ -118,8 +118,7 @@ mac <- mac %>%
 # Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
         ncol = 4, group.by = "Sample_type") & 
-  scale_fill_manual(values = macpie_colours$discrete) &
-  macpie_theme(show_x_title = F, show_y_title = F, legend_position_ = 'none', x_labels_angle = 45)
+  scale_fill_manual(values = macpie_colours$discrete) 
 
 ```
 
