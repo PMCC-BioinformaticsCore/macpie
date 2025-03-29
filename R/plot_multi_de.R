@@ -12,9 +12,7 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param n_genes Top n genes to be extracted from each treatment comparison
 #' @param control The control group to be included in the final heatmap, usually DMSO_0
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
-#' @param gene_list Exernal list of genes to plot the heatmap on
-
-
+#' @param gene_list External list of genes to plot the heatmap on
 #' @import pheatmap
 #' @import dplyr
 #' @returns a pheatmap object
@@ -60,7 +58,7 @@ plot_multi_de <- function(data = NULL,
     if (length(data@tools$diff_exprs) == 0) {
       stop("Missing information on DE genes. Run compute_multi_de first.")
     }
-    if (!inherits(gene_list, "character")) {
+    if (!is.null(gene_list) && !inherits(gene_list, "character")) {
       stop("Error: argument 'gene_list' must be a vector of characters.")
     }
   }
