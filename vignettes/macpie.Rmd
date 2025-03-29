@@ -3,7 +3,7 @@ title: "macpie"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 4
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
@@ -127,7 +127,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
-```{r subset_seurat, fig.width = 10, fig.height = 6}
+```{r subset_seurat, fig.width = 8, fig.height = 6}
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
@@ -151,7 +151,7 @@ girafe(ggobj = p, fonts = list(sans = "sans"))
 
 We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
 
-```{r qc_stats_plot, fig.width = 8, fig.height = 6}
+```{r qc_stats_plot, fig.width = 8, fig.height = 4}
 qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
 ```
@@ -166,6 +166,7 @@ As you can see below, Staurosporine had the largest variability between the samp
 plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 ```
+
 ##### 2.2.4 Variability within a sample
 
 As described previously, MAC-seq is more variable than RNA-seq, which can influence data variability within a sample. One way to estimate this is with poisson distance of reads within a sample
@@ -173,11 +174,11 @@ As described previously, MAC-seq is more variable than RNA-seq, which can influe
 ```{r, fig.width = 8, fig.height = 3}
 plot_distance(mac, "combined_id", treatment = "DMSO_0")
 ```
+##### 2.2.5 Estimate of batch effect
 
-Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots.
 
 ```{r plot_rle, fig.width = 8, fig.height = 4}
-
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
@@ -299,7 +300,7 @@ pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_them
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r compute_multi_screen_profile, fig.width = 15, fig.height = 5}
+```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac_screen_profile <- mac@tools$screen_profile %>%
