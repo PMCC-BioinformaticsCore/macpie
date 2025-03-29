@@ -9,7 +9,6 @@ utils::globalVariables(c(".data", "Treatments", "CPM"))
 #' @param group_by A column that specifies the treatment group in the input data
 #' @param treatment_samples Value in the column "combined_id" representing replicates of treatment samples in the data
 #' @param control_samples Value in the column "combined_id"  representing replicates of control samples in the data
-#'
 #' @import ggplot2
 #' @import dplyr
 #'
@@ -30,9 +29,12 @@ plot_cpm <- function(data = NULL,
                       genes = NULL,
                       group_by = NULL,
                       treatment_samples = NULL,
-                      control_samples = NULL) {
+                      control_samples = NULL,
+                      color_by = NULL) {
+  
   # Helper function to validate input data
-  validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples) {
+  validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by) {
+
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -46,8 +48,10 @@ plot_cpm <- function(data = NULL,
     if (is.null(treatment_samples) || is.null(control_samples)) {
       stop("Missing the vectors of treatment and control samples.")
     }
+    color_by <- if (is.null(color_by)) "combined_id" else color_by
   }
-  validate_inputs(data, genes, group_by, treatment_samples, control_samples)
+  validate_inputs(data, genes, group_by, treatment_samples, control_samples, color_by)
+
   #calculate cpm on full samples
   lcpm <- cpm(data@assays$RNA$counts, log = FALSE)
   combined_id_barcodes <- data@meta.data[[group_by]]
@@ -57,12 +61,21 @@ plot_cpm <- function(data = NULL,
   sub_lcpm <- lcpm[genes, colnames(lcpm) %in% treatment_control]
   sub_lcpm_m <- melt(sub_lcpm)
   colnames(sub_lcpm_m) <- c("Genes", "Treatments", "CPM")
-  n_samples <- length(treatment_control)
-  p <- ggplot(sub_lcpm_m, aes(x = Treatments, y = CPM, group = Treatments)) +
-    geom_boxplot(aes(fill = Treatments)) + facet_wrap(~Genes, ncol = 3) +
+  
+  # Add color_by column
+  sub_lcpm_m$color_by <- data@meta.data[match(sub_lcpm_m$Treatments, combined_id_barcodes), color_by]
+  n_samples <- length(unique(sub_lcpm_m$color_by))
+  
+  #reorder factors
+  sub_lcpm_m$Treatments <- factor(sub_lcpm_m$Treatments, levels = c(treatment_samples, control_samples))
+
+  p <- ggplot(sub_lcpm_m, aes(x = Treatments, y = CPM, group = Treatments, fill = color_by)) +
+    geom_boxplot() + 
+    facet_wrap(~Genes, ncol = 3, scales = "free") +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
     scale_fill_manual(values = macpie_colours$discrete[1:n_samples]) +
-    labs(y = "Gene Expression (CPM)") +
-    macpie_theme()
+    labs(y = "Gene Expression (CPM)") #+
+    #macpie_theme()
+
   return(p)
 }
