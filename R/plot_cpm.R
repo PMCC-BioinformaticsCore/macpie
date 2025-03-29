@@ -68,6 +68,7 @@ plot_cpm <- function(data = NULL,
   #reorder factors
   sub_lcpm_m$Treatments <- factor(sub_lcpm_m$Treatments, levels = c(treatment_samples, control_samples))
 
+
   p <- ggplot(sub_lcpm_m, aes(x = Treatments, y = CPM, group = Treatments)) +
     geom_boxplot(aes(fill = Treatments)) + facet_wrap(~Genes, ncol = 3) +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
