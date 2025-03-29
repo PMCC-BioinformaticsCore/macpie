@@ -3,7 +3,7 @@ title: "macpie"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 4
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
@@ -103,7 +103,7 @@ mac <- CreateSeuratObject(counts = raw_counts,
 
 ```
 
-```{r violin_plot, fig.width = 8, fig.height = 6}
+```{r violin_plot, fig.width = 8, fig.height = 4}
 # Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
@@ -127,7 +127,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
 For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
 
-```{r subset_seurat, fig.width = 10, fig.height = 6}
+```{r subset_seurat, fig.width = 8, fig.height = 5}
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
@@ -137,48 +137,48 @@ plot_plate_layout(mac, "nCount_RNA", "Sample_type")
 ```
 
 #### 2.2 Basic QC metrics
+##### 2.2.1 Sample grouping with MDS plot
 
 As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
 
 ```{r mds_plot, fig.width = 8, fig.height = 6}
-
-# Example of MDS function 
 p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
-Box plot to show distribution of read counts from all wells that belong to one treatment condition
 
-```{r, fig.width = 8, fig.height = 6}
+##### 2.2.2 Distribution of read counts
 
-qc_stats <- compute_qc_metrics(mac, "combined_id")
+We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
+
+```{r qc_stats_plot, fig.width = 8, fig.height = 4}
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
+```
+##### 2.2.3 Variability among all replicates
+
+In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. To that end, we have allowed the user to have access to statistical metrics such as standard deviation (sd_value), z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap. 
+
+As you can see below, Staurosporine had the largest variability between the samples across all metrics. 
+
+```{r qc_metrics, fig.width = 8, fig.height = 4}
+
+plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 ```
 
-```{r, fig.width = 8, fig.height = 15}
+##### 2.2.4 Variability within a sample
 
-plot_qc_metrics(qc_stats, "combined_id", "sd_value")
-plot_qc_metrics(qc_stats, "combined_id", "z_score")
-plot_qc_metrics(qc_stats, "combined_id", "mad_value")
-plot_qc_metrics(qc_stats, "combined_id", "IQR")
+As described previously, MAC-seq is more variable than RNA-seq, which can influence data variability within a sample. One way to estimate this is with poisson distance of reads within a sample
 
+```{r, fig.width = 8, fig.height = 3}
+plot_distance(mac, "combined_id", treatment = "DMSO_0")
 ```
+##### 2.2.5 Estimate of batch effect
 
-Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
-
-```{r, fig.width = 8, fig.height = 6}
-
-plot_distance(mac, "combined_id", "Staurosporine_10")
-plot_distance(mac, "combined_id", "DMSO_0")
-plot_distance(mac, "combined_id", "SN01005979_10")
-
-```
-
-Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots.
 
 ```{r plot_rle, fig.width = 8, fig.height = 4}
-
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
@@ -300,7 +300,7 @@ pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_them
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r compute_multi_screen_profile, fig.width = 15, fig.height = 5}
+```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac_screen_profile <- mac@tools$screen_profile %>%
