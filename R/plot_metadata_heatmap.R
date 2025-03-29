@@ -103,7 +103,7 @@ plot_metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend 
     heatmaps <- lapply(seq_along(annotation_cols), function(i) {
       annotation <- annotation_cols[i]
       scale_func <- if (is.factor(plate_data[[annotation]])) {
-        scale_fill_gradientn(colors = macpie_colours$discrete)
+        scale_fill_manual(values = macpie_colours$discrete_40)
       } else if (is.numeric(plate_data[[annotation]])) {
         scale_fill_gradientn(colors = macpie_colours$continuous)
       } else if (length(unique(plate_data[[annotation]])) < 40) {
