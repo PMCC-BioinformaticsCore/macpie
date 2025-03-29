@@ -9,8 +9,6 @@ utils::globalVariables(c(".data", "Treatments", "CPM"))
 #' @param group_by A column that specifies the treatment group in the input data
 #' @param treatment_samples Value in the column "combined_id" representing replicates of treatment samples in the data
 #' @param control_samples Value in the column "combined_id"  representing replicates of control samples in the data
-#' @param group_by A column that specifies the coloring for the data
-
 #' @import ggplot2
 #' @import dplyr
 #'
@@ -36,6 +34,7 @@ plot_cpm <- function(data = NULL,
   
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by) {
+
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -52,6 +51,7 @@ plot_cpm <- function(data = NULL,
     color_by <- if (is.null(color_by)) "combined_id" else color_by
   }
   validate_inputs(data, genes, group_by, treatment_samples, control_samples, color_by)
+
   #calculate cpm on full samples
   lcpm <- cpm(data@assays$RNA$counts, log = FALSE)
   combined_id_barcodes <- data@meta.data[[group_by]]
@@ -76,5 +76,6 @@ plot_cpm <- function(data = NULL,
     scale_fill_manual(values = macpie_colours$discrete[1:n_samples]) +
     labs(y = "Gene Expression (CPM)") #+
     #macpie_theme()
+
   return(p)
 }

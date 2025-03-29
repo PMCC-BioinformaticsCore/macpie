@@ -14,6 +14,7 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
 #' @param gene_list Exernal list of genes to plot the heatmap on
 
+
 #' @import pheatmap
 #' @import dplyr
 #' @returns a pheatmap object
@@ -43,6 +44,7 @@ plot_multi_de <- function(data = NULL,
       if (!inherits(p_value_cutoff, "numeric")) {
         stop("Error: argument 'p_value_cutoff' must be numeric.")
       }
+
     if (!is.null(direction) && !direction %in% c("up", "down", "both")) {
       stop("Value of the direction paramater should be up, down or both. Default is both.")
     }
@@ -78,6 +80,7 @@ plot_multi_de <- function(data = NULL,
         slice_min(., order_by = .data$p_value_adj, n = n_genes)
       }
     }
+
   #find genes shared by at least 2 different treatment groups
   common_genes <- top_genes_per_combined_id %>%
     group_by(.data$gene) %>%
@@ -90,6 +93,7 @@ plot_multi_de <- function(data = NULL,
   } else {
     features <- unique(gene_list)
   }
+
   common_genes_treatments <- common_genes %>% dplyr::distinct(.data[[group_by]]) %>% pull() %>% unique()
   #add control group
   common_genes_treatments <- c(common_genes_treatments, control)
@@ -114,6 +118,7 @@ plot_multi_de <- function(data = NULL,
       pivot_wider(names_from = source, values_from = log2FC, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene 
+
     storage.mode(fc_matrix) <- "numeric"
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
@@ -125,6 +130,7 @@ plot_multi_de <- function(data = NULL,
     fc_common_genes <- de_df %>% 
       filter(gene %in% features) %>%
       select(gene, metric, any_of(group_by)) %>%
+
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
@@ -136,3 +142,4 @@ plot_multi_de <- function(data = NULL,
   }
   return(p)
 }
+
