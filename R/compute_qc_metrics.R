@@ -16,10 +16,7 @@
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' compute_qc_metrics(data = mac, group_by = "combined_id", order_by = "median")
-#' 
-#' 
 #' @export
-
 compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, order_by) {
@@ -28,10 +25,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
 
-    column_names <- data %>%
-      head() %>%
-      colnames()
-    if (!is.null(group_by) & !any(c(group_by) %in% c(colnames(mac@meta.data), "median"))) {
+    if (!is.null(group_by) && !any(c(group_by) %in% c(colnames(mac@meta.data), "median"))) {
       stop("Your parameter group_by is not a metadata column or 'median'.")
     }
     list(data = data, group_by = group_by, order_by = order_by)
@@ -58,8 +52,6 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
               z_score = round((.data$group_median - global_median) / global_mad, 3),
               IQR = round(stats::IQR(.data$nCount_RNA), 3),
               .groups = "drop")# Calculate qc metrics per group
-  
-  
   if (order_by == "median") {
     meta[[group_by]] <- fct_reorder(meta[[group_by]], meta$nCount_RNA, median)
   } else if (order_by %in% colnames(stats_summary)) {
@@ -67,7 +59,6 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     ordering <- stats_summary %>%
       arrange(.data[[order_by]]) %>%
       pull(!!sym(group_by))
-    
     meta[[group_by]] <- factor(meta[[group_by]], levels = ordering)
   } else if (order_by %in% colnames(meta)) {
     # Order by a per-cell metadata column (like Row, Column, Time, etc.)
@@ -75,17 +66,12 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   } else {
     stop(glue::glue("`order_by` = '{order_by}' not found in stats_summary or metadata"))
   }
-  
-
   p <- ggplot(meta, aes(.data[[group_by]], .data$nCount_RNA)) + 
     geom_boxplot(outlier.colour = "NA") +
     geom_jitter(width = 0.1, aes(color = .data[[group_by]])) + 
     theme_minimal() +
     labs(x = group_by, y = "Read counts") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
-
   print(p)
-
   return(list(stats_summary = stats_summary, plot = p))
-
 }
