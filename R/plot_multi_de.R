@@ -134,7 +134,7 @@ plot_multi_de <- function(data = NULL,
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
-    storage.mode(fc_matrix) <- "numeric
+    storage.mode(fc_matrix) <- "numeric"
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
