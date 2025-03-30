@@ -20,6 +20,8 @@ macpie_colours <- list(
   'discrete' = usecol(pal_unikn_pref),
   'discrete_40' = distinct_colors,
   'discrete_400' = hcl.colors(400, palette = "Zissou1", rev = TRUE),
+  'high' = pal_signal[[1]],
+  'low' = Karpfenblau[[1]],
   'continuous' = colorRampPalette(c(pal_signal[[1]], "white", Karpfenblau[[1]]))(100),  # Signal yellow to green
   'continuous_rev' = rev(colorRampPalette(c(pal_signal[[1]], "white", Karpfenblau[[1]]))(100)),  # Signal yellow to green
   'scale_3' = c(pal1[[11]], "white", Karpfenblau[[1]])  # Same 3-color scale

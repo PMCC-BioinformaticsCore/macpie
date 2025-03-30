@@ -58,25 +58,34 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
       mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
       mutate(median_value = median(!!rlang::sym(metric))) %>%
       mutate(max_value = max(!!rlang::sym(metric))) %>%
-      mutate(min_value = min(!!rlang::sym(metric)))
+      mutate(min_value = min(!!rlang::sym(metric))) %>%
+      mutate(
+        tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
+        group_id = .data[[annotation]]
+      )
   })
   # Plot the results
 
   tryCatch({
-    p <- ggplot(data, aes(.data$Col,
-                          forcats::fct_rev(forcats::as_factor(.data$Row)),
-                          fill = !!rlang::sym(metric))) +
-      geom_tile() +
+    p <- ggplot(data, aes(
+      x = .data$Col,
+      y = forcats::fct_rev(forcats::as_factor(.data$Row)),
+      fill = !!rlang::sym(metric)
+    )) +
+      geom_tile_interactive(aes(tooltip = tooltip_text,
+                                data_id = group_id), color = "grey90") +
       scale_x_discrete(position = "top") +
-      scale_fill_gradient2(high = macpie_colours$scale_3[[1]],
-                           mid = macpie_colours$scale_3[[2]],
-                           low = macpie_colours$scale_3[[3]],
-                           midpoint = unique(data$median_value),
-                           name = {{metric}}) +
+      scale_fill_gradient2(
+        high = macpie_colours$high,
+        mid = "white",
+        low = macpie_colours$low,
+        midpoint = unique(data$median_value),
+        name = rlang::as_name(metric)
+      ) +
       ylab("Row") +
-      macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right', x_labels_angle = 0) +
-      geom_text(aes(label = !!rlang::sym(annotation)), size = 1.5)
-    p
+      macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right') +
+      guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10))
+    
   }, error = function(e) {
     stop("Error in plotting: ", e$message)
   })
