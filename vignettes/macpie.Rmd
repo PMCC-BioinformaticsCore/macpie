@@ -229,7 +229,6 @@ group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 ```
 
-
 Summarise the outputs from single comparison in a table
 
 ```{r de_single_summary}
