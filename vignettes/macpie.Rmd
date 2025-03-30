@@ -141,7 +141,7 @@ p <- plot_plate_layout(mac, "nCount_RNA", "combined_id")
 girafe(ggobj = p, 
   fonts = list(sans = "sans"),
   options = list(
-    opts_hover(css = "filter:brightness(80%)")  # <- slight darkening
+    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
   ))
 ```
 

@@ -79,7 +79,7 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
         high = macpie_colours$high,
         mid = "white",
         low = macpie_colours$low,
-        midpoint = unique(data$median_value),
+        midpoint = mean(range(data[[metric]])),
         name = rlang::as_name(metric)
       ) +
       ylab("Row") +
