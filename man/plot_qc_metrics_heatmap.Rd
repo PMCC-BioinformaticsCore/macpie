@@ -5,10 +5,10 @@
 \title{Create a heatmap for multiple QC metrics}
 \usage{
 plot_qc_metrics_heatmap(
-  stats_summary,
+  stats_summary = NULL,
   group_by = NULL,
   metrics = NULL,
-  sort_by = NULL
+  order_by = NULL
 )
 }
 \arguments{
@@ -18,8 +18,15 @@ plot_qc_metrics_heatmap(
 
 \item{metrics}{A vector of QC metrics to visualize.}
 
-\item{sort_by}{The metric to use for sorting group_by values.}
+\item{order_by}{The metric to use for sorting group_by values.}
 }
 \description{
 Plots multiple QC metrics from stats_summary as a heatmap, normalizing values between 0 and 1.
+}
+\examples{
+rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+mac<-readRDS(rds_file)
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
+plot_qc_metrics_heatmap(stats_summary = qc_stats$stats_summary, group_by = "combined_id")
+
 }
