@@ -49,10 +49,11 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
                                       TRUE ~ diff_expressed),
            diff_expressed = forcats::fct_expand(diff_expressed, "up", "down", "no"), # Add all expected levels
            gene_labels = case_when(.data$diff_expressed != "no" ~ .data$gene, TRUE ~ ""),
-           colors = as.character(fct_recode(.data$diff_expressed,
-                                            darkred = "up",
-                                            gray = "no",
-                                            darkblue = "down")))
+           colors = case_when(
+             .data$diff_expressed == "up"   ~ macpie_colours$high,
+             .data$diff_expressed == "down" ~ macpie_colours$low,
+             TRUE                           ~ "gray"
+           ))
 
   color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
   named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
