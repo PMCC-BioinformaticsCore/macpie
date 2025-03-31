@@ -164,7 +164,7 @@ Since we are operating from a standard Seurat object, we can also use a regular 
 mac <- SCTransform(mac) %>%
   RunPCA() %>%
   RunUMAP(dims = 1:30)
-DimPlot(mac, reduction = "umap", group.by = "Concentration_1", cols = macpie_colours$discrete)
+DimPlot(mac, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
 ```
 
 ##### 2.2.2 Distribution of read counts
@@ -197,7 +197,7 @@ plot_distance(mac, "combined_id", treatment = "DMSO_0")
 
 ##### 2.2.5 Estimate of the batch effect
 
-Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots.
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots. In our case, limma_voom provides the lowest average coefficient of variation, when compared to other methods such as "raw", Seurat "SCT" or "edgeR".
 
 ```{r plot_rle, fig.width = 8, fig.height = 4}
 # First we will subset the data to look at control, DMSO samples only
@@ -205,8 +205,8 @@ mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
 # Run the RLE function
-plot_rle(mac_dmso, label_column = "Row", normalisation = "raw")
-plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
+
 ```
 
 
