@@ -272,6 +272,7 @@ Since MAC-seq is commonly used for high-throughput screening of compound librari
 mac$combined_id <- make.names(mac$combined_id)
 
 treatments <- mac %>%
+  filter(Concentration_1 == 10) %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
@@ -290,7 +291,6 @@ This heatmap shows shared differentially expressed genes with corresponding log2
 
 ```{r plot_multi_de, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
-
 ```
 If you prefer to see at the expression level for each replicate, you can do it by specifying "lcpm". 
 
