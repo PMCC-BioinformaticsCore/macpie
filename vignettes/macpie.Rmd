@@ -438,11 +438,24 @@ plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + sc
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 #### 5.2 Single comparison DE analysis 
 
 We run differential expression using edgeR between one treatment condition and control (e.g. Staurosporine_0.1 vs DMSO_0), while accounting for plate effects via batch modeling.
+
+```{r multi_plates_compute_single_de_raw, fig.width = 8, fig.height = 6}
+treatment_samples <- "Staurosporine_0.1"
+control_samples <- "DMSO_0"
+# subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
+# batch <- subset$orig.ident
+combined_edgeR <- compute_single_de(combined, treatment_samples, control_samples, method = "edgeR")
+plot_volcano(combined_edgeR)
+
+```
+
 
 ```{r multi_plates_compute_single_de, fig.width = 8, fig.height = 6}
 treatment_samples <- "Staurosporine_0.1"
