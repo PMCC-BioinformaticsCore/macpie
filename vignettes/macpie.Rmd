@@ -158,6 +158,15 @@ girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
 
+Since we are operating from a standard Seurat object, we can also use a regular scRNA-seq workflow too. 
+
+```{r qc_stats_umap, fig.width = 8, fig.height = 4}
+mac <- SCTransform(mac) %>%
+  RunPCA() %>%
+  RunUMAP(dims = 1:30)
+DimPlot(mac, reduction = "umap", group.by = "Concentration_1", cols = macpie_colours$discrete)
+```
+
 ##### 2.2.2 Distribution of read counts
 
 We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
