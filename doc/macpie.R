@@ -222,96 +222,62 @@ ggplot(mac_screen_profile, aes(target, NES)) +
   macpie_theme(x_labels_angle = 45, show_x_title = F)
 
 
-## ----load_data_pmm33----------------------------------------------------------
-# Define project variables
-project_name <- "PMMSq033"
+## ----load_two_plates----------------------------------------------------------
 project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 metadata <- read_metadata(project_metadata)
 
-project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
-raw_counts_total <- Read10X(data.dir = project_rawdata)
+pmm33_in <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
+pmm34_in <- system.file("extdata/PMMSq034/raw_matrix", package = "macpie")
+raw_counts_total <- Read10X(data.dir = c(pmm33_in,pmm34_in))
 keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
 raw_counts <- raw_counts_total[keep, ]
-
-#create tidySeurat object
-mac_pmm33 <- CreateSeuratObject(counts = raw_counts,
-                          project = project_name,
-                          min.cells = 1,
+combined <- CreateSeuratObject(counts=raw_counts,
+                               min.cells = 1,
                           min.features = 1)
-#calculate percent of mitochondrial and ribosomal genes
-mac_pmm33[["percent.mt"]] <- PercentageFeatureSet(mac_pmm33, pattern = "^mt-|^MT-")
-mac_pmm33[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm33, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+combined[["percent.mt"]] <- PercentageFeatureSet(combined, pattern = "^mt-|^MT-")
+combined[["percent.ribo"]] <- PercentageFeatureSet(combined, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
 #join with metadata
-mac_pmm33 <- mac_pmm33 %>%
-  inner_join(metadata, by = c(".cell" = "Barcode"))
+combined$Barcode <- str_replace_all(rownames(combined@meta.data),"[1|2]_","")
 
-mac_pmm33 <- mac_pmm33%>%
+combined <- combined %>%
+  inner_join(metadata, by = c("Barcode" = "Barcode"))
+
+combined <- combined%>%
   filter(Project == "Current")
 
 #add unique identifier
-mac_pmm33 <- mac_pmm33 %>%
+combined <- combined %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
 
-mac_pmm33$combined_id <- make.names(mac_pmm33$combined_id)
-
-## ----load_data pmmsq34--------------------------------------------------------
-project_rawdata <- system.file("extdata/PMMSq034/raw_matrix", package = "macpie")
-raw_counts_total <- Read10X(data.dir = project_rawdata)
-keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
-raw_counts <- raw_counts_total[keep, ]
-
-#create tidySeurat object
-project_name <- "PMMSq034"
-mac_pmm34 <- CreateSeuratObject(counts = raw_counts,
-                          project = project_name,
-                          min.cells = 1,
-                          min.features = 1)
-
-#calculate percent of mitochondrial and ribosomal genes
-mac_pmm34[["percent.mt"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^mt-|^MT-")
-mac_pmm34[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
-
-#join with metadata
-mac_pmm34 <- mac_pmm34 %>%
-  inner_join(metadata, by = c(".cell" = "Barcode"))
-
-mac_pmm34 <- mac_pmm34%>%
-  filter(Project == "Current")
-
-#add unique identifier
-mac_pmm34 <- mac_pmm34 %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
-  mutate(combined_id = gsub(" ", "", .data$combined_id))
-mac_pmm34$combined_id <- make.names(mac_pmm34$combined_id)
-
-## ----combine_plates-----------------------------------------------------------
-
-combined <- merge(mac_pmm33, mac_pmm34, add.cell.ids = c("PMMSq033", "PMMSq034"))
-
-all_genes <- union(rownames(combined@assays$RNA$counts.PMMSq033),
-                   rownames(combined@assays$RNA$counts.PMMSq034))
+combined$combined_id <- make.names(combined$combined_id)
 
 
-counts1 <- pad_sparse_matrix(combined@assays$RNA$counts.PMMSq033, all_genes)
-counts2 <- pad_sparse_matrix(combined@assays$RNA$counts.PMMSq034, all_genes)
+## ----two_plates_plate_layout_plate1, fig.width = 8, fig.height = 6------------
+p <- plot_plate_layout(combined%>%filter(orig.ident==1), "nCount_RNA", "combined_id")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
+  ))
 
-combined_counts <- cbind(counts1, counts2)
-combined@assays$RNA$counts <- combined_counts
-combined@assays$RNA$counts.PMMSq033 <- NULL
-combined@assays$RNA$counts.PMMSq034 <- NULL
+## ----two_plates_plate_layout_plate2, fig.width = 8, fig.height = 6------------
+p <- plot_plate_layout(combined%>%filter(orig.ident==2), "nCount_RNA", "combined_id")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
+  ))
 
-
+## -----------------------------------------------------------------------------
 combined_dmso <- combined %>%
   filter(Treatment_1 == "DMSO")
-
-
 
 ## ----multi_plates_plot_mds, fig.width = 8, fig.height = 4---------------------
 plot_mds(combined, group_by = "orig.ident", label = "combined_id", n_labels = 30)
 plot_mds(combined_dmso, group_by = "orig.ident", label = "combined_id", n_labels = 30)
-
 
 ## ----multi_plates_plot_rle, fig.width = 8, fig.height = 4---------------------
 plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + scale_x_discrete(drop = FALSE) + 
