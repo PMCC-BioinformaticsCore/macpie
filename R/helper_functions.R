@@ -73,21 +73,4 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
     )
 }
 
-# For multi_plates, when combining plates, genes are different
-# Define a helper to fill missing genes with 0s
-pad_sparse_matrix <- function(mat, all_genes) {
-  missing_genes <- setdiff(all_genes, rownames(mat))
-  if (length(missing_genes) > 0) {
-    # Create a zero matrix for missing genes
-    zero_mat <- Matrix(0, nrow = length(missing_genes), ncol = ncol(mat), sparse = TRUE)
-    rownames(zero_mat) <- missing_genes
-    colnames(zero_mat) <- colnames(mat)
-    
-    # Combine existing and missing gene matrices
-    mat <- rbind(mat, zero_mat)
-  }
-  
-  # Reorder rows to match all_genes
-  mat <- mat[all_genes, , drop = FALSE]
-  return(mat)
-}
+
