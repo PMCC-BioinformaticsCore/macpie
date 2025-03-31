@@ -124,7 +124,7 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = rev(macpie_colours$continuous_rev),
+                  col = macpie_colours$continuous_rev,
                   cluster_cols = F)
   } else {
     # plot metric

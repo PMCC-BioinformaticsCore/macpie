@@ -229,7 +229,7 @@ plot_volcano(top_table)
 
 ```
 
-Based on the results, we can quickly check gene expression levels in counts per million (CPM) for selected genes between treatment and control samples as described below.
+Based on the results, we can quickly check gene expression levels in counts per million (CPM) for selected genes between treatment and control samples as described below. 
 
 ```{r plot_cpm, fig.width = 8, fig.height = 6}
 genes <- top_table$gene[1:6]
@@ -237,7 +237,7 @@ group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 ```
 
-Summarise the outputs from single comparison in a table
+Some plotting functions also have a "summarise" version that provides collapsed versions of the results in a table format.
 
 ```{r de_single_summary}
 summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
@@ -266,7 +266,7 @@ gridExtra::grid.arrange(p1, ncol = 1)
 
 #### 3.3. Differential gene expression - multiple comparisons
 
-Since MAC-seq is commonly used for high-throughput screening of compound libraries, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". 
+Since MAC-seq is commonly used for high-throughput screening of compound libraries, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". (Warning, parallelisation speedup currently only works on OSX and Linux machines, and not on Windows)
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
 mac$combined_id <- make.names(mac$combined_id)
