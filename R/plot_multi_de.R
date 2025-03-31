@@ -124,8 +124,7 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous_rev,
-                  cluster_cols = F)
+                  col = macpie_colours$continuous_rev)
   } else {
     # plot metric
     fc_common_genes <- de_df %>% 
