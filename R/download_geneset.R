@@ -28,8 +28,11 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
 
   validate_inputs(species, db)
 
-  url <- paste0("https://maayanlab.cloud/", species, "Enrichr/")
-
+  if(!species %in% c("human", "mouse")){
+    url <- paste0("https://maayanlab.cloud/", species, "Enrichr/")
+  } else {
+    url <- paste0("https://maayanlab.cloud/Enrichr/")
+  }
   tryCatch({
     results_table <- request(paste0(url, "geneSetLibrary?mode=text&libraryName=", db)) %>%
       req_perform() %>%           #perform request

@@ -5,42 +5,49 @@
 #' @param stats_summary A list containing QC metrics.
 #' @param group_by A metadata column name to group data.
 #' @param metrics A vector of QC metrics to visualize.
-#' @param sort_by The metric to use for sorting group_by values.
+#' @param order_by The metric to use for sorting group_by values.
 #'
 #' @import ggplot2
 #' @import dplyr
 #' @import tidyr
 #' @importFrom scales rescale
+#' @examples
+#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac<-readRDS(rds_file)
+#' qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
+#' plot_qc_metrics_heatmap(stats_summary = qc_stats$stats_summary, group_by = "combined_id")
+#' 
 #' @export
 
-plot_qc_metrics_heatmap <- function(stats_summary, group_by = NULL, metrics = NULL, sort_by = NULL) {
+plot_qc_metrics_heatmap <- function(stats_summary = NULL, 
+                                    group_by = NULL, 
+                                    metrics = NULL, 
+                                    order_by = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(stats_summary, group_by, metrics, sort_by) {
-    if (!inherits(stats_summary, "list")) {
+  validate_inputs <- function(stats_summary, group_by, metrics, order_by) {
+    if (!inherits(stats_summary, "tbl_df")) {
       stop("Error: argument 'stats_summary' must be calculated QC metrics by running QC_metrics function.")
     }
-    
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     metrics <- if (is.null(metrics)) c("sd_value","z_score","mad_value","IQR") else metrics
-    sort_by <- if (is.null(sort_by)) "sd_value" else sort_by
+    order_by <- if (is.null(order_by)) "sd_value" else order_by
     
-    column_names <- colnames(stats_summary$stats_summary)
-    if (!all(metrics %in% column_names)) {
+    if (!all(metrics %in% colnames(stats_summary))) {
       stop("Error: One or more specified metrics are not present in stats_summary.")
     }
     
-    if (!(sort_by %in% metrics)) {
-      stop("Error: 'sort_by' metric must be one of the selected metrics.")
+    if (!(order_by %in% metrics)) {
+      stop("Error: 'order_by' metric must be one of the selected metrics.")
     }
     
-    list(stats_summary = stats_summary$stats_summary, group_by = group_by, metrics = metrics, sort_by = sort_by)
+    list(stats_summary = stats_summary, group_by = group_by, metrics = metrics, order_by = order_by)
   }
   
-  validated_inputs <- validate_inputs(stats_summary, group_by, metrics, sort_by)
+  validated_inputs <- validate_inputs(stats_summary, group_by, metrics, order_by)
   var_stats <- validated_inputs$stats_summary
   group_by <- validated_inputs$group_by
   metrics <- validated_inputs$metrics
-  sort_by <- validated_inputs$sort_by
+  order_by <- validated_inputs$order_by
   
   # Reshape data to long format
   heatmap_data <- var_stats %>%
@@ -50,9 +57,9 @@ plot_qc_metrics_heatmap <- function(stats_summary, group_by = NULL, metrics = NU
     mutate(Normalized = scales::rescale(Value, to = c(0, 1))) %>%  # Normalize to 0-1
     ungroup()
   
-  # Compute sorting order based on `sort_by` metric
+  # Compute sorting order based on `order_by` metric
   sorting_order <- heatmap_data %>%
-    filter(Metric == sort_by) %>%
+    filter(Metric == order_by) %>%
     arrange(desc(Value)) %>%  # Sort descending
     pull(.data[[group_by]])
   
@@ -61,10 +68,11 @@ plot_qc_metrics_heatmap <- function(stats_summary, group_by = NULL, metrics = NU
   # Plot heatmap
   p <- ggplot(heatmap_data, aes(x = Metric, y = factor(.data[[group_by]], levels = sorting_order), fill = Normalized)) +
     geom_tile() +
-    scale_fill_gradient(low = "white", high = "darkred") +  # Change color scale if needed
+    scale_fill_gradient(low = "white", high = macpie_colours$discrete[7]) +  # Change color scale if needed
     labs(x = "QC Metric", y = group_by, fill = "Normalized Value") +
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    coord_flip() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
   
   return(p)
 }

@@ -59,7 +59,7 @@ compute_single_de <- function(data = NULL,
       treatment_samples_list <- grepl(treatment_samples, data$combined_id)
       control_samples_list <- grepl(control_samples, data$combined_id)
       if (any(sum(treatment_samples_list) == 0, sum(control_samples_list) == 0)) {
-        stop("The combined id of your samples (format: 'treatment'_'concentration') is not valid.")
+        stop("Your treatment and control samples are not in your combined_id column.")
       }
     }
   }

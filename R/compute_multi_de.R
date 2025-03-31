@@ -77,8 +77,16 @@ compute_multi_de <- function(data = NULL,
   num_cores <- validated$num_cores
 
   de_list <- pmclapply(treatment_samples, function(x) {
-    result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
-    result$combined_id <- x
+    if (length(batch) == 1){
+      result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
+      result$combined_id <- x
+    } else {
+      data_subset <- data[, grepl(paste0(x, "|", control_samples), data$combined_id)]
+      batch_new <- data_subset$orig.ident
+      result <- compute_single_de(data, x, control_samples, method, batch_new, k, spikes)
+      result$combined_id <- x
+      
+    }
     return(result)
   }, mc.cores = num_cores)
   names(de_list) <- treatment_samples

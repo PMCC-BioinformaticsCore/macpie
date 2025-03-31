@@ -1,50 +1,33 @@
+library(unikn)
+library(ggplot2)
+library(colorspace)
+
+n_colors <- 60  # Adjust as needed
+
+# Get base colors
+unikn_colors <- c(usecol(pal_unikn_pref))
+
+# Select well-separated colors using farthest-point sampling
+unikn_colors_extended <- colorRampPalette(unikn_colors)(n_colors)
+set.seed(60)
+distinct_colors <- unikn_colors_extended[sample(1:n_colors)]  # Pick spaced-out colors
+#barplot(rep(1, 10), col = distinct_colors, border = NA,space = 0, axes = FALSE, main = "Extended unikn palette")
+
+pal1 <- c(rev(pal_seeblau), "white", pal_bordeaux)
+
+# Replace colors with unikn palettes
 macpie_colours <- list(
-  'discrete' = c(
-    "#3CB371",  # medium sea green
-    "#FFD700",  # gold
-    "#8A2BE2",  # blue violet
-    "#00BFFF",  # deep sky blue
-    "#DA70D6",  # orchid
-    "#FF8C00",  # dark orange
-    "#ADFF2F",  # green yellow
-    "#20B2AA",  # light sea green
-    "#FF4500",  # orange red
-    "#003366",  # Prussian Blue
-    "#32CD32",  # lime green
-    "#FF1493",  # deep pink
-    "#00CED1",  # dark turquoise
-    "#FF6347",  # tomato
-    "#FF00FF",  # fuchsia
-    'black', #black
-    "#00FF7F",  # spring green
-    "#800080",  # purple
-    "#DC143C",  # crimson
-    "#8B4513",  # saddle brown
-    'white', # white
-    "#B22222",   # firebrick
-    "#FF6347",  # tomato
-    "#B0E0E6",  # powder blue
-    "#C71585",  # medium violet red
-    "#808000",  # olive
-    "#D2691E",  # chocolate
-    "#A52A2A",  # brown
-    "#FFB6C1",  # light pink
-    "#4B0082",  # indigo
-    "#F0E68C",  # khaki
-    "#E6E6FA",  # lavender
-    "#FFFACD",  # lemon chiffon
-    "#D3D3D3",  # light gray
-    "#FF7F50",  # coral
-    "#F5DEB3",  # wheat
-    "#98FB98",  # pale green
-    "#B0C4DE",  # light steel blue
-    "#FFDEAD",  # navajo white
-    "#E0FFFF"   # light cyan
-  ),
-  'continuous' = colorRampPalette(c("darkorange", "white", "darkgreen"))(100),
-  'scale_3' = c("darkorange", "white", "darkgreen"),
-  'discrete_400' = hcl.colors(400, palette = "Spectral", rev = TRUE)
+  'discrete' = usecol(pal_unikn_pref),
+  'discrete_40' = distinct_colors,
+  'discrete_400' = hcl.colors(400, palette = "Zissou1", rev = TRUE),
+  'high' = pal_signal[[1]],
+  'low' = Karpfenblau[[1]],
+  'continuous' = colorRampPalette(c(pal_signal[[1]], "white", Karpfenblau[[1]]))(100),  # Signal yellow to green
+  'continuous_rev' = rev(colorRampPalette(c(pal_signal[[1]], "white", Karpfenblau[[1]]))(100)),  # Signal yellow to green
+  'scale_3' = c(pal1[[11]], "white", Karpfenblau[[1]])  # Same 3-color scale
+   # Using a diverging palette
 )
+
 
 macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_position_ = 'bottom', x_labels_angle = 0) {
   
@@ -60,28 +43,51 @@ macpie_theme <- function(show_x_title = TRUE, show_y_title = TRUE, legend_positi
   # Apply the theme with the customizations
   theme_bw(base_size = 20) +
     theme(
-      plot.title = element_text(face = 'plain', size = rel(0.9), hjust = 0.5),
-      panel.grid.major.y = element_blank(), #element_line(colour = 'gray'),
-      panel.grid.minor.y = element_blank(), #element_line(colour = 'gray'),
+      plot.title = element_text(face = 'plain', size = rel(1.2), hjust = 0.5),  # Slightly larger title
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.y = element_blank(),
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank(),
-      plot.background = element_rect(fill = NULL, colour = 'white'),
-      panel.background = element_rect(fill = 'white'),
-      # Axis stuff
-      axis.line = element_line(colour = 'black', linewidth = 1),
-      axis.text = element_text(colour = "black", face = 'plain'),
-      axis.text.x = element_text(size = rel(0.75), angle = x_labels_angle, hjust = hjust_, vjust = vjust_),
-      axis.text.y = element_text(size = rel(0.75)),
-      axis.title.x = element_text(size = rel(ifelse(show_x_title, 1, 0))),
-      axis.title.y = element_text(size = rel(ifelse(show_x_title, 1, 0))),
-      axis.ticks = element_line(colour = 'black', linewidth = 1.1),
-      # Legend stuff
-      legend.position = legend_position_,
-      legend.margin = margin(6, 6, 6, 6),
-      legend.title = element_text(face = 'plain', size = rel(0.6)),
-      legend.text = element_text(size = rel(0.5)),
+      panel.border = element_blank(),
+      #plot.background = element_rect(fill = NULL, colour = "white"),
+      #panel.background = element_rect(fill = "white"),
+      
+      # Axis settings
+      axis.line = element_line(colour = "black", linewidth = 0.5),
+      axis.text.x = element_text(size = rel(0.8), angle = x_labels_angle, hjust = hjust_, vjust = vjust_),  # Keep x-axis ticks
+      axis.text.y = element_text(size = rel(0.8)),  # Keep y-axis ticks
+      axis.title.x = element_blank(),  # Remove x-axis label
+      axis.title.y = element_blank(),  # Remove y-axis label
+      axis.ticks = element_line(colour = "black", linewidth = 0.5),  # Slightly thinner ticks
+      
+      # Heatmap Text Labels (Make this large)
+      plot.subtitle = element_text(size = rel(1.5)),  # Larger text inside heatmap
+      
+      # Legend settings (Same size as axis ticks)
+      legend.title = element_text(face = 'plain', size = rel(0.8)),  # Match tick size
+      legend.text = element_text(size = rel(0.8)),  # Match tick size
       legend.background = element_blank(),
-      # legend.box.background = element_rect(colour = "black")
+      
+      # Facet strip background
       strip.background = element_rect(fill = "white")
     )
+}
+
+# For multi_plates, when combining plates, genes are different
+# Define a helper to fill missing genes with 0s
+pad_sparse_matrix <- function(mat, all_genes) {
+  missing_genes <- setdiff(all_genes, rownames(mat))
+  if (length(missing_genes) > 0) {
+    # Create a zero matrix for missing genes
+    zero_mat <- Matrix(0, nrow = length(missing_genes), ncol = ncol(mat), sparse = TRUE)
+    rownames(zero_mat) <- missing_genes
+    colnames(zero_mat) <- colnames(mat)
+    
+    # Combine existing and missing gene matrices
+    mat <- rbind(mat, zero_mat)
+  }
+  
+  # Reorder rows to match all_genes
+  mat <- mat[all_genes, , drop = FALSE]
+  return(mat)
 }

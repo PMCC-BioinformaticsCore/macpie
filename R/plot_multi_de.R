@@ -12,8 +12,10 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param n_genes Top n genes to be extracted from each treatment comparison
 #' @param control The control group to be included in the final heatmap, usually DMSO_0
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
+#' @param gene_list External list of genes to plot the heatmap on
 #' @import pheatmap
 #' @import dplyr
+#' @importFrom purrr map2_dfr
 #' @returns a pheatmap object
 #' @export
 #' @examples
@@ -29,24 +31,27 @@ plot_multi_de <- function(data = NULL,
                           direction = "both",
                           n_genes = 10,
                           control = "DMSO_0",
-                          by = "fc") {
+                          by = "fc",
+                          gene_list = NULL) {
   # Helper function to validate input data
-  validate_inputs <- function(data, group_by, value, p_value_cutoff, direction, n_genes, control, by) {
+  validate_inputs <- function(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     if (!is.null(value) && !value %in% c("lcpm", "log2FC", "metric"))
       if (!inherits(p_value_cutoff, "numeric")) {
-      stop("Error: argument 'p_value_cutoff' must be numeric.")
-    }
+        stop("Error: argument 'p_value_cutoff' must be numeric.")
+      }
+
+
     if (!is.null(direction) && !direction %in% c("up", "down", "both")) {
       stop("Value of the direction paramater should be up, down or both. Default is both.")
     }
     if (!inherits(n_genes, "numeric")) {
       stop("Error: argument 'n_genes' must be numeric.")
     }
-    if (!inherits(control, "character")) {
+    if (!is.null(control) && !inherits(control, "character")) {
       stop("Error: argument 'control' must be control group in same format as combined_id.")
     }
     if (!is.null(by) && !by %in% c("fc", "adj_p_val")) {
@@ -55,22 +60,29 @@ plot_multi_de <- function(data = NULL,
     if (length(data@tools$diff_exprs) == 0) {
       stop("Missing information on DE genes. Run compute_multi_de first.")
     }
+    if (!is.null(gene_list) && !inherits(gene_list, "character")) {
+      stop("Error: argument 'gene_list' must be a vector of characters.")
+    }
   }
-  validate_inputs(data, group_by, value, p_value_cutoff, direction, n_genes, control, by)
+  validate_inputs(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list)
   #extract de information from the object data
   all_de <- data@tools$diff_exprs
-  de_df <- bind_rows(all_de)
+  de_df <- unique(map2_dfr(all_de, names(all_de), ~ mutate(.x, source = .y)))
+
+
   filtered_de_df <- de_df %>%
     filter(.data$p_value_adj < .env$p_value_cutoff) %>%
     filter(direction == "both" | (direction == "up" & .data$log2FC > 0) | (direction == "down" & .data$log2FC < 0))
   top_genes_per_combined_id <- filtered_de_df %>%
     group_by(.data[[group_by]]) %>% {
-    if (by == "fc") {
-      slice_max(., order_by = abs(.data$log2FC), n = n_genes)
-    } else {
-      slice_min(., order_by = .data$p_value_adj, n = n_genes)
+      if (by == "fc") {
+        slice_max(., order_by = abs(.data$log2FC), n = n_genes)
+      } else {
+        slice_min(., order_by = .data$p_value_adj, n = n_genes)
       }
-  }
+    }
+
+
   #find genes shared by at least 2 different treatment groups
   common_genes <- top_genes_per_combined_id %>%
     group_by(.data$gene) %>%
@@ -78,7 +90,13 @@ plot_multi_de <- function(data = NULL,
   if (length(common_genes) == 0) {
     stop("No genes are shared by at least 2 different treatment groups.")
   }
-  features <- unique(common_genes$gene)
+  if(is.null(gene_list)){
+    features <- unique(common_genes$gene)
+  } else {
+    features <- unique(gene_list)
+  }
+
+
   common_genes_treatments <- common_genes %>% dplyr::distinct(.data[[group_by]]) %>% pull() %>% unique()
   #add control group
   common_genes_treatments <- c(common_genes_treatments, control)
@@ -93,21 +111,26 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(sub_lcpm,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous)
+                  col = macpie_colours$continuous_rev)
   } else if (value == "log2FC") {
     # plot log2fc
-    fc_common_genes <- common_genes %>% select(gene, log2FC, any_of(group_by)) %>%
-      pivot_wider(names_from = any_of(group_by), values_from = log2FC, values_fill = 0)
+    fc_common_genes <- de_df %>% 
+      filter(gene %in% features) %>%
+      select(gene, log2FC, source) %>%
+      pivot_wider(names_from = source, values_from = log2FC, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
-    rownames(fc_matrix) <- fc_common_genes$gene
+    rownames(fc_matrix) <- fc_common_genes$gene 
     storage.mode(fc_matrix) <- "numeric"
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous)
+                  col = rev(macpie_colours$continuous_rev),
+                  cluster_cols = F)
   } else {
     # plot metric
-    fc_common_genes <- common_genes %>% select(gene, metric, any_of(group_by)) %>%
+    fc_common_genes <- de_df %>% 
+      filter(gene %in% features) %>%
+      select(gene, metric, any_of(group_by)) %>%
       pivot_wider(names_from = any_of(group_by), values_from = metric, values_fill = 0)
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
@@ -115,7 +138,8 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous)
+                  col = macpie_colours$continuous_rev)
   }
   return(p)
 }
+

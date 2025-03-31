@@ -4,13 +4,15 @@
 \alias{compute_qc_metrics}
 \title{Calculate QC metrics}
 \usage{
-compute_qc_metrics(data = NULL, group_by = NULL)
+compute_qc_metrics(data = NULL, group_by = NULL, order_by = NULL)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column".}
 
 \item{group_by}{A metadata column name to group data}
+
+\item{order_by}{A column name or "median" for median of read counts.}
 }
 \value{
 a list with a data frame with QC metrics and a box plot showing read counts per condition
@@ -19,4 +21,9 @@ a list with a data frame with QC metrics and a box plot showing read counts per 
 To calculate QC metrics such as standard deviation (sd), median absolute deviation (MAD),
 interquartile range (IQR), and Z score
 for read counts per condition/group of interest
+}
+\examples{
+rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+mac<-readRDS(rds_file)
+compute_qc_metrics(data = mac, group_by = "combined_id", order_by = "median")
 }

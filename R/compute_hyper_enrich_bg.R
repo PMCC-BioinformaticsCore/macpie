@@ -38,6 +38,7 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
     #set background/universe gene number
     background <- switch(background,
                          "human" = as.character(20000),
+                         "mouse" = as.character(22000),
                          #as enrichr set
                          "geneset" = length(unique(unlist(genesets))))
     background <- as.numeric(background)

@@ -11,7 +11,8 @@ plot_cpm(
   genes = NULL,
   group_by = NULL,
   treatment_samples = NULL,
-  control_samples = NULL
+  control_samples = NULL,
+  color_by = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ plot_cpm(
 \item{treatment_samples}{Value in the column "combined_id" representing replicates of treatment samples in the data}
 
 \item{control_samples}{Value in the column "combined_id"  representing replicates of control samples in the data}
+
+\item{color_by}{A column that specifies the group coloring}
 }
 \value{
 a ggplot2 object

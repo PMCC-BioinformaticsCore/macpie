@@ -62,7 +62,11 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
     })
   }
 
-  data <- read_file(file_path)
+  data <- read_file(file_path) %>%
+    mutate(across(
+      where(is.numeric),
+      ~ if (n_distinct(.) < 10) as.factor(.) else .  # or < 20 if you want
+    ))
 
   # Match predefined columns with user columns
   # Strict string matching required here as requested by Xin

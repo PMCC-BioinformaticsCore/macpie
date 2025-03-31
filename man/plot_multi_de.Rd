@@ -15,7 +15,8 @@ plot_multi_de(
   direction = "both",
   n_genes = 10,
   control = "DMSO_0",
-  by = "fc"
+  by = "fc",
+  gene_list = NULL
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ plot_multi_de(
 \item{control}{The control group to be included in the final heatmap, usually DMSO_0}
 
 \item{by}{Extract top n genes by either absolute fold change or by adjusted p-value}
+
+\item{gene_list}{External list of genes to plot the heatmap on}
 }
 \value{
 a pheatmap object

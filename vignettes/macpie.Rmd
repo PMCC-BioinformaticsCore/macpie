@@ -3,7 +3,7 @@ title: "macpie"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 4
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
@@ -61,13 +61,18 @@ library(enrichR)
 library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
+library(Matrix)
+
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(file_path = project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
+
 colnames(metadata)
 
 # Validate metadata
@@ -81,9 +86,12 @@ First, let's visually inspect the large number of experimental variables, in ord
 
 plot_metadata_heatmap(metadata)
 
+
 ```
 
 ### 2. Sequencing data import and QC 
+#### 2.1 Import data to tidySeurat object 
+
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
 
 ```{r load_data}
@@ -101,7 +109,7 @@ mac <- CreateSeuratObject(counts = raw_counts,
 
 ```
 
-```{r violin_plot, fig.width = 8, fig.height = 6}
+```{r violin_plot, fig.width = 8, fig.height = 4}
 # Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
 mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
@@ -118,78 +126,80 @@ mac <- mac %>%
 # Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
         ncol = 4, group.by = "Sample_type") & 
-  scale_fill_manual(values = macpie_colours$discrete) &
-  macpie_theme(show_x_title = F, show_y_title = F, legend_position_ = 'none', x_labels_angle = 45)
+  scale_fill_manual(values = macpie_colours$discrete) 
 
 ```
 
 This allows us to apply all of the tidyverse functions to manipulate the Seurat object.
-For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot.
+For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots are useful for visualising any spatial anomalies or unexpected patterns.
 
-```{r subset_seurat, fig.width = 10, fig.height = 6}
-
+```{r subset_seurat, fig.width = 8, fig.height = 3}
 unique(mac$Project)
 mac <- mac %>%
   filter(Project == "Current")
 
 # QC plot plate layout (all metadata columns can be used):
-plot_plate_layout(mac, "nCount_RNA", "Sample_type")
-
+p <- plot_plate_layout(mac, "nCount_RNA", "combined_id")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
+  ))
 ```
 
-Visualise grouping of samples on an interactive plot.
+#### 2.2 Basic QC metrics
+##### 2.2.1 Sample grouping with MDS plot
 
-```{r mds_plot, fig.width = 8, fig.height = 8}
 
-# Example of MDS function 
+As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
+
+```{r mds_plot, fig.width = 8, fig.height = 6}
 p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 ```
 
-Since MAC-seq lies between single-cell and RNA-seq data, a number of methods are available for downstream analysis including scaling, normalisation and differential expression. A good way to estimate batch effects as well as the quality of scaling and normalisation is through the RLE plots.
+##### 2.2.2 Distribution of read counts
 
-```{r plot_rle, fig.width = 8, fig.height = 7}
+We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
 
+```{r qc_stats_plot, fig.width = 8, fig.height = 4}
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
+qc_stats$stats_summary
+```
+##### 2.2.3 Variability among all replicates
+
+In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. To that end, we have allowed the user to have access to statistical metrics such as standard deviation (sd_value), z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap. 
+
+As you can see below, Staurosporine had the largest variability between the samples across all metrics. 
+
+```{r qc_metrics, fig.width = 8, fig.height = 4}
+
+plot_qc_metrics_heatmap(qc_stats$stats_summary)
+
+
+```
+
+##### 2.2.4 Variability within a sample
+
+Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. It is therefore fairly important to estimate bioogical variability between the replicates. We provide a way to estimate inter-replicate variability using poisson distance within the function plot_distance.
+
+```{r, fig.width = 8, fig.height = 6}
+plot_distance(mac, "combined_id", treatment = "DMSO_0")
+```
+
+##### 2.2.5 Estimate of the batch effect
+
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots.
+
+```{r plot_rle, fig.width = 8, fig.height = 4}
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
 # Run the RLE function
-plot_rle(mac_dmso, label_column = "Row")
-plot_rle(mac_dmso, label_column = "Row", normalisation = "SCT")
+plot_rle(mac_dmso, label_column = "Row", normalisation = "raw")
 plot_rle(mac_dmso, label_column = "Row", normalisation = "edgeR")
-
-```
-
-QC metrics for each condition 
-
-Box plot to show distribution of read counts from all wells that belong to one treatment condition
-
-```{r, fig.width = 8, fig.height = 6}
-
-qc_stats <- compute_qc_metrics(mac, group_by = "combined_id")
-qc_stats$stats_summary
-
-```
-
-```{r, fig.width = 8, fig.height = 15}
-
-plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "sd_value")
-plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "z_score")
-plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "mad_value")
-plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "IQR")
-
-```
-
-Calculate poisson distance for treatment group that with high sd value or z score, mad value, or IQR from the previous steps
-
-```{r, fig.width = 8, fig.height = 6}
-
-plot_distance(mac, group_by = "combined_id", treatment = "Staurosporine_10")
-plot_distance(mac, group_by = "combined_id", treatment = "DMSO_0")
-plot_distance(mac, group_by ="combined_id", treatment = "SN01005979_10")
-
 ```
 
 
@@ -202,7 +212,6 @@ Let's first perform the differential expression analysis with a couple of method
 the results on the volcano plots.
 
 ```{r de_analysis, fig.width = 8, fig.height = 6}
-
 # First perform the differential expression analysis
 treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
@@ -215,13 +224,19 @@ plot_volcano(top_table_edgeR)
 
 Based on the results, we can quickly check CPM levels of selected genes between treatment and control samples.
 
+To show gene expression (in CPM) of the top 6 differentially expressed genes in this single drug comparison. 
+
 ```{r plot_cpm, fig.width = 8, fig.height = 6}
 genes <- top_table_edgeR$gene[1:6]
 group_by <- "combined_id"
 plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 ```
 
+Summarise the outputs from single comparison in a table
 
+```{r de_single_summary}
+summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05)
+```
 
 #### 3.2. Pathway analysis, single comparison
 
@@ -237,11 +252,14 @@ top_genes <- top_table_edgeR %>%
 enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
 p1 <- enrichR::plotEnrich(enriched[[1]]) + 
-  macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+  macpie_theme(legend_position_ = 'right') + 
+  scale_fill_gradientn(colors = macpie_colours$continuous)
 p2 <- enrichR::plotEnrich(enriched[[2]]) + 
-   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+  macpie_theme(legend_position_ = 'right') + 
+  scale_fill_gradientn(colors = macpie_colours$continuous)
 p3 <- enrichR::plotEnrich(enriched[[3]]) + 
-   macpie_theme(legend_position_ = 'right') + scale_fill_gradientn(colors = macpie_colours$continuous)
+  macpie_theme(legend_position_ = 'right') + 
+  scale_fill_gradientn(colors = macpie_colours$continuous)
 
 gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
@@ -249,31 +267,51 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
 
 #### 3.3. Differential gene expression - multiple comparisons
 
-On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised.
+On the other hand, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". 
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
+mac$combined_id <- make.names(mac$combined_id)
 
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 1)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 2)
 
 ```
 
 
-To show log CPM or log2FC or test metric values of the shared DE genes among different treatment groups
+We often want to ask what are the genes are differentially expressed in more than one treatment group. 
 
-Top 10 DE genes from each treatment comparison that are found in at least 2 different treatment groups
+Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment group.
 
-```{r plot_multi_de, fig.width=10, fig.height=5}
-plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+This heatmap shows shared differentially expressed genes with corresponding log2FC values.
 
-plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+
+```{r plot_multi_de, fig.width=10, fig.height=6}
+plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+```
+If you prefer to see at the expression level for each replicate, you can do it by specifying "lcpm". 
+
+```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
+plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
 
 
+
+Summarise the outputs from multi de comparison in a table
+
+```{r de_multi_summary}
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+```
+
+
+
+Pathway enrichment analysis is done by using enrichR. 
+
+Summarise the outputs from multi de comparison in a table
 
 ```{r enriched_pathways, fig.width = 8, fig.height = 12}
 
@@ -282,20 +320,22 @@ enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
 enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
+  bind_rows() %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
   column_to_rownames(var = "Term") %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat, color = macpie_colours$continuous) + macpie_theme()
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev) + macpie_theme()
 
 ```
+
 
 ### 4. Methods for compound screening
 #### 4.1. Profile Similarity
 
-```{r compute_multi_screen_profile, fig.width = 15, fig.height = 5}
+```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
 mac_screen_profile <- mac@tools$screen_profile %>%
@@ -311,3 +351,184 @@ ggplot(mac_screen_profile, aes(target, NES)) +
 
 ```
 
+
+
+### 5. Multi-plates analysis
+
+This section walks through QC and differential expression analysis of two MAC-seq plates with matched layouts.
+
+#### 5.1 QC
+
+Here we import the raw count matrix and metadata for the first plate, apply QC filters, and generate the tidySeurat object.
+
+Load PMMSq033
+
+```{r load_data_pmm33}
+# Define project variables
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
+metadata <- read_metadata(project_metadata)
+
+project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
+raw_counts_total <- Read10X(data.dir = project_rawdata)
+keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
+raw_counts <- raw_counts_total[keep, ]
+
+#create tidySeurat object
+mac_pmm33 <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+#calculate percent of mitochondrial and ribosomal genes
+mac_pmm33[["percent.mt"]] <- PercentageFeatureSet(mac_pmm33, pattern = "^mt-|^MT-")
+mac_pmm33[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm33, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+#join with metadata
+mac_pmm33 <- mac_pmm33 %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+
+mac_pmm33 <- mac_pmm33%>%
+  filter(Project == "Current")
+
+#add unique identifier
+mac_pmm33 <- mac_pmm33 %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+mac_pmm33$combined_id <- make.names(mac_pmm33$combined_id)
+```
+
+
+Load PMMSq034
+
+```{r load_data pmmsq34}
+project_rawdata <- system.file("extdata/PMMSq034/raw_matrix", package = "macpie")
+raw_counts_total <- Read10X(data.dir = project_rawdata)
+keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
+raw_counts <- raw_counts_total[keep, ]
+
+#create tidySeurat object
+project_name <- "PMMSq034"
+mac_pmm34 <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+
+#calculate percent of mitochondrial and ribosomal genes
+mac_pmm34[["percent.mt"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^mt-|^MT-")
+mac_pmm34[["percent.ribo"]] <- PercentageFeatureSet(mac_pmm34, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+#join with metadata
+mac_pmm34 <- mac_pmm34 %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+
+mac_pmm34 <- mac_pmm34%>%
+  filter(Project == "Current")
+
+#add unique identifier
+mac_pmm34 <- mac_pmm34 %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+mac_pmm34$combined_id <- make.names(mac_pmm34$combined_id)
+```
+
+#### 5.2 Combine plates
+
+We merge the two tidySeurat objects using merge(), then align their gene sets by zero-padding missing genes from our helper function. The resulting count matrix is stored in the RNA assay.
+
+```{r combine_plates}
+
+combined <- merge(mac_pmm33, mac_pmm34, add.cell.ids = c("PMMSq033", "PMMSq034"))
+
+all_genes <- union(rownames(combined@assays$RNA$counts.PMMSq033),
+                   rownames(combined@assays$RNA$counts.PMMSq034))
+
+
+counts1 <- pad_sparse_matrix(combined@assays$RNA$counts.PMMSq033, all_genes)
+counts2 <- pad_sparse_matrix(combined@assays$RNA$counts.PMMSq034, all_genes)
+
+combined_counts <- cbind(counts1, counts2)
+combined@assays$RNA$counts <- combined_counts
+combined@assays$RNA$counts.PMMSq033 <- NULL
+combined@assays$RNA$counts.PMMSq034 <- NULL
+
+
+combined_dmso <- combined %>%
+  filter(Treatment_1 == "DMSO")
+
+
+```
+
+#### 5.3 Visualisation 
+
+We visualize sample grouping across plates using MDS (multidimensional scaling) plots and assess expression variability using RLE plots.
+
+```{r multi_plates_plot_mds, fig.width = 8, fig.height = 4}
+plot_mds(combined, group_by = "orig.ident", label = "combined_id", n_labels = 30)
+plot_mds(combined_dmso, group_by = "orig.ident", label = "combined_id", n_labels = 30)
+
+```
+
+
+```{r multi_plates_plot_rle, fig.width = 8, fig.height = 4}
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#### 5.4 Single comparison DE analysis 
+
+We run differential expression using edgeR between one treatment condition and control (e.g. Staurosporine_0.1 vs DMSO_0), while accounting for plate effects via batch modeling.
+
+```{r multi_plates_compute_single_de, fig.width = 8, fig.height = 6}
+treatment_samples <- "Staurosporine_0.1"
+control_samples <- "DMSO_0"
+subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
+batch <- subset$orig.ident
+combined_edgeR <- compute_single_de(combined, treatment_samples, control_samples, method = "edgeR", batch = batch)
+plot_volcano(combined_edgeR)
+
+```
+
+Check CPM levels for top 6 differentially expressed genes.
+
+```{r multiplate_plot_cpm, fig.width = 8, fig.height = 6}
+genes <- combined_edgeR$gene[1:6]
+group_by <- "combined_id"
+plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
+
+```
+
+Summarise the outputs from single comparison in a table
+
+```{r}
+summarise_de(combined_edgeR, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
+```
+
+#### 5.5 Multi-comparison DE analysis 
+
+We compare all treatment conditions against the DMSO control. This is especially useful for screening multiple drugs across the plates.
+
+```{r}
+treatments <- combined %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+combined <- compute_multi_de(combined, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 2, batch = batch)
+```
+
+Summarise the outputs from single comparison in a table
+
+```{r}
+summarise_de(combined, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+```
+
+
+Similar to single plate analysis, we can also use this heatmap shows shared differentially expressed genes with corresponding log2FC values.
+
+```{r mutli_plates_plot_multi_de, fig.width=10, fig.height=6}
+plot_multi_de(combined, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+
+```
