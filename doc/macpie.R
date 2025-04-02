@@ -153,7 +153,7 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 ## ----de_single_summary--------------------------------------------------------
 summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
 
-## ----pathway_analysis_single, fig.width = 8, fig.height = 15------------------
+## ----pathway_analysis_single, fig.width = 8, fig.height = 4-------------------
 
 top_genes <- top_table %>%
   filter(p_value_adj < 0.05) %>%
