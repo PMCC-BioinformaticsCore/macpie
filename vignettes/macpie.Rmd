@@ -227,9 +227,9 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 **Key points**: 
 
-  -  use **compute_single_de** to perform a differential expression analysis for one treatment group vs control group
-  -  use **compute_multi_de** to perform  differential expression analyses for all treatment groups vs control group
-  -  volcano plot, box plot and heatmap to show results from the analyses and visualise gene expression levels  
+  -  use **compute_single_de** to perform a differential expression analysis for one treatment group vs control
+  -  use **compute_multi_de** to perform differential expression analyses for all treatment groups vs control
+  -  use volcano plot, box plot and heatmap to show results from the analyses and visualise gene expression levels  
   -  use **enrichr** for pathway enrichment analysis
 
 #### 3.1. Single comparison
@@ -278,7 +278,7 @@ enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
 p1 <- enrichR::plotEnrich(enriched[[1]]) + 
   macpie_theme(legend_position_ = 'right') + 
-  scale_fill_gradientn(colors = macpie_colours$continuous)
+  scale_fill_gradientn(colors = macpie_colours$divergent)
 
 gridExtra::grid.arrange(p1, ncol = 1)
 
@@ -286,7 +286,7 @@ gridExtra::grid.arrange(p1, ncol = 1)
 
 #### 3.3. Differential gene expression - multiple comparisons
 
-Since MAC-seq is commonly used for high-throughput screening of compound libraries, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". (Warning, parallelisation speedup currently only works on OSX and Linux machines, and not on Windows)
+Since MAC-seq is commonly used for high-throughput screening of compound libraries, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". (Warning, due to the limitations of "mclapply", parallelisation speedup currently only works on OSX and Linux machines, and not on Windows.)
 
 ```{r de_multi, fig.width = 8, fig.height = 5}
 mac$combined_id <- make.names(mac$combined_id)
@@ -298,37 +298,33 @@ treatments <- mac %>%
   pull() %>%
   unique()
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 2)
-
 ```
 
 
-We often want to ask what are the genes are differentially expressed in more than one treatment group. 
+We often want to ask which genes are differentially expressed in more than one treatment group. 
 
-Here, we can visualise treatment groups with shared differentially expressed genes. The definition of shared diffrentially expressed genes are the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment group.
+Here, we can visualise treatment groups with shared differentially expressed genes, defined as the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
 
-This heatmap shows shared differentially expressed genes with corresponding log2FC values.
-
+The heatmap below shows shared differentially expressed genes with corresponding log2FC values.
 
 ```{r plot_multi_de, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
-If you prefer to see at the expression level for each replicate, you can do it by specifying logCPM - "lcpm". As we're checking log CPM, we can also check our control DMSO_0. 
+If you prefer to see the expression level on replicate level, you can specify logCPM = "lcpm". Since we are observing log CPM of individual samples, and not the comparisons, we can also visualise the DMSO control. 
 
 ```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
 
-
-
-Summarise the outputs from multi de comparison in a table
+The outputs from the analyses above can be represented in table format.
 
 ```{r de_multi_summary}
 summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
 ```
 
+#### 3.4. Pathway analysis - multiple comparisons
 
-
-Pathway enrichment analysis is done by using enrichR. 
+The pathway enrichment analysis is done by using enrichR
 
 Summarise the outputs from multi de comparison in a table
 
