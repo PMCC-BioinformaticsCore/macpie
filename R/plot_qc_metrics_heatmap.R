@@ -48,7 +48,8 @@ plot_qc_metrics_heatmap <- function(stats_summary = NULL,
   group_by <- validated_inputs$group_by
   metrics <- validated_inputs$metrics
   order_by <- validated_inputs$order_by
-  
+  # abs z-score
+  var_stats$z_score <- abs(var_stats$z_score)
   # Reshape data to long format
   heatmap_data <- var_stats %>%
     select(all_of(c(group_by, metrics))) %>%
@@ -72,7 +73,7 @@ plot_qc_metrics_heatmap <- function(stats_summary = NULL,
     labs(x = "QC Metric", y = group_by, fill = "Normalized Value") +
     theme_minimal() +
     coord_flip() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
   
   return(p)
 }

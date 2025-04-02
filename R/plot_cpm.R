@@ -70,7 +70,7 @@ plot_cpm <- function(data = NULL,
 
 
   p <- ggplot(sub_lcpm_m, aes(x = Treatments, y = CPM, group = Treatments)) +
-    geom_boxplot(aes(fill = Treatments)) + facet_wrap(~Genes, ncol = 3) +
+    geom_boxplot(aes(fill = Treatments)) + facet_wrap(~Genes, ncol = 3, scales = "free_y") +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
     scale_fill_manual(values = c(macpie_colours$high, macpie_colours$low, macpie_colours$discrete[1:n_samples])) +
     labs(y = "Gene Expression (CPM)") +
