@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include = FALSE, dpi=300}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -33,6 +33,10 @@ MAC-seq data shares similarities with single-cell RNA-seq data as it derives gen
 ### 1. Metadata import and QC
 
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables. Metadata has to be in a tabular format and contain the key columns for sample description as in the example dataset below.
+
+**Key points**: 
+
+  - use **plot_metadata_heatmap** to check your metadata
 
 ```{r load_metadata}
 
@@ -89,6 +93,14 @@ plot_metadata_heatmap(metadata)
 ```
 
 ### 2. Sequencing data import and QC 
+
+**Key points**: 
+
+  -  use **plot_plate_layout** to check read counts
+  -  use **plot_mds** to check sample grouping (umap/pca is also available using Seurat's functions)
+  -  use **compute_qc_metrics**, **plot_qc_metrics_heatmap**, and **plot_distance** to check sample variability
+  -  use **plot_rle** to check any row/column effects
+
 #### 2.1 Import data to tidySeurat object 
 
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
@@ -187,6 +199,8 @@ plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 ```
 
+
+
 ##### 2.2.4 Variability within a sample
 
 Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. It is therefore fairly important to estimate bioogical variability between the replicates. We provide a way to estimate inter-replicate variability using poisson distance within the function plot_distance.
@@ -211,6 +225,14 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 
 ### 3. Differential gene expression
+
+**Key points**: 
+
+  -  use **compute_single_de** to perform a differential expression analysis for one treatment group vs control group
+  -  use **compute_multi_de** to perform  differential expression analyses for all treatment groups vs control group
+  -  volcano plot, box plot and heatmap to show results from the analyses and visualise gene expression levels  
+  -  use **enrichr** for pathway enrichment analysis
+
 #### 3.1. Single comparison
 
 Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero counts compared to bulk RNA-seq. Statistical models assuming a Poisson or negative binomial distribution may not fit the data well. For that reason, differential expression effects could be over or underestimated.
@@ -292,7 +314,7 @@ This heatmap shows shared differentially expressed genes with corresponding log2
 ```{r plot_multi_de, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 ```
-If you prefer to see at the expression level for each replicate, you can do it by specifying "lcpm". 
+If you prefer to see at the expression level for each replicate, you can do it by specifying logCPM - "lcpm". As we're checking log CPM, we can also check our control DMSO_0. 
 
 ```{r plot_multi_de_lcpm, fig.width=10, fig.height=6}
 plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
@@ -326,12 +348,27 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
   as.matrix()
 
-pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev) + macpie_theme()
 
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
 ```
 
 
+**Quick check of some treatments**:
+
+**Nutlin.3a** is a MDM2-P53 inhibitor and stablises the p53 protein. It induces cell autophagy and apotopsis. Nutlin-activated p53 induces G1 and G2 arrest in cancer cell lines (see in the pathway enrichment heatmap). 
+
+**Ref**:
+Tovar C, et al. Proc Natl Acad Sci USA. 2006;103(6):1888–1893.
+Shows Nutlin-3’s effect on various p53 targets in cancer cell lines.
+
+
+
 ### 4. Methods for compound screening
+
+**Key points**: 
+
+  - use **compute_multi_screen_profile** to check gene set enrichment scores acorss all treatments given a gene list 
+  
 #### 4.1. Profile Similarity
 
 ```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
@@ -346,7 +383,7 @@ ggplot(mac_screen_profile, aes(target, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
   facet_wrap(~pathway, scales = "free") +
-  macpie_theme(x_labels_angle = 45, show_x_title = F)
+  macpie_theme(x_labels_angle = 90, show_x_title = F)
 
 ```
 
@@ -355,6 +392,12 @@ ggplot(mac_screen_profile, aes(target, NES)) +
 ### 5. Multi-plates analysis
 
 This section walks through QC and differential expression analysis of two MAC-seq plates with matched layouts.
+
+
+**Key points**: 
+
+  - import two macseq plates and check QC for any batch effects (and batch correction)
+  - use **compute_single_de** and **compute_multi_de** by incorporating batch factor
 
 #### 5.1 Import data and QC
 
@@ -396,26 +439,24 @@ combined$combined_id <- make.names(combined$combined_id)
 
 ```
 
-Plate layout for PMMSq033:
+```{r}
+# meta <- meta %>% mutate(Treatment_1 =  ifelse(grepl("^Ada|^Shenali|^EMPTY$", Treatment_1), Treatment_1, paste0("ML_", Treatment_1)))
 
-```{r two_plates_plate_layout_plate1, fig.width = 8, fig.height = 6}
-p <- plot_plate_layout(combined%>%filter(orig.ident==1), "nCount_RNA", "combined_id")
-girafe(ggobj = p, 
-  fonts = list(sans = "sans"),
-  options = list(
-    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
-  ))
+combined <- combined %>% mutate(orig.ident = ifelse(grepl("1", orig.ident), "PMMSq033","PMMSq034"))
 ```
 
-Plate layout for PMMSq034:
 
-```{r two_plates_plate_layout_plate2, fig.width = 8, fig.height = 6}
-p <- plot_plate_layout(combined%>%filter(orig.ident==2), "nCount_RNA", "combined_id")
+Plate layout for both plates:
+
+
+```{r, fig.width = 10, fig.height = 4}
+p <- plot_plate_layout(combined, "nCount_RNA", "combined_id") + facet_wrap(~orig.ident)
 girafe(ggobj = p, 
   fonts = list(sans = "sans"),
   options = list(
-    opts_hover(css = "stroke:orange; stroke-width:1px;")  # <- slight darkening
+    opts_hover(css = "stroke:black; stroke-width:1px;")  # <- slight darkening
   ))
+
 ```
 
 
@@ -432,29 +473,32 @@ plot_mds(combined, group_by = "orig.ident", label = "combined_id", n_labels = 30
 plot_mds(combined_dmso, group_by = "orig.ident", label = "combined_id", n_labels = 30)
 ```
 
+RLE plots to show before and after using limma_voom for batch correction.  
+
 
 ```{r multi_plates_plot_rle, fig.width = 8, fig.height = 4}
 plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + scale_x_discrete(drop = FALSE) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
+plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "limma_voom") + scale_x_discrete(drop = FALSE) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "edgeR") + scale_x_discrete(drop = FALSE) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
 #### 5.2 Single comparison DE analysis 
 
 We run differential expression using edgeR between one treatment condition and control (e.g. Staurosporine_0.1 vs DMSO_0), while accounting for plate effects via batch modeling.
 
+First, we look at the volcano plot if no batch correction is used.
+
 ```{r multi_plates_compute_single_de_raw, fig.width = 8, fig.height = 6}
 treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
-# subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
-# batch <- subset$orig.ident
-combined_edgeR <- compute_single_de(combined, treatment_samples, control_samples, method = "edgeR")
-plot_volcano(combined_edgeR)
+combined_lv_nobatch <- compute_single_de(combined, treatment_samples, control_samples, method =  "limma_voom")
+plot_volcano(combined_lv_nobatch, max.overlaps = 10)
 
 ```
+
+Then, we compare with the volcano plot after batch correction.
 
 
 ```{r multi_plates_compute_single_de, fig.width = 8, fig.height = 6}
@@ -462,15 +506,15 @@ treatment_samples <- "Staurosporine_0.1"
 control_samples <- "DMSO_0"
 subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
 batch <- subset$orig.ident
-combined_edgeR <- compute_single_de(combined, treatment_samples, control_samples, method = "edgeR", batch = batch)
-plot_volcano(combined_edgeR)
+combined_lv <- compute_single_de(combined, treatment_samples, control_samples, method = "limma_voom", batch = batch)
+plot_volcano(combined_lv)
 
 ```
 
 Check CPM levels for top 6 differentially expressed genes.
 
 ```{r multiplate_plot_cpm, fig.width = 8, fig.height = 6}
-genes <- combined_edgeR$gene[1:6]
+genes <- combined_lv$gene[1:6]
 group_by <- "combined_id"
 plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
 
@@ -479,15 +523,18 @@ plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
 Summarise the outputs from single comparison in a table
 
 ```{r}
-summarise_de(combined_edgeR, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
+summarise_de(combined_lv, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
 ```
 
 #### 5.3 Multi-comparison DE analysis 
 
 We compare all treatment conditions against the DMSO control. This is especially useful for screening multiple drugs across the plates.
 
+For visualisation purpose, we only use high concentration treatments in this workshop. 
+
 ```{r}
 treatments <- combined %>%
+  filter(Concentration_1 == 10) %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
