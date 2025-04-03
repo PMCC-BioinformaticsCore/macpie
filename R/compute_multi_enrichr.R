@@ -60,7 +60,7 @@ compute_multi_enrichr <- function(data,
   validate_inputs(data, genesets, species, direction, p_value_cutoff, n_distinct)
 
   #modify the analysis if the species is mouse
-  if(species == mouse){
+  if(species == "mouse"){
     genesets <- lapply(genesets, convert_human_to_mouse)
   }
   
