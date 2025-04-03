@@ -24,16 +24,20 @@
 #' mac <- readRDS(file_path)
 #' plot_plate_layout(mac,"nCount_RNA","Treatment_1")
 
-plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
-
+plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, midpoint = NULL) {
+  
   # Helper function to validate input data
-  validate_inputs <- function(data, metric, annotation) {
+  validate_inputs <- function(data, metric, annotation, midpoint) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
     metric <- if (is.null(metric)) "nCount_RNA" else metric
     annotation <- if (is.null(annotation)) "Treatment_1" else annotation
-
+    midpoint <- if (is.null(midpoint)) "mean" else midpoint
+    if (!midpoint %in% c("mean","median")){
+      stop("Error: argument 'midpoint' must be either mean or median.")
+    }
+    
     suppressWarnings({column_names <- data %>%
       head() %>%
       colnames()
@@ -41,15 +45,17 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
     if (!all(c(metric, annotation) %in% column_names)) {
       stop("Your column names are not present in the data or metadata.")
     }
-    list(data = data, metric = metric, annotation = annotation)
+    list(data = data, metric = metric, annotation = annotation, midpoint = midpoint)
   }
-
+  
   # Validate inputs
-  validated <- validate_inputs(data, metric, annotation)
+  validated <- validate_inputs(data, metric, annotation, midpoint)
+  # validated <- validate_inputs(mac_outliers, "nCount_RNA","combined_id", midpoint = "median")
   metric <- validated$metric
   annotation <- validated$annotation
   data <- validated$data
-
+  midpoint <- validated$midpoint
+  
   # Find stats for the data to arrange plotting
   suppressWarnings({
     data <- data %>%
@@ -57,16 +63,19 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
       mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
       mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
       mutate(median_value = median(!!rlang::sym(metric))) %>%
-      mutate(max_value = max(!!rlang::sym(metric))) %>%
-      mutate(min_value = min(!!rlang::sym(metric))) %>%
+      mutate(mean_value = mean(!!rlang::sym(metric))) %>%
       mutate(
         tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
         group_id = .data[[annotation]]
       )
   })
   # Plot the results
-
   tryCatch({
+    if (midpoint == "median"){
+      midpoint <- unique(data$median_value)
+    } else {
+      midpoint <- unique(data$mean_value)
+    }
     p <- ggplot(data, aes(
       x = .data$Col,
       y = forcats::fct_rev(forcats::as_factor(.data$Row)),
@@ -79,15 +88,13 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL) {
         high = macpie_colours$high,
         mid = "white",
         low = macpie_colours$low,
-        midpoint = mean(range(data[[metric]])),
+        midpoint = midpoint,
         name = rlang::as_name(metric)
       ) +
       ylab("Row") +
       macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right') +
       guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10))
-    
   }, error = function(e) {
     stop("Error in plotting: ", e$message)
   })
-
 }
