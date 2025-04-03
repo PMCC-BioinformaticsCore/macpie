@@ -1,4 +1,4 @@
-## ----include = FALSE, dpi=300-------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -7,12 +7,6 @@ knitr::opts_chunk$set(
 )
 
 ## ----load_metadata------------------------------------------------------------
-
-# Clean environment
-rm(list = ls(all.names = TRUE)) # will clear all objects including hidden objects
-gc() # free up memory and report the memory usage
-
-# Load all functions
 devtools::load_all()
 
 library(macpie)
@@ -51,16 +45,15 @@ validate_metadata(metadata)
 
 
 ## ----metadata_plot, fig.width = 8, fig.height = 6-----------------------------
-
 plot_metadata_heatmap(metadata)
 
 
 
 ## ----load_data----------------------------------------------------------------
-
+# Import raw data
 project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
 raw_counts_total <- Read10X(data.dir = project_rawdata)
-keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
+keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2 
 raw_counts <- raw_counts_total[keep, ]
 
 # Create tidySeurat object
@@ -68,12 +61,6 @@ mac <- CreateSeuratObject(counts = raw_counts,
                           project = project_name,
                           min.cells = 1,
                           min.features = 1)
-
-
-## ----violin_plot, fig.width = 8, fig.height = 4-------------------------------
-# Calculate percent of mitochondrial and ribosomal genes
-mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
-mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
 # Join with metadata
 mac <- mac %>%
@@ -83,6 +70,17 @@ mac <- mac %>%
 mac <- mac %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+# Filter by read count per sample group
+mac <- filter_genes_by_expression(mac, 
+                                  group_by = "combined_id", 
+                                  min_counts = 10, 
+                                  min_samples = 2)
+
+## ----violin_plot, fig.width = 8, fig.height = 4-------------------------------
+# Calculate percent of mitochondrial and ribosomal genes
+mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
+mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
 # Example of a function from Seurat QC 
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
@@ -119,7 +117,6 @@ qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median
 qc_stats$stats_summary
 
 ## ----qc_metrics, fig.width = 8, fig.height = 4--------------------------------
-
 plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 
@@ -154,7 +151,6 @@ plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
 summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
 
 ## ----pathway_analysis_single, fig.width = 8, fig.height = 4-------------------
-
 top_genes <- top_table %>%
   filter(p_value_adj < 0.05) %>%
   select(gene) %>%
@@ -164,7 +160,7 @@ enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
                                  "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
 p1 <- enrichR::plotEnrich(enriched[[1]]) + 
   macpie_theme(legend_position_ = 'right') + 
-  scale_fill_gradientn(colors = macpie_colours$continuous)
+  scale_fill_gradientn(colors = macpie_colours$divergent)
 
 gridExtra::grid.arrange(p1, ncol = 1)
 
@@ -179,7 +175,6 @@ treatments <- mac %>%
   pull() %>%
   unique()
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 2)
-
 
 ## ----plot_multi_de, fig.width=10, fig.height=6--------------------------------
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
@@ -265,7 +260,7 @@ p <- plot_plate_layout(combined, "nCount_RNA", "combined_id") + facet_wrap(~orig
 girafe(ggobj = p, 
   fonts = list(sans = "sans"),
   options = list(
-    opts_hover(css = "stroke:black; stroke-width:1px;")  # <- slight darkening
+    opts_hover(css = "stroke:black; stroke-width:1px;")
   ))
 
 
