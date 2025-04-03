@@ -380,7 +380,13 @@ ggplot(mac_screen_profile, aes(target, NES)) +
   macpie_theme(x_labels_angle = 90, show_x_title = F)
 
 ```
-
+Instead of plotting UMAP on individual samples, we can also visualise the samples on UMAP of differentials vs control.
+```{r compute_de_umap, fig.width = 8, fig.height = 5}
+mac <- compute_de_umap(mac)
+mac <- find_clusters_de_umap(mac, k = 3)
+p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
+girafe(ggobj = p, fonts = list(sans = "Open Sans"))
+```
 
 
 ### 5. Multi-plates analysis
