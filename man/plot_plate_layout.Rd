@@ -4,7 +4,12 @@
 \alias{plot_plate_layout}
 \title{Plot MAC-seq data on a plate layout}
 \usage{
-plot_plate_layout(data = NULL, metric = NULL, annotation = NULL)
+plot_plate_layout(
+  data = NULL,
+  metric = NULL,
+  annotation = NULL,
+  midpoint = NULL
+)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
