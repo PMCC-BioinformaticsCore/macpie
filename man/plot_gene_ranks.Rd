@@ -6,7 +6,12 @@
 A knee plot to show total number of total read counts for each gene in a given
 treatment group}
 \usage{
-plot_gene_ranks(data = NULL, group_by = NULL, samples = NULL)
+plot_gene_ranks(
+  data = NULL,
+  group_by = NULL,
+  samples = NULL,
+  scale_y_log = TRUE
+)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
@@ -24,5 +29,5 @@ treatment group
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plot_rank_counts(mac, group_by = "combined_id", samples = "Staurosporine_10")
+plot_gene_ranks(mac, group_by = "combined_id", samples = "Staurosporine_10", scale_y_log = TRUE)
 }
