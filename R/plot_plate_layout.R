@@ -9,6 +9,7 @@
 #' @import tidyseurat
 #' @import rlang
 #' @import ggplot2
+#' @import ggiraph
 #' @importFrom dplyr select
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"

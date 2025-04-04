@@ -5,7 +5,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' convert_human_to_mouse(c("BRCA1", "TRAF1", "MYBL1"))
+#' }
 
 convert_human_to_mouse <- function(gene_list) {
     

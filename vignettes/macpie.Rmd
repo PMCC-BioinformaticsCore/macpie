@@ -41,7 +41,7 @@ To ensure the integrity of metadata for future analyses, we provide the user wit
 ```{r load_metadata}
 devtools::load_all()
 
-library(macpie)
+
 library(Seurat)
 library(edgeR)
 library(dplyr)
