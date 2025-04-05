@@ -63,5 +63,6 @@ Imports:
     doParallel,
     zinbwave,
     scales,
-    unikn
+    unikn,
+    pkgdown
 VignetteBuilder: knitr
