@@ -29,6 +29,7 @@ Authors@R: c(person(given = "Nenad", family = "Bartonicek",
          comment = c(ORCID = "0000-0001-6222-4446")),
   person(given = "Susanne", family = "Ramm",
          role = "aut"))
+URL: https://github.com/PMCC-BioinformaticsCore/macpie.git
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8

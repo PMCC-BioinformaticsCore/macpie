@@ -1,19 +1,13 @@
 # The URL where your site will be hosted.
-
+url: "https://github.com/PMCC-BioinformaticsCore/macpie.git"
 
 # The folder where the generated site will be placed.
 destination: "docs"
 
 template:
   params:
-    bootswatch: flatly      # You can choose a different Bootswatch theme if desired.
-    # Uncomment and update the following if you have a Google Analytics ID:
-    # ganalytics: UA-XXXXXXXXX-X
-  # If you use Algolia DocSearch, uncomment and configure these:
-  # docsearch:
-  #   api_key: your_docsearch_api_key
-  #   index_name: your_index_name
-
+    bootswatch: flatly    
+    
 navbar:
   title: "macpie"   # Your package title as it should appear on the navbar.
   left:
@@ -26,7 +20,4 @@ navbar:
   right:
     - icon: fa-github
       href: "https://github.com/PMCC-BioinformaticsCore/macpie.git"  # Replace with your GitHub repo URL.
-
-
-
-
+      
