@@ -19,6 +19,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/rstudio/macpie \
+            -w /home/rstudio/macpie \
             macpie:latest R -e "pkgdown::build_site()"
 
       - name: Deploy to GitHub Pages

@@ -1,11 +1,34 @@
 Package: macpie
-Title: Analysis and visualisation of MAC-seq data
+Title: Scalable workflow for high-throughput transcriptomic profiling
 Version: 0.0.0.9000
-Authors@R: 
-    c(person("Peter", "Mac", , "peter.mac@petermac.org", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-2144-1887")),
-    person(given = "Mark", family = "Li", email = "limarkxiang@gmail.com", role = c("aut"),
-           comment = c(ORCID = "0000-0001-6222-4446")))
+Authors@R: c(person(given = "Nenad", family = "Bartonicek",
+         email = "nenad.bartonicek@petermac.org",
+         role = c("aut", "cre"),
+         comment = c(ORCID = "0000-0003-2144-1887")),
+  person(given = "Xin", family = "Liu",
+         email = "xin.liu@petermac.org",
+         role = c("aut", "cre")),
+  person(given = "Laura", family = "Twomey",
+         role = "aut"),
+  person(given = "Michelle", family = "Meier",
+         role = "aut"),
+  person(given = "Richard", family = "Lupad",
+         role = "aut"),
+  person(given = "Stuart", family = "Craig",
+         role = "aut"),
+  person(given = "David", family = "Yoannidis",
+         role = "aut"),
+  person(given = "Jason", family = "Li",
+         role = "aut"),
+  person(given = "Tim", family = "Semple",
+         role = "aut"),
+  person(given = "Kaylene J", family = "Simpson",
+         role = "aut"),
+  person(given = "Mark X", family = "Li",
+         role = "aut",
+         comment = c(ORCID = "0000-0001-6222-4446")),
+  person(given = "Susanne", family = "Ramm",
+         role = "aut"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
