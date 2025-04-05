@@ -1,4 +1,4 @@
-name: Build and Deploy pkgdown Site
+name: Deploy pkgdown Site
 
 on:
   push:
@@ -6,25 +6,16 @@ on:
       - main  # or your default branch
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: docker build -t macpie:latest -f dockers/Dockerfile dockers
-
-      - name: Build pkgdown site inside Docker container
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/home/rstudio/macpie \
-            -w /home/rstudio/macpie \
-            macpie:latest R -e "devtools::install('.', dependencies = TRUE, upgrade = 'never'); pkgdown::build_site()"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+
 
