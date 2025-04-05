@@ -22,12 +22,16 @@ remotes::install_github("https://github.com/PMCC-BioinformaticsCore/macpie")
 
 The simplest way is to use our docker container with all the R packages installed.
 ``` r
-docker pull lauratwomey/macpie
+docker pull --platform linux/amd64 xliu81/macpie:latest
 ```
 Inside your docker desktop, open a terminal, paste the docker pull command and install, depending on your platform.
 ``` r
-docker run --rm -ti -e PASSWORD=yourpassword -p 8787:8787 -v /Users/username/macpie:/home/rstudio/macpie lauratwomey/macpie
-docker run -d --platform linux/amd64 -p 8787:8787 -e PASSWORD=yourpassword -v /Users/username/macpie:/home/rstudio/macpie lauratwomey/macpie
+docker run --rm -ti \
+  -e PASSWORD=password \
+  -p 8787:8787 \
+  --platform linux/amd64 \
+  -v /Users/liuxin/Documents/MACseq/macpie/2025/macpie/:/home/rstudio/macpie:z \
+  xliu81/macpie:latest
 ```
 
 ## Example
@@ -64,21 +68,19 @@ mac <- mac %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id))  
 
 #example of MDS function, using limma
-plot_mds(mac, "Sample_type")
+p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
 
 #RLE function
-rle_plot(mac, label_column = "Row")
+plot_rle(mac, label_column = "Row", normalisation = "limma_voom")
 
 #Calculate qc metrics for each condition
-qc_stats <- QC_metrics(mac, "combined_id")
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
 
 #Plot qc metrics 
-plot_qc_metrics(qc_stats, "combined_id", "z_score")
+plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
-#Plot distance matrix in a heatmap for condition and control with high varibility from previous qc metrics step 
-plot_distance(mac, "combined_id", "Staurosporine_10")
-plot_distance(mac, "combined_id", "DMSO_0")
 
 
 
