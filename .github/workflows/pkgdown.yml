@@ -15,12 +15,9 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
 
-      - name: Install required packages
+      - name: Install required packages and build pkgdown site
         run: |
           Rscript -e "install.packages(c('pkgdown','devtools'), repos='https://cloud.r-project.org')"
-
-      - name: Build pkgdown site
-        run: |
           Rscript -e "pkgdown::build_site()"
 
       - name: Deploy to GitHub Pages
