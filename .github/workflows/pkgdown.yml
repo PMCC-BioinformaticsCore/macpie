@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-mintues: 120
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -21,10 +22,11 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
-      - name: Install required packages and build pkgdown site
+      - name: Install required packages and build pkgdown site (skip articles, as macpie.html is rendered)
         run: |
           Rscript -e "install.packages('pkgdown', repos='https://cloud.r-project.org')"
-          Rscript -e "pkgdown::build_site()"
+          Rscript -e "pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)"
+        shell: Rscript{0}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

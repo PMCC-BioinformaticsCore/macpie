@@ -4,6 +4,9 @@ url: "https://github.com/PMCC-BioinformaticsCore/macpie.git"
 # The folder where the generated site will be placed.
 destination: "docs"
 
+build:
+  articles: false
+
 template:
   params:
     bootswatch: flatly    
