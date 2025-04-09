@@ -35,6 +35,8 @@ library(zinbwave)
 #library(SingleCellExperiment)
 library(gdtools)
 library(ggiraph)
+library(drc)
+
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
