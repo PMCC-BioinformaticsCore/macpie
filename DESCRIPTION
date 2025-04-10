@@ -88,5 +88,7 @@ Imports:
     zinbwave,
     scales,
     unikn,
-    pkgdown
+    pkgdown,
+    drc,
+    tidyverse
 VignetteBuilder: knitr

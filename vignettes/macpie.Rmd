@@ -241,7 +241,7 @@ the results on a volcano plot.
 
 ```{r de_analysis, fig.width = 8, fig.height = 6}
 # First perform the differential expression analysis
-treatment_samples <- "Staurosporine_0.1"
+treatment_samples <- "Camptothecin_1"
 control_samples <- "DMSO_0"
 top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
 
