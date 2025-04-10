@@ -6,10 +6,13 @@
 \usage{
 compute_single_dose_response(
   data,
-  gene,
-  normalisation = "cpm",
+  gene = NULL,
+  pathway = NULL,
+  normalisation = "limma_voom",
   treatment_value,
-  batch = 1
+  control_value = "DMSO",
+  batch = 1,
+  k = 2
 )
 }
 \arguments{
@@ -27,4 +30,13 @@ A list with drc model, predicted values, and ggplot curve
 }
 \description{
 Model Gene Dose-Response Curve Using drc
+}
+\examples{
+rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+mac<-readRDS(rds_file)
+res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "limma_voom", treatment_value = "Staurosporine")
+res$plot
+res <- compute_single_dose_response(data = mac, pathway = "Myc Targets V1", treatment_value = "Camptothecin")
+res$plot
+
 }

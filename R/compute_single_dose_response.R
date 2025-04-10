@@ -11,72 +11,77 @@
 #' @examples
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "limma_voom", treatment_value = "Staurosporine")
+#' res <- compute_single_dose_response(data = mac,
+#' gene = "SOX12",
+#' normalisation = "limma_voom",
+#' treatment_value = "Staurosporine")
 #' res$plot
-#' res <- compute_single_dose_response(data = mac, pathway = "Myc Targets V1", treatment_value = "Camptothecin")
+#' res <- compute_single_dose_response(data = mac,
+#' pathway = "Myc Targets V1",
+#' treatment_value = "Camptothecin")
 #' res$plot
-#' }
-#' 
 #' @export
-compute_single_dose_response <- function(data, 
-                                         gene = NULL, 
-                                         pathway = NULL, 
-                                         normalisation = "limma_voom", 
-                                         treatment_value, 
+compute_single_dose_response <- function(data,
+                                         gene = NULL,
+                                         pathway = NULL,
+                                         normalisation = "limma_voom",
+                                         treatment_value,
                                          control_value = "DMSO",
                                          batch = 1,
                                          k = 2) {
-  
+  # Helper function to fetch and log-transform count matrix
+  fetch_count_matrix <- function(data, log) {
+    count_matrix <- as.matrix(data@assays$RNA$counts)
+    if (log) {
+      count_matrix <- log1p(count_matrix)
+    }
+    return(count_matrix)
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, gene, pathway, normalisation, treatment_value, control_value, batch, k) {
     if (!inherits(data, "Seurat")) {
       stop("Error: 'data' must be a Seurat or TidySeurat object.")
     }
-    if(!is.null(gene)){
-      if(!gene %in% row.names(data@assays$RNA$counts)){
+    if (!is.null(gene)) {
+      if (!gene %in% row.names(data@assays$RNA$counts)) {
         stop("Error: Your gene is not present in the dataset.")
       }
     }
-    if(!is.null(pathway)){
-      if(!pathway %in% data@tools$pathway_enrichment$Term){
-        stop("Error: Your pathway was not present in the list of enriched pathways. Check mac@tools$pathway_enrichment.")
+    if (!is.null(pathway)) {
+      if (!pathway %in% data@tools$pathway_enrichment$Term) {
+        stop("Error: Your pathway was not present in the list 
+             of enriched pathways. Check mac@tools$pathway_enrichment.")
       }
     }
-    if(!is.null(gene) && !is.null(pathway)){
+    if (!is.null(gene) && !is.null(pathway)) {
       stop("Error: Please select only gene OR pathway, not both.")
     }
-    if(!treatment_value %in% data$Treatment_1){
+    if (!treatment_value %in% data$Treatment_1) {
       stop("Error: Your treatment_value was not present in data$Treatment_1.")
     }
-    if(!control_value %in% data$Treatment_1){
+    if (!control_value %in% data$Treatment_1) {
       stop("Error: Your control_value was not present in data$Treatment_1.")
     }
     normalisation <- if (is.null(normalisation)) "limma_voom" else normalisation
     if (!normalisation %in% c("raw", "logNorm",
-                       "cpm", "clr", "SCT",
-                       "DESeq2", "edgeR",
-                       "RUVg", "RUVs", "RUVr",
-                       "limma_voom", "zinb")) {
+                              "cpm", "clr", "SCT",
+                              "DESeq2", "edgeR",
+                              "RUVg", "RUVs", "RUVr",
+                              "limma_voom", "zinb")) {
       stop("Your normalization method is not available.")
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
     k <- if (is.null(k)) 2 else k
   }
-  
   validate_inputs(data, gene, pathway, normalisation, treatment_value, control_value, batch, k)
-  
   # Subset metadata
-  data <- data %>% 
-    filter(Treatment_1 == treatment_value | Treatment_1 == control_value)
-  
+  data <- data %>%
+    filter(.data$Treatment_1 == treatment_value | .data$Treatment_1 == control_value)
   meta <- data@meta.data %>%
     mutate(barcode = rownames(.)) %>%
-    filter(Treatment_1 == treatment_value | Treatment_1 == control_value)
-  
+    filter(.data$Treatment_1 == treatment_value | .data$Treatment_1 == control_value)
   if (nrow(meta) < 3) stop("Not enough cells in this treatment group.")
-  
-  
-  if(!is.null(gene)){
+  if (!is.null(gene)) {
     # Get normalised expression values
     assay_data <- switch(
       normalisation,
@@ -94,33 +99,28 @@ compute_single_dose_response <- function(data,
       zinb = compute_normalised_counts(data, method = "zinb", batch = batch),
       stop("Unsupported normalization method.")
     )
-  
     expr <- as.numeric(assay_data[gene, meta$barcode])
     names(expr) <- meta$combined_id
     if (all(expr == 0)) stop("Gene not expressed in selected treatment.")
-    
     # Assign 0 concentration for control_value samples
     meta$concentration <- ifelse(meta$Treatment_1 == control_value, 0, as.numeric(as.character(meta$Concentration_1)))
-    
     # Data frame for modeling
     df <- data.frame(
       expression = expr,
       concentration = meta$concentration,
       replicate = meta$combined_id
     )
-  } else if (!is.null(pathway)){
-    
+  } else if (!is.null(pathway)) {
     pathway_enrichment <- data@tools$pathway_enrichment %>%
-      filter(Term == .env$pathway) %>%
-      select(combined_id, Combined.Score) 
+      filter(.data$Term == .env$pathway) %>%
+      select(.data$combined_id, .data$Combined.Score)
     meta <- data@meta.data %>%
-      select(Concentration_1, combined_id, Treatment_1) %>%
+      select(.data$Concentration_1, .data$combined_id, .data$Treatment_1) %>%
       unique() %>%
       left_join(., pathway_enrichment, join_by(combined_id)) %>%
       filter(grepl(.env$treatment_value, combined_id)) %>%
       unique()
-    meta$Combined.Score[is.na(meta$Combined.Score)] = 0
-    
+    meta$Combined.Score[is.na(meta$Combined.Score)] <- 0
     expr <- expr_pathway$Combined.Score
     names(expr) <- expr_pathway$combined_id
     df <- data.frame(
@@ -129,37 +129,29 @@ compute_single_dose_response <- function(data,
     ) %>%
       bind_rows(data.frame(expression = 0, concentration = 0))
   }
-
-  
   # Fit 4-parameter logistic curve using concentration (including 0)
   model <- tryCatch({
     drm(expression ~ concentration, data = df, fct = LL.4())
   }, error = function(e) {
     warning("Sigmoidal fit failed: ", e$message)
     return(NULL)
-  })  
-  
+  })
   if (!is.null(model)) {
     newdata <- data.frame(concentration = seq(min(df$concentration), max(df$concentration), length.out = 100))
     newdata$predicted <- predict(model, newdata)
     ed <- ED(model, 50, interval = "delta")
     ec50 <- ed[1, "Estimate"]
-    ec50_lower <- ed[1, "Lower"]
-    ec50_upper <- ed[1, "Upper"]
-    
-    
     # Dynamically determine y-axis label
     if (is.null(gene) && !is.null(pathway)) {
       y_label <- "Enrichment score"
-      marker = pathway
+      marker <- pathway
     } else if (!is.null(gene)) {
       y_label <- paste0("Expression (", normalisation, ")")
-      marker = gene
+      marker <- gene
     } else {
       y_label <- "Metric"
-      marker = column_name
+      marker <- column_name
     }
-    
     p <- ggplot(df, aes(x = concentration, y = expression)) +
       geom_point(size = 2) +
       geom_line(data = newdata, aes(x = concentration, y = predicted), color = "blue", size = 1) +
@@ -203,7 +195,6 @@ compute_single_dose_response <- function(data,
         y = y_label
       )
   }
-  
   p
   return(list(model = model, predictions = newdata, plot = p))
 }

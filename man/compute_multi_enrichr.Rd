@@ -10,7 +10,7 @@ compute_multi_enrichr(
   species = NULL,
   direction = "both",
   p_value_cutoff = 0.01,
-  n_distinct = 5
+  n_distinct = 10
 )
 }
 \arguments{
@@ -29,7 +29,7 @@ one of "up", "down", "both" (default).}
 \item{n_distinct}{Minimum number of genes in a geneset, default 5}
 }
 \value{
-A tidyseurat object with pathway_enrichment list in slot tools
+A tidyseurat object with appended pathway_enrichment dataframe in slot tools
 }
 \description{
 Perform enrichR-style analysis on a screen
