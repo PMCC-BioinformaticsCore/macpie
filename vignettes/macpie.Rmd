@@ -297,7 +297,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 2)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 ```
 
 

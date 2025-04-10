@@ -7,6 +7,7 @@
 #' @param treatment_value A character string matching one value in metadata column "Treatment_1".
 #' @import drc
 #' @import tidyverse
+#' @importFrom scales pseudo_log_trans
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
