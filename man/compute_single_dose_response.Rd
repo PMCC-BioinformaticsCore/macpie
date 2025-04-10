@@ -34,9 +34,13 @@ Model Gene Dose-Response Curve Using drc
 \examples{
 rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)
-res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "limma_voom", treatment_value = "Staurosporine")
+res <- compute_single_dose_response(data = mac,
+gene = "SOX12",
+normalisation = "limma_voom",
+treatment_value = "Staurosporine")
 res$plot
-res <- compute_single_dose_response(data = mac, pathway = "Myc Targets V1", treatment_value = "Camptothecin")
+res <- compute_single_dose_response(data = mac,
+pathway = "Myc Targets V1",
+treatment_value = "Camptothecin")
 res$plot
-
 }
