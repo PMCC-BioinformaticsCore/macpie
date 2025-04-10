@@ -11,20 +11,65 @@
 #' @examples
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "limma_voom", treatment_value = "Staurosporine")
+#' res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "cpm", treatment_value = "Staurosporine")
 #' res$plot
 #' }
 #' 
 #' @export
-compute_single_dose_response <- function(data, gene, normalisation = "limma_voom", treatment_value, batch=1) {
+compute_single_dose_response <- function(data, 
+                                         gene = NULL, 
+                                         pathway = NULL, 
+                                         normalisation = "limma_voom", 
+                                         treatment_value, 
+                                         control_value = "DMSO",
+                                         batch = 1,
+                                         k = 2) {
   
-  # Sanity checks
-  if (!gene %in% rownames(data)) stop("Gene not found in expression matrix.")
-  if (!"Treatment_1" %in% colnames(data@meta.data)) stop("Metadata must include 'Treatment_1' column.")
+  # Helper function to validate input data
+  validate_inputs <- function(data, gene, pathway, normalisation, treatment_value, control_value, batch, k) {
+    if (!inherits(data, "Seurat")) {
+      stop("Error: 'data' must be a Seurat or TidySeurat object.")
+    }
+    if(!is.null(gene)){
+      if(!gene %in% row.names(data@assays$RNA$counts)){
+        stop("Error: Your gene is not present in the dataset.")
+      }
+    }
+    if(!is.null(pathway)){
+      if(!pathway %in% data@tools$pathway_enrichment$Term){
+        stop("Error: Your pathway was not present in the list of enriched pathways. Check mac@tools$pathway_enrichment.")
+      }
+    }
+    if(!is.null(gene) && !is.null(pathway)){
+      stop("Error: Please select only gene OR pathway, not both.")
+    }
+    if(!treatment_value %in% data$Treatment_1){
+      stop("Error: Your treatment_value was not present in data$Treatment_1.")
+    }
+    if(!control_value %in% data$Treatment_1){
+      stop("Error: Your control_value was not present in data$Treatment_1.")
+    }
+    normalisation <- if (is.null(normalisation)) "limma_voom" else normalisation
+    if (!normalisation %in% c("raw", "logNorm",
+                       "cpm", "clr", "SCT",
+                       "DESeq2", "edgeR",
+                       "RUVg", "RUVs", "RUVr",
+                       "limma_voom", "zinb")) {
+      stop("Your normalization method is not available.")
+    }
+    batch <- if (is.null(batch)) "1" else as.character(batch)
+    k <- if (is.null(k)) 2 else k
+  }
+  
+  validate_inputs(data, gene, pathway, normalisation, treatment_value, control_value, batch, k)
+  
   # Subset metadata
+  data <- data %>% 
+    filter(Treatment_1 == treatment_value | Treatment_1 == control_value)
+  
   meta <- data@meta.data %>%
     mutate(barcode = rownames(.)) %>%
-    filter(Treatment_1 == treatment_value | Treatment_1 == "DMSO")
+    filter(Treatment_1 == treatment_value | Treatment_1 == control_value)
   
   if (nrow(meta) < 3) stop("Not enough cells in this treatment group.")
   
@@ -50,8 +95,8 @@ compute_single_dose_response <- function(data, gene, normalisation = "limma_voom
   names(expr) <- meta$combined_id
   if (all(expr == 0)) stop("Gene not expressed in selected treatment.")
   
-  # Assign 0 concentration for DMSO samples
-  meta$concentration <- ifelse(meta$Treatment_1 == "DMSO", 0, as.numeric(meta$Concentration_1))
+  # Assign 0 concentration for control_value samples
+  meta$concentration <- ifelse(meta$Treatment_1 == control_value, 0, as.numeric(meta$Concentration_1))
   
   # Data frame for modeling
   df <- data.frame(
@@ -80,13 +125,13 @@ compute_single_dose_response <- function(data, gene, normalisation = "limma_voom
       geom_line(data = newdata, aes(x = concentration, y = predicted), color = "blue", size = 1) +
       scale_x_continuous(
         trans = pseudo_log_trans(base = 10),
-        breaks = c(0, 0.1, 1, 10, 100,1000),
+        breaks = sort(unique(df$concentration)),
         labels = function(x) {
           sapply(x, function(val) {
             if (is.na(val)) {
               NA  # skip or return blank if NA
-            } else if (abs(val - 0.1) < 1e-6) {
-              "0.1"
+            } else if (val<1) {
+              val
             } else {
               as.character(round(val))
             }
