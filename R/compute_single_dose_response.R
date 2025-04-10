@@ -11,7 +11,9 @@
 #' @examples
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
-#' res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "cpm", treatment_value = "Staurosporine")
+#' res <- compute_single_dose_response(data = mac, gene = "SOX12", normalisation = "limma_voom", treatment_value = "Staurosporine")
+#' res$plot
+#' res <- compute_single_dose_response(data = mac, pathway = "Myc Targets V1", treatment_value = "Camptothecin")
 #' res$plot
 #' }
 #' 
@@ -73,37 +75,61 @@ compute_single_dose_response <- function(data,
   
   if (nrow(meta) < 3) stop("Not enough cells in this treatment group.")
   
-  # Get normalised expression values
-  assay_data <- switch(
-    normalisation,
-    raw = fetch_count_matrix(data, log),
-    logNorm = compute_normalised_counts(data, method = "logNorm", batch = batch),
-    cpm = compute_normalised_counts(data, method = "cpm", batch = batch),
-    clr = compute_normalised_counts(data, method = "clr", batch = batch),
-    SCT = compute_normalised_counts(data, method = "SCT", batch = batch),
-    DESeq2 = compute_normalised_counts(data, method = "DESeq2", batch = batch),
-    edgeR = compute_normalised_counts(data, method = "edgeR", batch = batch),
-    limma_voom = compute_normalised_counts(data, method = "limma_voom", batch = batch),
-    RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes),
-    RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch),
-    RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch),
-    zinb = compute_normalised_counts(data, method = "zinb", batch = batch),
-    stop("Unsupported normalization method.")
-  )
   
-  expr <- as.numeric(assay_data[gene, meta$barcode])
-  names(expr) <- meta$combined_id
-  if (all(expr == 0)) stop("Gene not expressed in selected treatment.")
+  if(!is.null(gene)){
+    # Get normalised expression values
+    assay_data <- switch(
+      normalisation,
+      raw = fetch_count_matrix(data, log),
+      logNorm = compute_normalised_counts(data, method = "logNorm", batch = batch),
+      cpm = compute_normalised_counts(data, method = "cpm", batch = batch),
+      clr = compute_normalised_counts(data, method = "clr", batch = batch),
+      SCT = compute_normalised_counts(data, method = "SCT", batch = batch),
+      DESeq2 = compute_normalised_counts(data, method = "DESeq2", batch = batch),
+      edgeR = compute_normalised_counts(data, method = "edgeR", batch = batch),
+      limma_voom = compute_normalised_counts(data, method = "limma_voom", batch = batch),
+      RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes),
+      RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch),
+      RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch),
+      zinb = compute_normalised_counts(data, method = "zinb", batch = batch),
+      stop("Unsupported normalization method.")
+    )
   
-  # Assign 0 concentration for control_value samples
-  meta$concentration <- ifelse(meta$Treatment_1 == control_value, 0, as.numeric(meta$Concentration_1))
-  
-  # Data frame for modeling
-  df <- data.frame(
-    expression = expr,
-    concentration = meta$concentration,
-    replicate = meta$combined_id
-  )
+    expr <- as.numeric(assay_data[gene, meta$barcode])
+    names(expr) <- meta$combined_id
+    if (all(expr == 0)) stop("Gene not expressed in selected treatment.")
+    
+    # Assign 0 concentration for control_value samples
+    meta$concentration <- ifelse(meta$Treatment_1 == control_value, 0, as.numeric(as.character(meta$Concentration_1)))
+    
+    # Data frame for modeling
+    df <- data.frame(
+      expression = expr,
+      concentration = meta$concentration,
+      replicate = meta$combined_id
+    )
+  } else if (!is.null(pathway)){
+    
+    pathway_enrichment <- data@tools$pathway_enrichment %>%
+      filter(Term == .env$pathway) %>%
+      select(combined_id, Combined.Score) 
+    meta <- data@meta.data %>%
+      select(Concentration_1, combined_id, Treatment_1) %>%
+      unique() %>%
+      left_join(., pathway_enrichment, join_by(combined_id)) %>%
+      filter(grepl(.env$treatment_value, combined_id)) %>%
+      unique()
+    meta$Combined.Score[is.na(meta$Combined.Score)] = 0
+    
+    expr <- expr_pathway$Combined.Score
+    names(expr) <- expr_pathway$combined_id
+    df <- data.frame(
+      expression = meta$Combined.Score,
+      concentration = as.numeric(as.character(meta$Concentration_1))  # Convert from factor to numeric
+    ) %>%
+      bind_rows(data.frame(expression = 0, concentration = 0))
+  }
+
   
   # Fit 4-parameter logistic curve using concentration (including 0)
   model <- tryCatch({
@@ -116,10 +142,24 @@ compute_single_dose_response <- function(data,
   if (!is.null(model)) {
     newdata <- data.frame(concentration = seq(min(df$concentration), max(df$concentration), length.out = 100))
     newdata$predicted <- predict(model, newdata)
-    ed <- ED(res$model, 50, interval = "delta")
+    ed <- ED(model, 50, interval = "delta")
     ec50 <- ed[1, "Estimate"]
     ec50_lower <- ed[1, "Lower"]
     ec50_upper <- ed[1, "Upper"]
+    
+    
+    # Dynamically determine y-axis label
+    if (is.null(gene) && !is.null(pathway)) {
+      y_label <- "Enrichment score"
+      marker = pathway
+    } else if (!is.null(gene)) {
+      y_label <- paste0("Expression (", normalisation, ")")
+      marker = gene
+    } else {
+      y_label <- "Metric"
+      marker = column_name
+    }
+    
     p <- ggplot(df, aes(x = concentration, y = expression)) +
       geom_point(size = 2) +
       geom_line(data = newdata, aes(x = concentration, y = predicted), color = "blue", size = 1) +
@@ -129,8 +169,8 @@ compute_single_dose_response <- function(data,
         labels = function(x) {
           sapply(x, function(val) {
             if (is.na(val)) {
-              NA  # skip or return blank if NA
-            } else if (val<1) {
+              NA
+            } else if (val < 1) {
               val
             } else {
               as.character(round(val))
@@ -141,23 +181,27 @@ compute_single_dose_response <- function(data,
       geom_vline(xintercept = ec50, linetype = "dashed", color = macpie_colours$high) +
       annotate("text",
                x = ec50,
-               y = max(df$expression, na.rm = TRUE) * 0.95,  # 95% of the way up
-               label = sprintf("EC50 = %.2f\n[%.2f – %.2f]", ec50, ec50_lower, ec50_upper),
+               y = max(df$expression, na.rm = TRUE) * 0.95,
+               label = sprintf("EC50 = %.2f\n", ec50),
                color = "black",
                size = 4,
                hjust = 0.5,
                vjust = 1) +
       theme_minimal() +
       labs(
-        title = paste("Sigmoidal fit for", gene, "with", treatment_value),
+        title = paste("Sigmoidal fit for", marker, "with", treatment_value),
         x = "Concentration (log scale)",
-        y = "Expression"
+        y = y_label
       )
   } else {
     p <- ggplot(df, aes(x = concentration, y = expression)) +
       geom_point(size = 2, color = macpie_colours$high) +
       theme_minimal() +
-      labs(title = "Model failed to fit", x = "Concentration", y = "Expression")
+      labs(
+        title = "Model failed to fit",
+        x = "Concentration",
+        y = y_label
+      )
   }
   
   p

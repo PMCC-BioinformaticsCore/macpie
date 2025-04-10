@@ -12,7 +12,7 @@
 #' @importFrom dplyr reframe
 #' @importFrom tidyr unnest
 #'
-#' @returns A tidyseurat object with pathway_enrichment list in slot tools
+#' @returns A tidyseurat object with appended pathway_enrichment dataframe in slot tools
 #' @export
 #'
 #' @examples
@@ -26,7 +26,7 @@ compute_multi_enrichr <- function(data,
                                   species = NULL,
                                   direction = "both",
                                   p_value_cutoff = 0.01,
-                                  n_distinct = 5) {
+                                  n_distinct = 10) {
 
   # Helper function to validate input data
   validate_inputs <- function(data, genesets, species, direction, p_value_cutoff, n_distinct) {
@@ -83,6 +83,10 @@ compute_multi_enrichr <- function(data,
                                                  genesets = .env$genesets, 
                                                  background = .env$species)) %>%
     unnest(enrichment)
-  data@tools[["pathway_enrichment"]] <- c(unique(data@tools[["pathway_enrichment"]]),enriched_pathways)
+  if(length(data@tools$pathway_enrichment) ==0) {
+    data@tools[["pathway_enrichment"]] <- enriched_pathways
+  } else {
+    data@tools[["pathway_enrichment"]] <- rbind(unique(data@tools[["pathway_enrichment"]]),enriched_pathways)
+  }
   return(data)
 }
