@@ -10,7 +10,7 @@
 #' @importFrom scales pseudo_log_trans
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+#' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' res <- compute_single_dose_response(data = mac,
 #' gene = "SOX12",
@@ -21,6 +21,7 @@
 #' pathway = "Myc Targets V1",
 #' treatment_value = "Camptothecin")
 #' res$plot
+#' }
 #' @export
 compute_single_dose_response <- function(data,
                                          gene = NULL,
