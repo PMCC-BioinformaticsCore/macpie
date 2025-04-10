@@ -123,8 +123,8 @@ compute_single_dose_response <- function(data,
       filter(grepl(.env$treatment_value, combined_id)) %>%
       unique()
     meta$Combined.Score[is.na(meta$Combined.Score)] <- 0
-    expr <- expr_pathway$Combined.Score
-    names(expr) <- expr_pathway$combined_id
+    expr <- pathway_enrichment$Combined.Score
+    names(expr) <- pathway_enrichment$combined_id
     df <- data.frame(
       expression = meta$Combined.Score,
       concentration = as.numeric(as.character(meta$Concentration_1))  # Convert from factor to numeric
