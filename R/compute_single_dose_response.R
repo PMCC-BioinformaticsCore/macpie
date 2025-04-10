@@ -13,9 +13,9 @@
 #' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' res <- compute_single_dose_response(data = mac,
-#' gene = "SOX12",
+#' gene = "ATF3",
 #' normalisation = "limma_voom",
-#' treatment_value = "Staurosporine")
+#' treatment_value = "Camptothecin")
 #' res$plot
 #' res <- compute_single_dose_response(data = mac,
 #' pathway = "Myc Targets V1",
