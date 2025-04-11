@@ -13,7 +13,7 @@
 #' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' res <- compute_single_dose_response(data = mac,
-#' gene = "ATF3",
+#' gene = "PTPRA",
 #' normalisation = "limma_voom",
 #' treatment_value = "Camptothecin")
 #' res$plot
