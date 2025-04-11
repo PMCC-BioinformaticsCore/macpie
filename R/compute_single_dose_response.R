@@ -7,19 +7,21 @@
 #' @param treatment_value A character string matching one value in metadata column "Treatment_1".
 #' @import drc
 #' @import tidyverse
+#' @importFrom scales pseudo_log_trans
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+#' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' res <- compute_single_dose_response(data = mac,
-#' gene = "SOX12",
+#' gene = "PTPRA",
 #' normalisation = "limma_voom",
-#' treatment_value = "Staurosporine")
+#' treatment_value = "Camptothecin")
 #' res$plot
 #' res <- compute_single_dose_response(data = mac,
 #' pathway = "Myc Targets V1",
 #' treatment_value = "Camptothecin")
 #' res$plot
+#' }
 #' @export
 compute_single_dose_response <- function(data,
                                          gene = NULL,
@@ -121,8 +123,8 @@ compute_single_dose_response <- function(data,
       filter(grepl(.env$treatment_value, combined_id)) %>%
       unique()
     meta$Combined.Score[is.na(meta$Combined.Score)] <- 0
-    expr <- expr_pathway$Combined.Score
-    names(expr) <- expr_pathway$combined_id
+    expr <- pathway_enrichment$Combined.Score
+    names(expr) <- pathway_enrichment$combined_id
     df <- data.frame(
       expression = meta$Combined.Score,
       concentration = as.numeric(as.character(meta$Concentration_1))  # Convert from factor to numeric

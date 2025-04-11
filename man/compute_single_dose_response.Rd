@@ -32,15 +32,16 @@ A list with drc model, predicted values, and ggplot curve
 Model Gene Dose-Response Curve Using drc
 }
 \examples{
-rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+\dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac<-readRDS(rds_file)
 res <- compute_single_dose_response(data = mac,
-gene = "SOX12",
+gene = "PTPRA",
 normalisation = "limma_voom",
-treatment_value = "Staurosporine")
+treatment_value = "Camptothecin")
 res$plot
 res <- compute_single_dose_response(data = mac,
 pathway = "Myc Targets V1",
 treatment_value = "Camptothecin")
 res$plot
+}
 }

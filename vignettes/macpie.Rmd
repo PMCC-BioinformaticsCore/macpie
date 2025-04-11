@@ -297,7 +297,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 2)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 ```
 
 
@@ -357,13 +357,38 @@ Shows Nutlin-3’s effect on various p53 targets in cancer cell lines.
 
 
 
-### 4. Methods for compound screening
+### 4. Methods specific for compound screening
 
 **Key points**: 
 
-  - use **compute_multi_screen_profile** to check gene set enrichment scores acorss all treatments given a gene list 
+  - use **compute_single_dose_response** to evaluate impact of compound concentrations on
+  gene expression or pathway enrichment
+  - use **compute_multi_screen_profile** to find perturbations similar to your target profile or 
+  a known gene set
+  - use **plot_de_umap** to find compounds that behave similarly based on proximity on UMAP maps
+
+#### 4.1. EC50 Curves
+
+```{r compute_EC50 curves, fig.width = 4, fig.height = 3}
+treatments <- mac %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
+res <- compute_single_dose_response(data = mac,
+  gene = "SOX12",
+  normalisation = "limma_voom",
+  treatment_value = "Staurosporine")
+res$plot
+res <- compute_single_dose_response(data = mac,
+  pathway = "Myc Targets V1",
+  treatment_value = "Camptothecin")
+res$plot
+```
   
-#### 4.1. Profile Similarity
+#### 4.2. Profile Similarity
 
 ```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 
