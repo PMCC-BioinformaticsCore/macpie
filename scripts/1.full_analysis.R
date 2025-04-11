@@ -230,6 +230,7 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "l
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_de_umap(mac)
 
+# create index for merging the results
 mac$clean_compound_name <- mac %>%
   select(Treatment_1) %>%
   pull() %>%
@@ -237,30 +238,51 @@ mac$clean_compound_name <- mac %>%
   str_trim() %>%
   str_to_title() 
 
+#get smiles
 cids <- get_cid(unique(mac$clean_compound_name), from = "name", match = "first", verbose = FALSE) 
 smiles_list <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
   mutate(CID = as.character(CID))%>%
   left_join(., cids, join_by(CID==cid)) %>%
   rename(smiles = IsomericSMILES)
 
-mac$smiles <- mac@meta.data %>%
-  left_join(.,smiles_list,join_by(clean_compound_name==query)) %>%
-  select(IsomericSMILES)  %>%
-  pull
+#mac$smiles <- mac@meta.data %>%
+#  left_join(.,smiles_list,join_by(clean_compound_name==query)) %>%
+#  select(IsomericSMILES)  %>%
+#  pull
 
-#only work on those molecules that have smiles
+# Only work on those molecules that have smiles
 mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
-safe_descs <- setdiff(get.desc.names("all"), grep("charge|peoe|ATS", get.desc.names("all"), value = TRUE))
+names(mol) <- smiles_list$query[!is.na(smiles_list$smiles)]
+  
+# exclude descriptors that require 3D coordinates or use Gasteiger partial charges
+safe_descs <- setdiff(get.desc.names("all"), 
+                      grep("charge|peoe|ATS", 
+                           get.desc.names("all"), 
+                           value = TRUE))
 
+# Get standard descriptors
 descriptor_df <- bind_rows(lapply(mol, function(m) {
   if (!is.null(m)) {
     suppressWarnings(
       tryCatch(eval.desc(m, safe_descs), error = function(e) NULL)
     )
-  } else {
-    NULL
-  }
+  } else { NULL }
 }))
+
+# Clean descriptors from NA and constant columns
+descriptor_df_clean <- descriptor_df %>%
+  select(where(~ all(!is.na(.)))) %>% 
+  select(where(~ n_distinct(.) > 1))    
+
+# Remove highly correlated cols (R² > 0.6)
+corr_mat <- cor(descriptor_df_clean, use = "pairwise.complete.obs")^2       
+upper_tri <- which(upper.tri(corr_mat) & corr_mat > 0.6, arr.ind = TRUE)
+cols_to_remove <- unique(colnames(corr_mat)[upper_tri[,2]])
+
+descriptor_df_clean <- descriptor_df_clean %>% 
+  select(-all_of(cols_to_remove))
+
+descriptor_df$clean_compound_name <- smiles_list$query[!is.na(smiles_list$smiles)]
 
 # Compute fingerprints
 fp_list <- lapply(mol, function(x) {
@@ -272,28 +294,19 @@ fp_list <- lapply(mol, function(x) {
 })
 
 # Convert fingerprints to binary matrix
-fp_matrix <- do.call(rbind, lapply(fp_list, function(bits) {
+fp_matrix <- do.call(rbind, lapply(fp_list, function(x) {
   fp_vec <- rep(0, 1024)
-  if (!is.null(bits)) fp_vec[as.numeric(bits)] <- 1
+  if (!is.null(x)) fp_vec[as.numeric(x)] <- 1
   fp_vec
 }))
 
 colnames(fp_matrix) <- paste0("FP_", seq_len(ncol(fp_matrix)))
 fingerprint_df <- as.data.frame(fp_matrix)
+fingerprint_df$clean_compound_name <- names(fp_list)
 
-# Combine everything
-chem_features <- bind_cols( %>% select(Treatment_1), descriptor_df, fingerprint_df)
-
-mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
-
-
-fp <- get.fingerprint(mol, type = "extended")  # or "maccs", "pubchem", etc.
-dc <- get.desc.categories()
-dn <- get.desc.names(dc[4])
-all_descs <- get.desc.names("all")
-desc_filtered <- setdiff(all_descs, grep("charge|peoe|ATS", all_descs, value = TRUE))
-desc <- eval.desc(mol, desc_filtered)
-
+# Combine all features
+combined_features <- descriptor_df %>%
+  left_join(.,fingerprint_df, join_by(clean_compound_name))
 
 
 
