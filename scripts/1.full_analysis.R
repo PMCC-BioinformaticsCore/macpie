@@ -100,7 +100,9 @@ mac <- mac %>%
 # Create an ID that uniquely identifies samples based on the
 # Combination of treatment and treatment concentration
 mac <- mac %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_"))
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id)) %>%
+  mutate(combined_id = make.names(combined_id))
 
 
 # QC ===================================================
@@ -226,10 +228,74 @@ treatments <- mac %>%
 # Update the mac object with differential expression
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
-mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 mac <- compute_de_umap(mac)
 
-mac$smiles <- 
+mac$clean_compound_name <- mac %>%
+  select(Treatment_1) %>%
+  pull() %>%
+  str_replace_all("_", " ") %>%
+  str_trim() %>%
+  str_to_title() 
+
+cids <- get_cid(unique(mac$clean_compound_name), from = "name", match = "first", verbose = FALSE) 
+smiles_list <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
+  mutate(CID = as.character(CID))%>%
+  left_join(., cids, join_by(CID==cid)) %>%
+  rename(smiles = IsomericSMILES)
+
+mac$smiles <- mac@meta.data %>%
+  left_join(.,smiles_list,join_by(clean_compound_name==query)) %>%
+  select(IsomericSMILES)  %>%
+  pull
+
+#only work on those molecules that have smiles
+mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
+safe_descs <- setdiff(get.desc.names("all"), grep("charge|peoe|ATS", get.desc.names("all"), value = TRUE))
+
+descriptor_df <- bind_rows(lapply(mol, function(m) {
+  if (!is.null(m)) {
+    suppressWarnings(
+      tryCatch(eval.desc(m, safe_descs), error = function(e) NULL)
+    )
+  } else {
+    NULL
+  }
+}))
+
+# Compute fingerprints
+fp_list <- lapply(mol, function(x) {
+  if (!is.null(x)) {
+    tryCatch(as.character(get.fingerprint(x, type = "extended")@bits), error = function(e) NULL)
+  } else {
+    NULL
+  }
+})
+
+# Convert fingerprints to binary matrix
+fp_matrix <- do.call(rbind, lapply(fp_list, function(bits) {
+  fp_vec <- rep(0, 1024)
+  if (!is.null(bits)) fp_vec[as.numeric(bits)] <- 1
+  fp_vec
+}))
+
+colnames(fp_matrix) <- paste0("FP_", seq_len(ncol(fp_matrix)))
+fingerprint_df <- as.data.frame(fp_matrix)
+
+# Combine everything
+chem_features <- bind_cols( %>% select(Treatment_1), descriptor_df, fingerprint_df)
+
+mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
+
+
+fp <- get.fingerprint(mol, type = "extended")  # or "maccs", "pubchem", etc.
+dc <- get.desc.categories()
+dn <- get.desc.names(dc[4])
+all_descs <- get.desc.names("all")
+desc_filtered <- setdiff(all_descs, grep("charge|peoe|ATS", all_descs, value = TRUE))
+desc <- eval.desc(mol, desc_filtered)
+
+
+
 
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
