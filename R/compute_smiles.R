@@ -11,10 +11,12 @@
 #' @export
 #'
 #' @examples
+#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+#' mac <- readRDS(file_path)
 #' mac <- compute_smiles(mac)
 
 compute_smiles <- function(data) {
-  if (!"Treatment_1" %in% colnames(data)) {
+  if (!"Treatment_1" %in% colnames(data@meta.data)) {
     stop("The input object must contain a column named 'Treatment_1'")
   }
   

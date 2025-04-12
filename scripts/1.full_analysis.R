@@ -37,7 +37,7 @@ library(gdtools)
 library(ggiraph)
 library(drc)
 library(webchem)
-
+library(randomForest)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -230,83 +230,55 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "l
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_de_umap(mac)
 
-# create index for merging the results
-mac$clean_compound_name <- mac %>%
-  select(Treatment_1) %>%
-  pull() %>%
-  str_replace_all("_", " ") %>%
-  str_trim() %>%
-  str_to_title() 
+# Add smiles
+mac <- compute_smiles(mac)
 
-#get smiles
-cids <- get_cid(unique(mac$clean_compound_name), from = "name", match = "first", verbose = FALSE) 
-smiles_list <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
-  mutate(CID = as.character(CID))%>%
-  left_join(., cids, join_by(CID==cid)) %>%
-  rename(smiles = IsomericSMILES)
+# Calculate descriptors
+mac <- compute_chem_descriptors(mac)
 
-#mac$smiles <- mac@meta.data %>%
-#  left_join(.,smiles_list,join_by(clean_compound_name==query)) %>%
-#  select(IsomericSMILES)  %>%
-#  pull
+# Join with target variable (e.g. pathway score)
+model_df <- mac@tools$pathway_enrichment %>%
+  filter(Term == "Estrogen Response Early") %>%
+  left_join(., mac@meta.data, join_by(combined_id)) %>%
+  filter(Concentration_1 == 10) %>%
+  select(Treatment_1, Combined.Score) %>%
+  unique() %>%
+  left_join(., mac@tools$chem_descriptors, join_by(Treatment_1)) %>%
+  drop_na()
 
-# Only work on those molecules that have smiles
-mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
-names(mol) <- smiles_list$query[!is.na(smiles_list$smiles)]
-  
-# exclude descriptors that require 3D coordinates or use Gasteiger partial charges
-safe_descs <- setdiff(get.desc.names("all"), 
-                      grep("charge|peoe|ATS", 
-                           get.desc.names("all"), 
-                           value = TRUE))
+# Train random forest
+rf_model <- randomForest(Combined.Score ~ ., data = model_df, importance = TRUE, na.action = na.omit)
 
-# Get standard descriptors
-descriptor_df <- bind_rows(lapply(mol, function(m) {
-  if (!is.null(m)) {
-    suppressWarnings(
-      tryCatch(eval.desc(m, safe_descs), error = function(e) NULL)
-    )
-  } else { NULL }
-}))
+# Get importance scores
+rf_importance <- importance(rf_model, type = 1)  # %IncMSE = predictive power
+rf_ranked <- sort(rf_importance[, 1], decreasing = TRUE)
 
-# Clean descriptors from NA and constant columns
-descriptor_df_clean <- descriptor_df %>%
-  select(where(~ all(!is.na(.)))) %>% 
-  select(where(~ n_distinct(.) > 1))    
+# Top 20 important descriptors
+head(rf_ranked, 20)
+varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features")
 
-# Remove highly correlated cols (R² > 0.6)
-corr_mat <- cor(descriptor_df_clean, use = "pairwise.complete.obs")^2       
-upper_tri <- which(upper.tri(corr_mat) & corr_mat > 0.6, arr.ind = TRUE)
-cols_to_remove <- unique(colnames(corr_mat)[upper_tri[,2]])
 
-descriptor_df_clean <- descriptor_df_clean %>% 
-  select(-all_of(cols_to_remove))
+# Rank features by lowest p-value
+lm_ranked <- sort(lm_pvals, na.last = NA)
+head(lm_ranked, 20)  # Top 20 most significant predictors
 
-descriptor_df$clean_compound_name <- smiles_list$query[!is.na(smiles_list$smiles)]
 
-# Compute fingerprints
-fp_list <- lapply(mol, function(x) {
-  if (!is.null(x)) {
-    tryCatch(as.character(get.fingerprint(x, type = "extended")@bits), error = function(e) NULL)
-  } else {
-    NULL
-  }
-})
+
 
 # Convert fingerprints to binary matrix
-fp_matrix <- do.call(rbind, lapply(fp_list, function(x) {
-  fp_vec <- rep(0, 1024)
-  if (!is.null(x)) fp_vec[as.numeric(x)] <- 1
-  fp_vec
-}))
-
-colnames(fp_matrix) <- paste0("FP_", seq_len(ncol(fp_matrix)))
-fingerprint_df <- as.data.frame(fp_matrix)
-fingerprint_df$clean_compound_name <- names(fp_list)
-
-# Combine all features
-combined_features <- descriptor_df %>%
-  left_join(.,fingerprint_df, join_by(clean_compound_name))
+#fp_matrix <- do.call(rbind, lapply(fp_list, function(x) {
+#  fp_vec <- rep(0, 1024)
+#  if (!is.null(x)) fp_vec[as.numeric(x)] <- 1
+#  fp_vec
+#}))
+#
+#colnames(fp_matrix) <- paste0("FP_", seq_len(ncol(fp_matrix)))
+#fingerprint_df <- as.data.frame(fp_matrix)
+#fingerprint_df$clean_compound_name <- names(fp_list)
+#
+## Combine all features
+#combined_features <- descriptor_df %>%
+#  left_join(.,fingerprint_df, join_by(clean_compound_name))
 
 
 
