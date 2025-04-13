@@ -168,12 +168,6 @@ treatments <- mac %>%
   pull() %>%
   unique()
 
-##slow version
-#de_list<-sapply(treatments,function(x){
-#  compute_single_de(mac, x, control_samples,method = "edgeR");
-#  cat(".")
-#})
-
 # Load genesets from enrichr for a specific species or define your own
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 
@@ -183,7 +177,6 @@ mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 
 # Aggregate data to visualise umap
-
 mac_agg <- aggregate_by_de(mac)
 mac_agg <- compute_de_umap(mac_agg)
 DimPlot(mac_agg, reduction = "umap_de")
@@ -239,7 +232,6 @@ treatments <- mac %>%
 # Update the mac object with differential expression
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
-mac <- compute_de_umap(mac)
 
 # Add smiles
 mac <- compute_smiles(mac)
@@ -290,6 +282,24 @@ head(lm_ranked, 20)  # Top 20 most significant predictors
 ## Combine all features
 #combined_features <- descriptor_df %>%
 #  left_join(.,fingerprint_df, join_by(clean_compound_name))
+
+
+############ MOFA
+
+# 1. View 1: pathway enrichment (wide)
+compounds_10um <- mac %>%
+  filter(Concentration_1 == 10) %>%
+  select(combined_id) %>%
+  pull()
+         
+pathway_mat <- mac@tools$pathway_enrichment %>%
+  filter(combined_id %in% compounds_10um) %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(names_from = Term, values_from = Combined.Score) %>%
+  column_to_rownames("combined_id") %>%
+  t()
+
+
 
 
 

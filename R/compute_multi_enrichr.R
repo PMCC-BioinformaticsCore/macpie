@@ -81,10 +81,7 @@ compute_multi_enrichr <- function(data,
                                                  genesets = .env$genesets, 
                                                  background = .env$species)) %>%
     unnest(enrichment)
-  if(length(data@tools$pathway_enrichment) ==0) {
-    data@tools[["pathway_enrichment"]] <- enriched_pathways
-  } else {
-    data@tools[["pathway_enrichment"]] <- rbind(unique(data@tools[["pathway_enrichment"]]),enriched_pathways)
-  }
+  data@tools[["pathway_enrichment"]] <- enriched_pathways
+  
   return(data)
 }
