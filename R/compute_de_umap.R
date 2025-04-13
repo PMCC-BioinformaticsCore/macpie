@@ -6,6 +6,7 @@
 #' @importFrom dplyr bind_rows select
 #' @importFrom tidyr pivot_wider
 #' @importFrom umap umap
+#' @importFrom stats dist
 #' @returns A tidyseurat object with umap_de data frame in slot tools
 #' @export
 #'
@@ -35,7 +36,7 @@ compute_de_umap <- function(data = NULL) {
 
   # Get UMAP coordinates
   umap_mat <- df_umap$layout
-  rownames(umap_mat) <- colnames(df_wide)  # these are the "combined_id"s
+  colnames(umap_mat) <- c("UMAPde_1", "UMAPde_2")
   
   # Create DimReduc object
   umap_reduction <- CreateDimReducObject(

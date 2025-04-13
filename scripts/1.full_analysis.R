@@ -182,14 +182,19 @@ mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "e
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 
-# Aggreaget mac to visualise umap
+# Aggregate data to visualise umap
 
 mac_agg <- aggregate_by_de(mac)
+mac_agg <- compute_de_umap(mac_agg)
+DimPlot(mac_agg, reduction = "umap_de")
+FeaturePlot(mac_agg,features = c("MYC"))
+
+mac_agg <- FindNeighbors(mac_agg, reduction = "umap_de", dims = 1:2)
+mac_agg <- FindClusters(mac_agg, resolution = 0.5)
+DimPlot(mac_agg, reduction = "umap_de")
 
 
-compute_de_umap(mac)
-mac<- find_clusters_de_umap(mac, k = 3)
-p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
+p <- plot_de_umap(mac_agg, group_by = "cluster", max_overlaps = 5)
 girafe(ggobj = p, fonts = list(sans = "Open Sans"))
 
 # Get all the differential expression information in a tabular format
