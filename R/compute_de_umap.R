@@ -33,12 +33,18 @@ compute_de_umap <- function(data = NULL) {
   set.seed(1)
   df_umap <- umap(t(df_wide[, -1]))
 
-  #plot controls on UMAP
-  df_umap_data <- df_umap$layout %>%
-    as.data.frame() %>%
-    rownames_to_column("combined_id") %>%
-    rename("UMAP_1" = "V1", "UMAP_2" = "V2")
-
-  data@tools[["umap_de"]] <- df_umap_data
+  # Get UMAP coordinates
+  umap_mat <- df_umap$layout
+  rownames(umap_mat) <- colnames(df_wide)  # these are the "combined_id"s
+  
+  # Create DimReduc object
+  umap_reduction <- CreateDimReducObject(
+    embeddings = umap_mat,
+    key = "UMAPde_",
+    assay = DefaultAssay(data)
+  )
+  
+  # Add it to the Seurat object under reductions
+  data@reductions[["umap_de"]] <- umap_reduction
   return(data)
 }

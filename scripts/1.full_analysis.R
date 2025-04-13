@@ -181,15 +181,21 @@ enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
-mac <- compute_de_umap(mac)
-mac <- find_clusters_de_umap(mac, k = 3)
+
+# Aggreaget mac to visualise umap
+
+mac_agg <- aggregate_by_de(mac)
+
+
+compute_de_umap(mac)
+mac<- find_clusters_de_umap(mac, k = 3)
 p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
 girafe(ggobj = p, fonts = list(sans = "Open Sans"))
 
 # Get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
 enriched_pathways_per_comparison <- mac@tools$pathway_enrichment
-screen_preeofile_per_comparison <- mac@tools$screen_profile
+screen_profile_per_comparison <- mac@tools$screen_profile
 
 ### Plot DGE results ------------------
 # Plot the results for pathways across all the comparisons
