@@ -14,18 +14,18 @@
 #' @examples
 #' \dontrun{
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' mac <- compute_smiles(mac)
-#' mac <- compute_chem_descriptors(mac)
+#' data <- readRDS(file_path)
+#' data <- compute_smiles(data)
+#' data <- compute_chem_descriptors(data)
 #' }
-compute_chem_descriptors <- function(data, r = 0.6) {
+compute_chem_descriptors <- function(data, r_squared = 0.6) {
   if (!"smiles" %in% colnames(data@meta.data)) {
     stop("The input must contain a `smiles` column. Run compute_smiles() first.")
   }
   if (!"Treatment_1" %in% colnames(data@meta.data)) {
     stop("The input must contain a `Treatment_1` column.")
   }
-  if (!inherits(r, "numeric")) {
+  if (!inherits(r_squared, "numeric")) {
     stop("The r value must be numeric")
   }
   

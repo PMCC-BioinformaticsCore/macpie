@@ -136,11 +136,11 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 ## DE Single -----------------
 
-treatment_samples <- "Staurosporine_0.1"
+treatment_samples <- "Staurosporine_10"
 control_samples <- "DMSO_0"
 
 # Perform differential expression
-top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
+top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
 plot_volcano(top_table)
 
 # Perform pathway enrichment
@@ -163,6 +163,7 @@ plotEnrich(enriched)
 ### DGE analysis ------------------
 #to-do: shorten
 treatments <- mac %>%
+  filter(Concentration_1 == "10") %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
@@ -172,19 +173,59 @@ treatments <- mac %>%
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 
 # Update the mac object with differential expression
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "edgeR")
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom")
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 
+
+####### EC50s
+results<-list()
+treatments <- mac %>%
+  select(Treatment_1) %>%
+  filter(!grepl("DMSO", Treatment_1)) %>%
+  pull() %>%
+  unique()
+for(treatment in mac$Treatment_1){
+  res_gene<-list()
+  for(gene in row.names(mac@assays$RNA$counts)){
+  res <- compute_single_dose_response(data = mac,
+                                      gene = gene,
+                                      normalisation = "limma_voom",
+                                      treatment_value = "Staurosporine")
+  res_gene[[gene]]<-as.numeric(res$model$coefficients[4])
+  }
+  results[[treatment]]<-
+}
+
+
 # Aggregate data to visualise umap
+
 mac_agg <- aggregate_by_de(mac)
 mac_agg <- compute_de_umap(mac_agg)
 DimPlot(mac_agg, reduction = "umap_de")
 FeaturePlot(mac_agg,features = c("MYC"))
 
 mac_agg <- FindNeighbors(mac_agg, reduction = "umap_de", dims = 1:2)
-mac_agg <- FindClusters(mac_agg, resolution = 0.5)
+mac_agg <- FindClusters(mac_agg, resolution = 10)
 DimPlot(mac_agg, reduction = "umap_de")
+
+cell_coords <- Embeddings(mac_agg, reduction = "umap_de") %>%
+  as.data.frame() %>%
+  rownames_to_column("combined_id") %>%
+  left_join(mac_agg@meta.data %>% rownames_to_column("combined_id"), by = "combined_id")
+
+# Plot with clusters and labels
+ggplot(cell_coords, aes(x = UMAPde_1, y = UMAPde_2, color = seurat_clusters)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = combined_id), size = 3, max.overlaps = 10, force_pull = 1) +
+  theme_minimal() +
+  guides(color = guide_legend(title = "Cluster")) +
+  labs(x = "UMAP 1", y = "UMAP 2", title = "UMAP with Cell Names") +
+  theme(legend.position = "right")
+
+
+
+
 
 
 p <- plot_de_umap(mac_agg, group_by = "cluster", max_overlaps = 5)
@@ -233,7 +274,7 @@ treatments <- mac %>%
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
-# Add smiles
+# Add smiles (warning this can take a while)
 mac <- compute_smiles(mac)
 
 # Calculate descriptors
@@ -266,8 +307,6 @@ lm_ranked <- sort(lm_pvals, na.last = NA)
 head(lm_ranked, 20)  # Top 20 most significant predictors
 
 
-
-
 # Convert fingerprints to binary matrix
 #fp_matrix <- do.call(rbind, lapply(fp_list, function(x) {
 #  fp_vec <- rep(0, 1024)
@@ -297,11 +336,50 @@ pathway_mat <- mac@tools$pathway_enrichment %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = Term, values_from = Combined.Score) %>%
   column_to_rownames("combined_id") %>%
+  as.data.frame() %>%
+  rownames_to_column("combined_id") %>%
+  left_join(
+    mac@meta.data %>% select(combined_id, Treatment_1) %>% distinct(),
+    by = "combined_id"
+  ) %>%
+  select(-combined_id) %>%
+  relocate(Treatment_1) %>%
+  column_to_rownames("Treatment_1") %>%
   t()
 
+# 2. View 2: chemical descriptors
+desc_mat <- mac@tools$chem_descriptors %>%
+  select(-clean_compound_name) %>%
+  column_to_rownames("Treatment_1") %>%
+  t()
+
+# 3. Optional View 3: chemical fingerprints
+#fp_mat <- mac@tools$chem_fingerprints %>%
+#  column_to_rownames("Treatment_1") %>%
+#  t()
+
+# 4. Match sample names across views
+common_cols <- Reduce(intersect, list(colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
+
+views <- list(
+  pathways = pathway_mat[, common_cols],
+  descriptors = desc_mat[, common_cols]
+  # , fingerprints = fp_mat[, common_cols]
+)
+
+mofa_obj <- create_mofa(views)
+model_opts <- get_default_model_options(mofa_obj)
+train_opts <- get_default_training_options(mofa_obj)
+train_opts$seed <- 1  # for reproducibility
 
 
 
+mofa_obj <- prepare_mofa(mofa_obj, model_options = model_opts, training_options = train_opts)
+model <- run_mofa(mofa_obj, use_basilisk = TRUE)
+
+plot_factors(model, color_by = "group")  # coloring by treatment groups
+plot_weights(model, view = "descriptors", factor = 1)
+plot_variance_explained(model)
 
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github

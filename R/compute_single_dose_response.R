@@ -147,7 +147,7 @@ compute_single_dose_response <- function(data,
   })
   if (!is.null(model)) {
     newdata <- data.frame(concentration = seq(min(df$concentration), max(df$concentration), length.out = 100))
-    newdata$predicted <- predict(model, newdata)
+    newdata$predicted <- stats::predict(model, newdata)
     ed <- ED(model, 50, interval = "delta")
     ec50 <- ed[1, "Estimate"]
     # Dynamically determine y-axis label
