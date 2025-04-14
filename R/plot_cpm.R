@@ -17,8 +17,8 @@ utils::globalVariables(c(".data", "Treatments", "CPM"))
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
+# file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
+# mac <- readRDS(file_path)
 #' treatment_samples <- "Staurosporine_0.1"
 #' control_samples <- "DMSO_0"
 #' group_by <- "combined_id"
