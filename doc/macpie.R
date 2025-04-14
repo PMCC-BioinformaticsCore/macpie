@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 ## ----load_metadata------------------------------------------------------------
 devtools::load_all()
 
-library(macpie)
+
 library(Seurat)
 library(edgeR)
 library(dplyr)
@@ -28,7 +28,7 @@ library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
 library(Matrix)
-
+library(data.table)
 
 # Define project variables
 project_name <- "PMMSq033"
@@ -107,10 +107,10 @@ girafe(ggobj = p, fonts = list(sans = "sans"))
 
 
 ## ----qc_stats_umap, fig.width = 8, fig.height = 4-----------------------------
-mac <- SCTransform(mac) %>%
+mac_sct <- SCTransform(mac) %>%
   RunPCA() %>%
   RunUMAP(dims = 1:30)
-DimPlot(mac, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
+DimPlot(mac_sct, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
 
 ## ----qc_stats_plot, fig.width = 8, fig.height = 4-----------------------------
 qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
@@ -134,7 +134,7 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 ## ----de_analysis, fig.width = 8, fig.height = 6-------------------------------
 # First perform the differential expression analysis
-treatment_samples <- "Staurosporine_0.1"
+treatment_samples <- "Camptothecin_1"
 control_samples <- "DMSO_0"
 top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
 
@@ -142,10 +142,10 @@ top_table <- compute_single_de(mac, treatment_samples, control_samples, method =
 plot_volcano(top_table)
 
 
-## ----plot_cpm, fig.width = 8, fig.height = 6----------------------------------
+## ----plot_counts, fig.width = 8, fig.height = 6-------------------------------
 genes <- top_table$gene[1:6]
 group_by <- "combined_id"
-plot_cpm(mac,genes, group_by, treatment_samples, control_samples)
+plot_counts(mac,genes, group_by, treatment_samples, control_samples, normalisation = "cpm", color_by = "combined_id")
 
 ## ----de_single_summary--------------------------------------------------------
 summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
@@ -217,106 +217,9 @@ ggplot(mac_screen_profile, aes(target, NES)) +
   macpie_theme(x_labels_angle = 90, show_x_title = F)
 
 
-## ----load_two_plates----------------------------------------------------------
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
-metadata <- read_metadata(project_metadata)
-
-pmm33_in <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
-pmm34_in <- system.file("extdata/PMMSq034/raw_matrix", package = "macpie")
-raw_counts_total <- Read10X(data.dir = c(pmm33_in,pmm34_in))
-keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2
-raw_counts <- raw_counts_total[keep, ]
-combined <- CreateSeuratObject(counts=raw_counts,
-                               min.cells = 1,
-                          min.features = 1)
-
-combined[["percent.mt"]] <- PercentageFeatureSet(combined, pattern = "^mt-|^MT-")
-combined[["percent.ribo"]] <- PercentageFeatureSet(combined, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
-
-#join with metadata
-combined$Barcode <- str_replace_all(rownames(combined@meta.data),"[1|2]_","")
-
-combined <- combined %>%
-  inner_join(metadata, by = c("Barcode" = "Barcode"))
-
-combined <- combined%>%
-  filter(Project == "Current")
-
-#add unique identifier
-combined <- combined %>%
-  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
-  mutate(combined_id = gsub(" ", "", .data$combined_id))
-
-combined$combined_id <- make.names(combined$combined_id)
-
-
-## -----------------------------------------------------------------------------
-# meta <- meta %>% mutate(Treatment_1 =  ifelse(grepl("^Ada|^Shenali|^EMPTY$", Treatment_1), Treatment_1, paste0("ML_", Treatment_1)))
-
-combined <- combined %>% mutate(orig.ident = ifelse(grepl("1", orig.ident), "PMMSq033","PMMSq034"))
-
-## ----fig.width = 10, fig.height = 4-------------------------------------------
-p <- plot_plate_layout(combined, "nCount_RNA", "combined_id") + facet_wrap(~orig.ident)
-girafe(ggobj = p, 
-  fonts = list(sans = "sans"),
-  options = list(
-    opts_hover(css = "stroke:black; stroke-width:1px;")
-  ))
-
-
-## -----------------------------------------------------------------------------
-combined_dmso <- combined %>%
-  filter(Treatment_1 == "DMSO")
-
-## ----multi_plates_plot_mds, fig.width = 8, fig.height = 4---------------------
-plot_mds(combined, group_by = "orig.ident", label = "combined_id", n_labels = 30)
-plot_mds(combined_dmso, group_by = "orig.ident", label = "combined_id", n_labels = 30)
-
-## ----multi_plates_plot_rle, fig.width = 8, fig.height = 4---------------------
-plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "raw") + scale_x_discrete(drop = FALSE) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "limma_voom") + scale_x_discrete(drop = FALSE) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-## ----multi_plates_compute_single_de_raw, fig.width = 8, fig.height = 6--------
-treatment_samples <- "Staurosporine_0.1"
-control_samples <- "DMSO_0"
-combined_lv_nobatch <- compute_single_de(combined, treatment_samples, control_samples, method =  "limma_voom")
-plot_volcano(combined_lv_nobatch, max.overlaps = 10)
-
-
-## ----multi_plates_compute_single_de, fig.width = 8, fig.height = 6------------
-treatment_samples <- "Staurosporine_0.1"
-control_samples <- "DMSO_0"
-subset <- combined[, grepl(paste0(treatment_samples, "|", control_samples), combined$combined_id)]
-batch <- subset$orig.ident
-combined_lv <- compute_single_de(combined, treatment_samples, control_samples, method = "limma_voom", batch = batch)
-plot_volcano(combined_lv)
-
-
-## ----multiplate_plot_cpm, fig.width = 8, fig.height = 6-----------------------
-genes <- combined_lv$gene[1:6]
-group_by <- "combined_id"
-plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
-
-
-## -----------------------------------------------------------------------------
-summarise_de(combined_lv, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
-
-## -----------------------------------------------------------------------------
-treatments <- combined %>%
-  filter(Concentration_1 == 10) %>%
-  select(combined_id) %>%
-  filter(!grepl("DMSO", combined_id)) %>%
-  pull() %>%
-  unique()
-combined <- compute_multi_de(combined, treatments, control_samples = "DMSO_0", method = "edgeR", num_cores = 2, batch = batch)
-
-## -----------------------------------------------------------------------------
-summarise_de(combined, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
-
-## ----mutli_plates_plot_multi_de, fig.width=10, fig.height=6-------------------
-plot_multi_de(combined, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
-
+## ----compute_de_umap, fig.width = 8, fig.height = 5---------------------------
+mac <- compute_de_umap(mac)
+mac <- find_clusters_de_umap(mac, k = 3)
+p <- plot_de_umap(mac, group_by = "cluster", max_overlaps = 5)
+girafe(ggobj = p, fonts = list(sans = "Open Sans"))
 
