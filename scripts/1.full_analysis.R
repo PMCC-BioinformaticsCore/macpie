@@ -58,6 +58,13 @@ data_dir <- "inst/extdata"
 project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 metadata <- read_metadata(project_metadata)
 
+#load in the metadata on cell viability and confluence
+cell_viability <- read.csv("inst/extdata/PMMSq033/PMMSq033_CTG_cellcount.csv") %>%
+  select("Well_ID","CTG","Confluence")
+
+metadata <- metadata %>%
+  left_join(., cell_viability, join_by(Well_ID))
+
 # Validate metadata
 validate_metadata(metadata)
 
@@ -304,10 +311,8 @@ head(lm_ranked, 20)  # Top 20 most significant predictors
 
 ############ MOFA
 
-#load in the metadata on cell viability and confluence
-
-cell_viability <- read.csv("")
-
+#mac@meta.data <- mac@meta.data %>%
+#  left_join(., cell_viability, join_by(Well_ID))
 
 
 compounds_10um <- mac %>%
@@ -373,9 +378,26 @@ reads_counts <- mac %>%
   filter(Concentration_1 == 10) %>%
   select(Treatment_1, nCount_RNA) %>%
   group_by(Treatment_1) %>%
-  summarise(read_count = log10(mean(nCount_RNA))) %>%
+  summarise(read_count = log10(median(nCount_RNA))) %>%
   ungroup() %>%
   deframe()
+
+cell_viability <- mac %>%
+  filter(Concentration_1 == 10) %>%
+  select(Treatment_1, CTG) %>%
+  group_by(Treatment_1) %>%
+  summarise(read_count = log10(median(CTG))) %>%
+  ungroup() %>%
+  deframe() 
+
+cell_count <- mac %>%
+  filter(Concentration_1 == 10) %>%
+  select(Treatment_1, Confluence) %>%
+  group_by(Treatment_1) %>%
+  summarise(read_count = log10(median(Confluence))) %>%
+  ungroup() %>%
+  deframe() 
+
 
 # 4. Match sample names across views
 common_cols <- Reduce(intersect, list(names(reads_counts), colnames(gene_mat), colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
