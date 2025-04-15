@@ -1,11 +1,11 @@
 ---
-title: "macpie - multi_plate"
+title: "macpie"
 output:
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 5
 vignette: >
-  %\VignetteIndexEntry{macpie}
+  %\VignetteIndexEntry{multiplates}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -59,7 +59,25 @@ validate_metadata(metadata)
 
 ```
 
-### 5. Multi-plates analysis
+## Introduction 
+
+<b>macpie</b> supports multi-plate analysis using MACseq data, with features for quality control (QC), batch correction, differential expression (DE) analysis, and pathway enrichment.
+
+This vignette demonstrates a complete workflow for analyzing multiple plates, incorporating plate-specific batch effects. It includes:
+
+- Loading and filtering raw count matrices from two MAC-seq plates (PMMSq033 and PMMSq034).
+
+- Merging with metadata, constructing unique plate and sample identifiers
+
+- Visual QC sample distribution
+
+- Single DE comparison and Multi-DE comparisons
+
+
+The results from DE comparisons can be used for any downstream analyses such as pathway/geneset enrichment and Profile similarity that we've shown in the main vignettes. 
+
+
+### 1. Multi-plates analysis
 
 This section walks through QC and differential expression analysis of two MAC-seq plates with matched layouts.
 
@@ -69,7 +87,7 @@ This section walks through QC and differential expression analysis of two MAC-se
   - import two macseq plates and check QC for any batch effects (and batch correction)
   - use **compute_single_de** and **compute_multi_de** by incorporating batch factor
 
-#### 5.1 Import data and QC
+#### 1.1 Import data and QC
 
 Here we import the raw count matrix and metadata for the first plate, apply QC filters, and generate the tidySeurat object.
 
@@ -154,7 +172,7 @@ plot_rle(combined_dmso, label_column = "orig.ident", normalisation = "limma_voom
 
 ```
 
-#### 5.2 Single comparison DE analysis 
+#### 1.2 Single comparison DE analysis 
 
 We run differential expression using edgeR between one treatment condition and control (e.g. Staurosporine_0.1 vs DMSO_0), while accounting for plate effects via batch modeling.
 
@@ -183,10 +201,10 @@ plot_volcano(combined_lv)
 
 Check CPM levels for top 6 differentially expressed genes.
 
-```{r multiplate_plot_cpm, fig.width = 8, fig.height = 6}
+```{r multiplate_plot_counts, fig.width = 8, fig.height = 6}
 genes <- combined_lv$gene[1:6]
 group_by <- "combined_id"
-plot_cpm(combined,genes, group_by, treatment_samples, control_samples)
+plot_counts(combined,genes, group_by, treatment_samples, control_samples, normalisation = "cpm")
 
 ```
 
@@ -196,7 +214,7 @@ Summarise the outputs from single comparison in a table
 summarise_de(combined_lv, lfc_threshold = 1, padj_threshold = 0.01, multi=FALSE)
 ```
 
-#### 5.3 Multi-comparison DE analysis 
+#### 1.3 Multi-comparison DE analysis 
 
 We compare all treatment conditions against the DMSO control. This is especially useful for screening multiple drugs across the plates.
 
