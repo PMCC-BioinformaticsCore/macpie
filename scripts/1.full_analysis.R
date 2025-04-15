@@ -188,11 +188,10 @@ mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 # Aggregate data to visualise umap
 mac_agg <- aggregate_by_de(mac)
 mac_agg <- compute_de_umap(mac_agg)
-DimPlot(mac_agg, reduction = "umap_de")
 FeaturePlot(mac_agg,features = c("MYC"))
 
 mac_agg <- FindNeighbors(mac_agg, reduction = "umap_de", dims = 1:2)
-mac_agg <- FindClusters(mac_agg, resolution = 10)
+mac_agg <- FindClusters(mac_agg, resolution = 1.3)
 DimPlot(mac_agg, reduction = "umap_de")
 
 cell_coords <- Embeddings(mac_agg, reduction = "umap_de") %>%
