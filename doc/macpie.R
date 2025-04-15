@@ -134,12 +134,12 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 ## ----de_analysis, fig.width = 8, fig.height = 6-------------------------------
 # First perform the differential expression analysis
-treatment_samples <- "Camptothecin_1"
+treatment_samples <- "Staurosporine_10"
 control_samples <- "DMSO_0"
 top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
 
 # Let's visualise the results with a volcano plot
-plot_volcano(top_table)
+plot_volcano(top_table, max.overlaps = 18)
 
 
 ## ----plot_counts, fig.width = 8, fig.height = 6-------------------------------
