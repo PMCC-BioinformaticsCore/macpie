@@ -343,8 +343,9 @@ all_de <- bind_rows(mac@tools$diff_exprs, .id = "comparison")
 # 2. Identify genes that are significant in at least one comparison
 signif_genes <- all_de %>%
   filter(p_value_adj < 0.01) %>%
+  #filter(grepl("ENSG", gene)) %>%
   pull(gene) %>%
-  unique()
+  unique() 
 
 # 3. Filter and reshape the matrix for only significant genes and relevant compounds
 gene_mat <- all_de %>%
@@ -375,7 +376,7 @@ desc_mat <- mac@tools$chem_descriptors %>%
 #  t()
 
 reads_counts <- mac %>%
-  filter(Concentration_1 == 10) %>%
+  filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
   select(Treatment_1, nCount_RNA) %>%
   group_by(Treatment_1) %>%
   summarise(read_count = log10(median(nCount_RNA))) %>%
@@ -383,7 +384,7 @@ reads_counts <- mac %>%
   deframe()
 
 cell_viability <- mac %>%
-  filter(Concentration_1 == 10) %>%
+  filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
   select(Treatment_1, CTG) %>%
   group_by(Treatment_1) %>%
   summarise(read_count = log10(median(CTG))) %>%
@@ -391,32 +392,41 @@ cell_viability <- mac %>%
   deframe() 
 
 cell_count <- mac %>%
-  filter(Concentration_1 == 10) %>%
+  filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
   select(Treatment_1, Confluence) %>%
   group_by(Treatment_1) %>%
   summarise(read_count = log10(median(Confluence))) %>%
   ungroup() %>%
   deframe() 
 
+reads_fc <- reads_counts - reads_counts["DMSO"]
+viab_fc <- cell_viability - cell_viability["DMSO"]
+cell_count <- cell_count - cell_count["DMSO"]
+
 
 # 4. Match sample names across views
-common_cols <- Reduce(intersect, list(names(reads_counts), colnames(gene_mat), colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
+common_cols <- Reduce(intersect, 
+                      list(names(reads_counts), 
+                           names(reads_fc),
+                           names(viab_fc),
+                           names(cell_count),
+                           colnames(gene_mat), colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
 
 views <- list(
-  reads = t(as.matrix(reads_counts[common_cols])),
+  #reads = t(as.matrix(reads_fc[common_cols])),
+  viability = t(as.matrix(viab_fc[common_cols])),
+  cell_count = t(as.matrix(cell_count[common_cols])),
   genes = gene_mat[, common_cols],
   pathways = pathway_mat[, common_cols],
   descriptors = desc_mat[, common_cols]
   # , fingerprints = fp_mat[, common_cols]
 )
 
-views <- list(
-  #reads = t(as.matrix(reads_counts[common_cols])),
-  genes = gene_mat[, common_cols],
-  pathways = pathway_mat[, common_cols],
-  descriptors = desc_mat[, common_cols]
-  # , fingerprints = fp_mat[, common_cols]
-)
+# Set proper colnames on all matrices
+views <- lapply(views, function(view) {
+  colnames(view) <- common_cols
+  return(view)
+})
 
 mofa_obj <- create_mofa(views)
 model_opts <- get_default_model_options(mofa_obj)
@@ -428,13 +438,35 @@ model <- run_mofa(mofa_obj, use_basilisk = TRUE)
 
 plot_factors(model, color_by = "group")  # coloring by treatment groups
 plot_weights(model, view = "pathways", factor = 1)
-plot_variance_explained(model)
+plot_factor_cor(MOFAobject)
 
-plot_top_weights(model,
-                 view = "genes",
+p<-plot_variance_explained(model)
+ggsave("variance_explained.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+p<-plot_top_weights(model,
+                 view = "pathways",
                  factor = 1,
                  nfeatures = 10
 )
+ggsave("pathway_factor1.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+p<-plot_top_weights(model,
+                    view = "descriptors",
+                    factor = 5,
+                    nfeatures = 10
+)
+ggsave("descriptors_factor1.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+plot_factor(model, 
+            factors = 1, 
+            color_by = "Factor1"
+)
+
+plot_variance_explained(model, plot_total = T)
+
+
+plot_factors(model, factors = c(1, 5), color_by = "sample")
+
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
 #git pull origin main
