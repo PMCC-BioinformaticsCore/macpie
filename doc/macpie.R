@@ -174,7 +174,7 @@ treatments <- mac %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 2)
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 
 ## ----plot_multi_de, fig.width=10, fig.height=6--------------------------------
 plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
@@ -201,6 +201,24 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
 
 
 pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
+
+## ----compute_EC50 curves, fig.width = 4, fig.height = 3-----------------------
+treatments <- mac %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
+res <- compute_single_dose_response(data = mac,
+  gene = "SOX12",
+  normalisation = "limma_voom",
+  treatment_value = "Staurosporine")
+res$plot
+res <- compute_single_dose_response(data = mac,
+  pathway = "Myc Targets V1",
+  treatment_value = "Camptothecin")
+res$plot
 
 ## ----compute_multi_screen_profile, fig.width = 8, fig.height = 5--------------
 

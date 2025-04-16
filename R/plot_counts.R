@@ -13,10 +13,9 @@ utils::globalVariables(c(".data", "Treatments", "Expression", "spikes"))
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
 #' @param batch To indicate patch factor
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter facet_wrap scale_x_discrete scale_fill_manual labs
 #' @import dplyr
-#' @importFrom data.table data.table setDT melt :=
-#'
+#' @importFrom data.table melt
 #' @returns a ggplot2 object
 #' @export
 #'
@@ -88,7 +87,7 @@ plot_counts <- function(data = NULL,
   col_labels <- colnames(sub_count_matrix)
   colnames(sub_count_matrix) <- make.names(col_labels, unique = TRUE)  # makes them unique (e.g. DMSO_0, DMSO_0.1, ...)
   dt <- as.data.table(sub_count_matrix, keep.rownames = "Genes")
-  dt_long <- melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
+  dt_long <- data.table::melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
   setDT(dt_long)
   data.table::set(dt_long, j = "Treatment", value = gsub("\\..*", "", dt_long$ReplicateID))
   dt_long[, Replicate := sequence(.N), by = .(Genes, Treatment)]

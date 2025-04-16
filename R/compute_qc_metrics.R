@@ -11,7 +11,7 @@
 #'
 #' @return a list with a data frame with QC metrics and a box plot showing read counts per condition
 #'
-#' @import Seurat reshape2 tidyseurat
+#' @import Seurat tidyseurat
 #' @examples
 #' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)

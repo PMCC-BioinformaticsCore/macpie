@@ -77,7 +77,6 @@ Imports:
     scran,
     PoiClaClu,
     pheatmap,
-    reshape2,
     enrichR,
     glmGamPoi,
     gridExtra,
@@ -90,5 +89,6 @@ Imports:
     unikn,
     pkgdown,
     drc,
-    tidyverse
+    tidyverse,
+    data.table
 VignetteBuilder: knitr

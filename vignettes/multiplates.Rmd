@@ -42,6 +42,7 @@ library(variancePartition)
 library(glmGamPoi)
 library(PoiClaClu)
 library(Matrix)
+library(data.table)
 
 
 # Define project variables
