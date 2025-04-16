@@ -21,7 +21,7 @@ navbar:
         - text: "Introduction to macpie"
           href: articles/macpie.html
         - text: "Multi-plate analysis"
-          href: artiles/multiplates.html
+          href: articles/multiplates.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:
