@@ -3,7 +3,7 @@ name: Deploy pkgdown Site
 on:
   push:
     branches:
-      - main 
+      - main  #only push to main 
 
 jobs:
   deploy:
