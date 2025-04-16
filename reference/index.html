@@ -25,9 +25,19 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">Home</a>
 </li>
-<li>
-  <a href="../articles/macpie.html">Vignettes</a>
-</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Vignettes
+
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/macpie.html">Introduction to macpie</a>
+    </li>
+    <li>
+      <a href="../articles/multiplates.html">Multi-plate analysis</a>
+    </li>
+  </ul></li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -86,6 +96,10 @@
         </td>
         <td><p>Retrieve normalised counts of MAC-seq data</p></td>
       </tr><tr><td>
+          <p><code><a href="compute_single_dose_response.html">compute_single_dose_response()</a></code> </p>
+        </td>
+        <td><p>Model Gene Dose-Response Curve Using drc</p></td>
+      </tr><tr><td>
           <p><code><a href="compute_single_enrichr.html">compute_single_enrichr()</a></code> </p>
         </td>
         <td><p>Pathway enrichment analysis</p></td>
@@ -106,7 +120,7 @@
         </td>
         <td><p>Calculate clusters for umap based on DE analysis</p></td>
       </tr><tr><td>
-          <p><code><a href="plot_cpm.html">plot_cpm()</a></code> </p>
+          <p><code><a href="plot_counts.html">plot_counts()</a></code> </p>
         </td>
         <td><p>Generate a box plot to show gene expression (CPM) This is the function to generate a box plot to show CPM levels of DE genes among selected treatment samples and control samples.</p></td>
       </tr><tr><td>
