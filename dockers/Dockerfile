@@ -47,8 +47,9 @@ RUN R -e "install.packages('BiocManager', repos = 'https://cloud.r-project.org')
 RUN R -e "BiocManager::install('MOFA2')"
 RUN R -e "BiocManager::install('zinbwave')"
 RUN R -e "install.packages('pkgdown', repos='https://cloud.r-project.org')"
-# Latest installation - drc package
 RUN R -e "install.packages('drc', repos = 'https://cloud.r-project.org')"
+# Latest installtion 
+RUN R -e "install.packages(c('pkgdown', 'drc', 'webchem', 'rcdk', 'randomForest'), repos = 'https://cloud.r-project.org')"
 
 # 3. Copy your renv.lock file into the container
 COPY renv.lock /renv.lock

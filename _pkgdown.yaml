@@ -5,7 +5,7 @@ url: "https://github.com/PMCC-BioinformaticsCore/macpie.git"
 destination: "docs"
 
 build:
-  articles: false
+  articles: true
 
 template:
   params:
@@ -17,7 +17,11 @@ navbar:
     - text: "Home"
       href: index.html
     - text: "Vignettes"
-      href: articles/macpie.html   
+      menu:
+        - text: "Introduction to macpie"
+          href: articles/macpie.html
+        - text: "Multi-plate analysis"
+          href: articles/multiplates.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:

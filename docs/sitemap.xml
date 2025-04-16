@@ -4,6 +4,7 @@
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/LICENSE.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/index.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/macpie.html</loc></url>
+<url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/multiplates.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/authors.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/index.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_de_umap.html</loc></url>
@@ -14,12 +15,14 @@
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_normalised_counts.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_qc_metrics.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_single_de.html</loc></url>
+<url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_single_dose_response.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/compute_single_enrichr.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/convert_human_to_mouse.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/download_geneset.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/filter_genes_by_expression.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/find_clusters_de_umap.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/index.html</loc></url>
+<url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_counts.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_cpm.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_de_umap.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_distance.html</loc></url>
