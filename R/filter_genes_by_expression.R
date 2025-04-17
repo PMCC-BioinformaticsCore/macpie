@@ -60,5 +60,9 @@ filter_genes_by_expression <- function(data,
       data@assays[["RNA"]][slot] <- data@assays[["RNA"]][slot][genes_to_keep, , drop = FALSE]
     }
   }
+  
+  # update both nFeature_RNA and nCount_RNA columns 
+  data$nFeature_RNA <- Matrix::colSums(data@assays$RNA$counts>0)
+  data$nCount_RNA <- Matrix::colSums(data@assays$RNA$counts)
   return(data)
 }
