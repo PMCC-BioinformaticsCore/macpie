@@ -38,7 +38,7 @@ RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org')"
 
 # 2.1. Force R to use C++17 in Makeconf
 #    - We override all relevant variables so we don't end up with -std=gnu++11
-RaUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
+RUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX11FLAGS = -std=c++17 -fPIC"        >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX14 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX14FLAGS = -std=c++17 -fPIC"        >> /usr/local/lib/R/etc/Makeconf && \
