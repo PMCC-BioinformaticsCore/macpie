@@ -25,6 +25,11 @@ RUN apt-get update && apt-get install -y \
     libtiff5-dev \
     libgit2-dev \
     libglpk-dev \
+    default-jdk \
+    libx11-dev \
+    libxt-dev \
+    libxext-dev \
+    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -33,7 +38,7 @@ RUN R -e "install.packages('renv', repos = 'https://cloud.r-project.org')"
 
 # 2.1. Force R to use C++17 in Makeconf
 #    - We override all relevant variables so we don't end up with -std=gnu++11
-RUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
+RaUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX11FLAGS = -std=c++17 -fPIC"        >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX14 = g++"                         >> /usr/local/lib/R/etc/Makeconf && \
     echo "CXX14FLAGS = -std=c++17 -fPIC"        >> /usr/local/lib/R/etc/Makeconf && \
@@ -49,7 +54,7 @@ RUN R -e "BiocManager::install('zinbwave')"
 RUN R -e "install.packages('pkgdown', repos='https://cloud.r-project.org')"
 RUN R -e "install.packages('drc', repos = 'https://cloud.r-project.org')"
 # Latest installtion 
-RUN R -e "install.packages(c('pkgdown', 'drc', 'webchem', 'rcdk', 'randomForest'), repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages(c('pkgdown', 'drc', 'webchem', 'randomForest', 'rcdk'), repos = 'https://cloud.r-project.org')"
 
 # 3. Copy your renv.lock file into the container
 COPY renv.lock /renv.lock
