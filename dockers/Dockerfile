@@ -47,8 +47,9 @@ RUN echo "CXX11 = g++"                         >> /usr/local/lib/R/etc/Makeconf 
     echo "CXXFLAGS = -std=c++17 -fPIC"          >> /usr/local/lib/R/etc/Makeconf
 
 
-# Install MOFA2 package
+# Install new packages
 RUN R -e "install.packages('BiocManager', repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages('unikn')"
 RUN R -e "BiocManager::install('MOFA2')"
 RUN R -e "BiocManager::install('zinbwave')"
 RUN R -e "install.packages('pkgdown', repos='https://cloud.r-project.org')"
