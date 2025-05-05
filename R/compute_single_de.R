@@ -1,3 +1,4 @@
+utils::globalVariables(c("model_matrix"))
 #' Retrieve normalised counts of MAC-seq data
 #'
 #' This function retrieves  counts from a number of methods that are available

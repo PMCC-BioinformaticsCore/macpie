@@ -1,3 +1,4 @@
+utils::globalVariables(c("NES"))
 #' Find similarities between expression profiles with fgsea
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns

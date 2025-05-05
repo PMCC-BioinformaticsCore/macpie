@@ -1,3 +1,4 @@
+utils::globalVariables(c("mac"))
 #' Calculate QC metrics
 #'
 #' To calculate QC metrics such as standard deviation (sd), median absolute deviation (MAD),
@@ -66,9 +67,9 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   } else {
     stop(glue::glue("`order_by` = '{order_by}' not found in stats_summary or metadata"))
   }
-  p <- ggplot(meta, aes(.data[[group_by]], .data$nCount_RNA)) + 
+  p <- ggplot(meta, aes(.data[[group_by]], .data$nCount_RNA)) +
     geom_boxplot(outlier.colour = "NA") +
-    geom_jitter(width = 0.1, aes(color = .data[[group_by]])) + 
+    geom_jitter(width = 0.1, aes(color = .data[[group_by]])) +
     theme_minimal() +
     labs(x = group_by, y = "Read counts") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")

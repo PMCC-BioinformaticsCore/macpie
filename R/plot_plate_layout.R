@@ -1,3 +1,4 @@
+utils::globalVariables(c("tooltip_text", "group_id"))
 #' Plot MAC-seq data on a plate layout
 #' @importFrom stats median
 #' @importFrom gtools mixedsort

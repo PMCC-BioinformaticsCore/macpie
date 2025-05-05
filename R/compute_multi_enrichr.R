@@ -1,4 +1,4 @@
-
+utils::globalVariables(c("enrichment"))
 #' Perform enrichR-style analysis on a screen
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns

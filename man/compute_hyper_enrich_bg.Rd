@@ -16,7 +16,7 @@ compute_hyper_enrich_bg(deg = NULL, genesets = NULL, background = "human")
 number of genes (integer) or species}
 }
 \value{
-enricment stats
+enrichment stats
 }
 \description{
 Calculate enrichment of DE genes in a gene set

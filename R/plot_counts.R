@@ -1,4 +1,4 @@
-utils::globalVariables(c(".data", "Treatments", "Expression", "spikes"))
+utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolorder", "Genes", ".N", "Replicate", "as.data.table", "setDT"))
 #' Generate a box plot to show gene expression (CPM)
 #' This is the function to generate a box plot to show CPM levels of DE genes
 #' among selected treatment samples and control samples.
@@ -38,9 +38,8 @@ plot_counts <- function(data = NULL,
                         treatment_samples = NULL,
                         control_samples = NULL,
                         color_by = NULL,
-                        normalisation = NULL, 
+                        normalisation = NULL,
                         batch = 1) {
-  
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by, normalisation) {
     if (!inherits(data, "Seurat")) {

@@ -1,3 +1,4 @@
+utils::globalVariables(c("Metric", "Value", "Normalized"))
 #' Create a heatmap for multiple QC metrics
 #'
 #' Plots multiple QC metrics from stats_summary as a heatmap, normalizing values between 0 and 1.

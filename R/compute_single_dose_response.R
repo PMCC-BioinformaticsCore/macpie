@@ -1,3 +1,4 @@
+utils::globalVariables(c("combined_id", "column_name", "concentration", "predicted"))
 #' Model Gene Dose-Response Curve Using drc
 #'
 #' @param data A Seurat or TidySeurat object containing expression and metadata.
