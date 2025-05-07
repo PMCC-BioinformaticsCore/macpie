@@ -21,6 +21,8 @@ summarise_de(
 \item{padj_threshold}{Threshold of adjusted p value}
 
 \item{multi}{To indicate to summarise for single de comparison or multi de comparison}
+
+\item{group_by}{Name of the column that defines groups of replicates}
 }
 \value{
 a data table

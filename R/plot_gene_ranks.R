@@ -5,6 +5,7 @@
 #'   "Well_ID", "Row", "Column".
 #' @param group_by A column that specifies the treatment group in the input data
 #' @param samples Treatment group
+#' @param scale_y_log Boolean statement for log transformation 
 #' @import dplyr
 #' @import ggplot2
 #' @export

@@ -6,7 +6,7 @@ utils::globalVariables(c("p_value_adj", "log2FC", "Significantly_upregulated", "
 #' @param lfc_threshold  Threshold of log2FC
 #' @param padj_threshold Threshold of adjusted p value
 #' @param multi To indicate to summarise for single de comparison or multi de comparison
-#'
+#' @param group_by Name of the column that defines groups of replicates
 #' @import dplyr
 #'
 #' @returns a data table

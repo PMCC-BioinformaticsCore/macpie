@@ -202,7 +202,7 @@ enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
 
 pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
 
-## ----compute_EC50 curves, fig.width = 4, fig.height = 3-----------------------
+## ----compute_EC50_curves, fig.width = 4, fig.height = 3-----------------------
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%

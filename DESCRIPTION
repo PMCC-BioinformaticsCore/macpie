@@ -40,7 +40,10 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0),
     devtools,
-    leidenbase
+    leidenbase,
+    gridExtra,
+    unikn,
+    variancePartition
 Config/testthat/edition: 3
 Imports:
     dplyr,
@@ -79,16 +82,16 @@ Imports:
     pheatmap,
     enrichR,
     glmGamPoi,
-    gridExtra,
-    variancePartition,
     BiocParallel,
     SingleCellExperiment,
     doParallel,
     zinbwave,
     scales,
-    unikn,
     pkgdown,
     drc,
     tidyverse,
-    data.table
+    data.table,
+    Matrix,
+    glue,
+    igraph
 VignetteBuilder: knitr

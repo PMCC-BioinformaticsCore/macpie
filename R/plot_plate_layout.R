@@ -18,6 +18,7 @@ utils::globalVariables(c("tooltip_text", "group_id"))
 #'   a sample. Defaults to "nCount_RNA".
 #' @param annotation A string specifying which column in data will be used to
 #'   label a sample. Defaults to "Treatment_1".
+#' @param midpoint A value to be used in heatmap scale bar, it can be either mean value or median value.
 #' @return ggplot object
 #' @export
 #'

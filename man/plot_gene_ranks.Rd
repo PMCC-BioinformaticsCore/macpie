@@ -20,6 +20,8 @@ plot_gene_ranks(
 \item{group_by}{A column that specifies the treatment group in the input data}
 
 \item{samples}{Treatment group}
+
+\item{scale_y_log}{Boolean statement for log transformation}
 }
 \description{
 Generate a knee plot

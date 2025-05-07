@@ -20,6 +20,8 @@ a sample. Defaults to "nCount_RNA".}
 
 \item{annotation}{A string specifying which column in data will be used to
 label a sample. Defaults to "Treatment_1".}
+
+\item{midpoint}{A value to be used in heatmap scale bar, it can be either mean value or median value.}
 }
 \value{
 ggplot object
