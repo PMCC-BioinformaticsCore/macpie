@@ -8,3 +8,4 @@
 .quarto
 /Meta/
 /doc/
+*.DS_Store

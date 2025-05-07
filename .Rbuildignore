@@ -3,3 +3,5 @@
 ^doc$
 ^Meta$
 ^\.github$
+^^docs$$
+^^\.*\\.DS_Store$$

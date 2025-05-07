@@ -13,6 +13,7 @@
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
 #' mac <- compute_de_umap(mac)
+#' 
 
 compute_de_umap <- function(data = NULL) {
 

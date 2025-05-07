@@ -42,7 +42,6 @@ Suggests:
     devtools,
     leidenbase,
     gridExtra,
-    unikn,
     variancePartition
 Config/testthat/edition: 3
 Imports:
@@ -93,5 +92,9 @@ Imports:
     data.table,
     Matrix,
     glue,
-    igraph
+    igraph,
+    unikn
 VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
+LazyData: true

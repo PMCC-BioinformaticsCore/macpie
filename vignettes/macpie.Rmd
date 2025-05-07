@@ -8,6 +8,7 @@ vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
 ---
 
 ```{r, include = FALSE}

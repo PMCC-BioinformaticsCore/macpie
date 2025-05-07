@@ -15,7 +15,7 @@ utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolor
 #' @param batch To indicate patch factor
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter facet_wrap scale_x_discrete scale_fill_manual labs
 #' @import dplyr
-#' @importFrom data.table melt as.data.table setDT
+#' @importFrom data.table melt as.data.table setDT setcolorder
 #' @returns a ggplot2 object
 #' @export
 #'

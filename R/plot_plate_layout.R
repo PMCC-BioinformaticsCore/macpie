@@ -20,12 +20,14 @@ utils::globalVariables(c("tooltip_text", "group_id"))
 #'   label a sample. Defaults to "Treatment_1".
 #' @param midpoint A value to be used in heatmap scale bar, it can be either mean value or median value.
 #' @return ggplot object
-#' @export
 #'
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
 #' plot_plate_layout(mac,"nCount_RNA","Treatment_1")
+
+
+#' @export
 
 plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, midpoint = NULL) {
   
