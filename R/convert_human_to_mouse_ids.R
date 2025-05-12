@@ -18,11 +18,10 @@ convert_human_to_mouse <- function(gene_list) {
       stop("Error: argument 'gene_list' must be of type character.")
     }
   }
-  
-  mouse_human_genes_file <- "inst/extdata/annotation/mouse_human_genes.csv"
+  mouse_human_genes_file <- system.file("extdata", "annotation/mouse_human_genes.csv", package = "macpie")
   if(!file.exists(mouse_human_genes_file)){
     mouse_human_genes = read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
-    write.csv(mouse_human_genes,file="inst/extdata/annotation/mouse_human_genes.csv",row.names=F)
+    write.csv(mouse_human_genes,file=mouse_human_genes_file,row.names=F)
   } else {
     mouse_human_genes<-read.csv(mouse_human_genes_file)
   }

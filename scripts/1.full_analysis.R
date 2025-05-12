@@ -38,6 +38,7 @@ library(ggiraph)
 library(drc)
 library(webchem)
 library(randomForest)
+library(MOFA2)
 
 # Define longer length for description files
 custom_linters <- lintr::linters_with_defaults(
@@ -279,31 +280,47 @@ head(lm_ranked, 20)  # Top 20 most significant predictors
 
 ############ MOFA
 
-#mac@meta.data <- mac@meta.data %>%
-#  left_join(., cell_viability, join_by(Well_ID))
+#load external data
+file_path <- system.file("extdata", "PMMSq033/PMMSq033_CTG_cellcount.csv", package = "macpie")
+
+cell_viability <- read.csv(file_path) %>%
+  mutate(
+    cell_viability = scale(cell_viability)[, 1],
+    cell_confluence = scale(cell_confluence)[, 1]
+  ) %>%
+  dplyr::select(Well_ID, cell_viability, cell_confluence)
+
+#add to metadata
+mac@meta.data <- mac@meta.data %>%
+  rownames_to_column("Barcode") %>%
+  left_join(cell_viability, by = "Well_ID") %>%
+  column_to_rownames("Barcode")
+
 
 
 compounds_10um <- mac %>%
   filter(Concentration_1 == 10) %>%
-  select(combined_id) %>%
+  dplyr::select(combined_id) %>%
   pull()
          
 pathway_mat <- mac@tools$pathway_enrichment %>%
   filter(combined_id %in% compounds_10um) %>%
   filter(Adjusted.P.value < 0.05) %>%
-  select(combined_id, Term, Combined.Score) %>%
+  dplyr::select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = Term, values_from = Combined.Score) %>%
   column_to_rownames("combined_id") %>%
   as.data.frame() %>%
   rownames_to_column("combined_id") %>%
   left_join(
-    mac@meta.data %>% select(combined_id, Treatment_1) %>% distinct(),
+    mac@meta.data %>% dplyr::select(combined_id, Treatment_1) %>% distinct(),
     by = "combined_id"
   ) %>%
-  select(-combined_id) %>%
+  dplyr::select(-combined_id) %>%
   relocate(Treatment_1) %>%
   column_to_rownames("Treatment_1") %>%
   t()
+
+pathway_mat[is.na(pathway_mat)]<-0
 
 # 1. Combine all DE results
 all_de <- bind_rows(mac@tools$diff_exprs, .id = "comparison")
@@ -318,25 +335,26 @@ signif_genes <- all_de %>%
 # 3. Filter and reshape the matrix for only significant genes and relevant compounds
 gene_mat <- all_de %>%
   filter(gene %in% signif_genes, combined_id %in% compounds_10um) %>%
-  select(combined_id, gene, metric) %>%  # Change 'logFC' to your desired metric
+  dplyr::select(combined_id, gene, metric) %>%  # Change 'logFC' to your desired metric
   pivot_wider(names_from = gene, values_from = metric) %>%
   column_to_rownames("combined_id") %>%
   as.data.frame() %>%
   rownames_to_column("combined_id") %>%
   left_join(
-    mac@meta.data %>% select(combined_id, Treatment_1) %>% distinct(),
+    mac@meta.data %>% dplyr::select(combined_id, Treatment_1) %>% distinct(),
     by = "combined_id"
   ) %>%
-  select(-combined_id) %>%
+  dplyr::select(-combined_id) %>%
   relocate(Treatment_1) %>%
   column_to_rownames("Treatment_1") %>%
   t()
 
 # 2. View 2: chemical descriptors
 desc_mat <- mac@tools$chem_descriptors %>%
-  select(-clean_compound_name) %>%
+  dplyr::select(-clean_compound_name) %>%
   column_to_rownames("Treatment_1") %>%
-  t()
+  t() %>%
+  scale()
 
 # 3. Optional View 3: chemical fingerprints
 #fp_mat <- mac@tools$chem_fingerprints %>%
@@ -345,7 +363,7 @@ desc_mat <- mac@tools$chem_descriptors %>%
 
 reads_counts <- mac %>%
   filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
-  select(Treatment_1, nCount_RNA) %>%
+  dplyr::select(Treatment_1, nCount_RNA) %>%
   group_by(Treatment_1) %>%
   summarise(read_count = log10(median(nCount_RNA))) %>%
   ungroup() %>%
@@ -353,23 +371,23 @@ reads_counts <- mac %>%
 
 cell_viability <- mac %>%
   filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
-  select(Treatment_1, CTG) %>%
+  dplyr::select(Treatment_1, cell_viability) %>%
   group_by(Treatment_1) %>%
-  summarise(read_count = log10(median(CTG))) %>%
+  summarise(cell_viability = median(cell_viability)) %>%
   ungroup() %>%
   deframe() 
 
 cell_count <- mac %>%
   filter(Concentration_1 == 10 | Treatment_1 == "DMSO") %>%
-  select(Treatment_1, Confluence) %>%
+  dplyr::select(Treatment_1, cell_confluence) %>%
   group_by(Treatment_1) %>%
-  summarise(read_count = log10(median(Confluence))) %>%
+  summarise(cell_viability = median(cell_confluence)) %>%
   ungroup() %>%
   deframe() 
 
 reads_fc <- reads_counts - reads_counts["DMSO"]
-viab_fc <- cell_viability - cell_viability["DMSO"]
-cell_count <- cell_count - cell_count["DMSO"]
+viab_fc <- cell_viability 
+cell_count <- cell_count 
 
 
 # 4. Match sample names across views
@@ -382,7 +400,7 @@ common_cols <- Reduce(intersect,
 
 views <- list(
   #reads = t(as.matrix(reads_fc[common_cols])),
-  viability = t(as.matrix(viab_fc[common_cols])),
+  #viability = t(as.matrix(viab_fc[common_cols])),
   cell_count = t(as.matrix(cell_count[common_cols])),
   genes = gene_mat[, common_cols],
   pathways = pathway_mat[, common_cols],
@@ -406,34 +424,150 @@ model <- run_mofa(mofa_obj, use_basilisk = TRUE)
 
 plot_factors(model, color_by = "group")  # coloring by treatment groups
 plot_weights(model, view = "pathways", factor = 1)
-plot_factor_cor(MOFAobject)
+plot_factor_cor(model)
 
 p<-plot_variance_explained(model)
-ggsave("variance_explained.pdf", plot = p, width = 24, height = 12, units = "cm")
+p<-p+theme(axis.text.x = element_text(angle = 45, hjust = 1))
+p
+ggsave("variance_explained.2.pdf", plot = p, width = 10, height = 8, units = "cm")
 
 p<-plot_top_weights(model,
                  view = "pathways",
-                 factor = 1,
+                 factor = 2,
                  nfeatures = 10
 )
-ggsave("pathway_factor1.pdf", plot = p, width = 24, height = 12, units = "cm")
+ggsave("pathwasy_factor2.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+p<-plot_top_weights(model,
+                    view = "pathways",
+                    factor = 1,
+                    nfeatures = 10
+)
+ggsave("genes_factor2.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+p<-plot_top_weights(model,
+                    view = "genes",
+                    factor = 1,
+                    nfeatures = 10
+)
+ggsave("genes_factor2.pdf", plot = p, width = 7, height = 8, units = "cm")
 
 p<-plot_top_weights(model,
                     view = "descriptors",
-                    factor = 5,
+                    factor = 4,
                     nfeatures = 10
 )
-ggsave("descriptors_factor1.pdf", plot = p, width = 24, height = 12, units = "cm")
+ggsave("descriptor_factor5.pdf", plot = p, width = 7, height = 8, units = "cm")
 
-plot_factor(model, 
-            factors = 1, 
-            color_by = "Factor1"
+
+
+p <- plot_factors(model, 
+                  factors = c(1,5), 
+                  color_by = "PSMD2",
+                  dot_size = 2.5,
+                  show_missing = T
+)
+
+
+plot_factors(model, 
+            factors = c(2,5)
 )
 
 plot_variance_explained(model, plot_total = T)
 
 
 plot_factors(model, factors = c(1, 5), color_by = "sample")
+
+
+plot_factors_macpie<-function (object, factors = c(1, 2), groups = "all", show_missing = TRUE, 
+                               scale = FALSE, color_by = NULL, shape_by = NULL, size_by = NULL,
+                               color_name = NULL, shape_name = NULL, dot_size = 2, alpha = 1, 
+                               legend = TRUE, stroke = NULL, return_data = FALSE) 
+{
+  if (!is(object, "MOFA")) 
+    stop("'object' has to be an instance of MOFA")
+  
+  if (length(unique(factors)) == 1) {
+    .args <- as.list(match.call()[-1])
+    .args <- .args[names(.args) != "factors"]
+    return(do.call(plot_factor, c(.args, list(factors = unique(factors)))))
+  } else if (length(factors) > 2) {
+    .args <- as.list(match.call()[-1])
+    p <- do.call(.plot_multiple_factors, .args)
+    return(p)
+  }
+  
+  if (!is.null(color_by) && (length(color_by) == 1) && is.null(color_name)) 
+    color_name <- color_by
+  if (!is.null(shape_by) && (length(shape_by) == 1) && is.null(shape_name)) 
+    shape_name <- shape_by
+  
+  factors <- .check_and_get_factors(object, factors)
+  Z <- MOFA2::get_factors(object, factors = factors, groups = groups, as.data.frame = TRUE)
+  
+  #color_by <- .set_colorby(object, color_by)
+  #shape_by <- .set_shapeby(object, shape_by)
+  #size_by <- .set_colorby(object, size_by)
+  
+  Z <- Z[complete.cases(Z), ]
+  df <- merge(Z, color_by, by = "sample")
+  df <- merge(df, shape_by, by = "sample")
+  df$shape_by <- as.character(df$shape_by)
+  
+  # Optional size_by merge
+  if (!is.null(size_by)) {
+    size_df <- data.frame(sample = size_by$sample, size_val = as.numeric(size_by$color_by))
+    df <- merge(df, size_df, by = "sample", all.x = TRUE)
+  } else {
+    df$size_val <- dot_size  # fallback to default
+  }
+  
+  if (isFALSE(show_missing)) 
+    df <- filter(df, !is.na(color_by) & !is.na(shape_by))
+  
+  df <- spread(df, key = "factor", value = "value")
+  df <- df[, c(colnames(df)[seq_len(4)], "size_val", factors)]
+  df <- set_colnames(df, c(colnames(df)[seq_len(4)], "size", "x", "y"))
+  
+  if (scale) {
+    df$x <- df$x / max(abs(df$x))
+    df$y <- df$y / max(abs(df$y))
+  }
+  
+  if (return_data) 
+    return(df)
+  
+  if (is.null(stroke)) {
+    stroke <- .select_stroke(N = length(unique(df$sample)))
+  }
+  
+  p <- ggplot(df, aes(x = .data$x, y = .data$y, fill = .data$color_by, 
+                      shape = .data$shape_by, size = .data$size)) +
+    geom_point(alpha = alpha, stroke = stroke) +
+    labs(x = factors[1], y = factors[2]) +
+    theme_classic() +
+    theme(
+      axis.text = element_text(size = rel(0.8), color = "black"),
+      axis.title = element_text(size = rel(1.1), color = "black"),
+      axis.line = element_line(color = "black", linewidth = 0.5),
+      axis.ticks = element_line(color = "black", linewidth = 0.5)
+    )
+  
+  p <- .add_legend(p, df, legend, color_name, shape_name)
+  if (!is.null(color_name)) p <- p + labs(fill = color_name)
+  if (!is.null(shape_name)) p <- p + labs(shape = shape_name)
+  p <- p + guides(size = guide_legend(title = "Dot Size"))
+  
+  return(p)
+}
+
+temp<-p
+
+
+
+ggsave("MDEC.33_PSMD2.pdf", plot = p, width = 24, height = 12, units = "cm")
+
+
 
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github

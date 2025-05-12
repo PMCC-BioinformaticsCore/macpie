@@ -4,10 +4,12 @@
 \alias{compute_chem_descriptors}
 \title{Compute chemical descriptors from SMILES}
 \usage{
-compute_chem_descriptors(data)
+compute_chem_descriptors(data, r_squared = 0.6)
 }
 \arguments{
 \item{data}{A tidyseurat object with a \code{smiles} column and \code{Treatment_1} column.}
+
+\item{r}{R squared value, default of 0.6}
 }
 \value{
 The same tidyseurat object with a new entry in \code{tools$chem_descriptors}.
@@ -17,8 +19,10 @@ This function parses SMILES strings and computes chemical descriptors using rcdk
 It stores cleaned, non-redundant descriptors in \code{tools$chem_descriptors}.
 }
 \examples{
+\dontrun{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac <- compute_smiles(mac)
-mac <- compute_chem_descriptors(mac)
+data <- readRDS(file_path)
+data <- compute_smiles(data)
+data <- compute_chem_descriptors(data)
+}
 }

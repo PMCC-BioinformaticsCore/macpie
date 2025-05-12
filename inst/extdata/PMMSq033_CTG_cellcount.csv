@@ -1,4 +1,4 @@
-Well_ID,QCL_Sample_Number,Concentration,CTG,Confluence
+Well_ID,QCL_Sample_Number,Concentration,cell_viability,cell_confluence
 B02,Staurosporine,10,1881,31.53323
 B03,SN01004236,10,17672,32.82492
 I14,SN01004236,1,20586,48.51823

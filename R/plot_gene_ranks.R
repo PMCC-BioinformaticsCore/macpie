@@ -59,14 +59,12 @@ plot_gene_ranks <- function(data = NULL,
       geom_point(shape = 1) +
       scale_y_log10() +
       ylab("Read counts per gene") +
-      xlab("Rank") +
-      macpie_theme(show_x_title = TRUE, show_y_title = TRUE) 
+      xlab("Rank")  
   } else {
     p <- ggplot(rank_counts_genes, aes(x = rank, y = sum)) +
       geom_point(shape = 1) +
       ylab("Read counts per gene") +
-      xlab("Rank") +
-      macpie_theme(show_x_title = TRUE, show_y_title = TRUE)
+      xlab("Rank") 
   }
   return(p)
 }

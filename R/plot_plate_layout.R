@@ -87,6 +87,7 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
       y = forcats::fct_rev(forcats::as_factor(.data$Row)),
       fill = !!rlang::sym(metric)
     )) +
+      facet_wrap(~Plate_ID, ncol = 1) +
       geom_tile_interactive(aes(tooltip = tooltip_text,
                                 data_id = group_id), color = "grey90") +
       scale_x_discrete(position = "top") +

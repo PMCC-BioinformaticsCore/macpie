@@ -17,6 +17,7 @@
 #' @return A new tidyseurat object with collapsed metadata 
 #' @import tidyverse 
 #' @import Seurat 
+#' @importFrom Matrix Matrix
 #' @import tidyseurat
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
@@ -56,7 +57,25 @@ aggregate_by_de <- function(data, metric_col = "metric") {
   metadata_collapsed <- metadata %>%
     group_by(combined_id) %>%
     summarise(
-      across(everything(), ~ if (length(unique(.x)) == 1) unique(.x) else NA_character_, .names = "{.col}"),
+      across(
+        everything(),
+        ~ {
+          u <- unique(.x)
+          if (length(u) == 1) {
+            u
+          } else {
+            switch(
+              typeof(.x),
+              character = NA_character_,
+              integer   = mean(as.integer(as.character(.x)), na.rm = TRUE),
+              double    = mean(.x, na.rm = TRUE),
+              logical   = NA,              # Or use NA_logical_
+              NA                             # fallback for unknown types
+            )
+          }
+        },
+        .names = "{.col}"
+      ),
       .groups = "drop"
     ) %>%
     mutate(cell_id = combined_id) %>%
@@ -65,8 +84,8 @@ aggregate_by_de <- function(data, metric_col = "metric") {
   
   # 3. Create new Seurat object with DE matrix as RNA assay
   seurat_new <- CreateSeuratObject(
-    counts = Matrix(de_matrix, sparse = TRUE),
-    data = Matrix(de_matrix, sparse = TRUE),
+    counts = Matrix::Matrix(de_matrix, sparse = TRUE),
+    data = Matrix::Matrix(de_matrix, sparse = TRUE),
     assay = "DE"
   )
   
