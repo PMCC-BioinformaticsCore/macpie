@@ -26,7 +26,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
 
-    if (!is.null(group_by) && !any(c(group_by) %in% c(colnames(mac@meta.data), "median"))) {
+    if (!is.null(group_by) && !any(c(group_by) %in% c(colnames(data@meta.data), "median"))) {
       stop("Your parameter group_by is not a metadata column or 'median'.")
     }
     list(data = data, group_by = group_by, order_by = order_by)
