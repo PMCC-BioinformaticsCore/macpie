@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libxt-dev \
     libxext-dev \
     libxrender-dev \
+    qpdf \
     && rm -rf /var/lib/apt/lists/*
 
 
