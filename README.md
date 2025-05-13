@@ -3,12 +3,18 @@
 
 # macpie
 
+<img
+  src="man/figures/logo_hex.png"
+  style="float: right; height: 100px; margin: 0 0 1em 1em;"
+  alt="macpie logo"
+/>
+
 <!-- badges: start -->
 <!-- badges: end -->
 
 The goal of macpie package is to provide the users of Mac-seq data with
-the most recent set of tools for QC, visualisation and analysis for
-this high-throughput transcriptomic platform.
+the most recent set of tools for QC, visualisation and analysis for this
+high-throughput transcriptomic platform.
 
 ## Installation
 
@@ -20,11 +26,16 @@ remotes::install_github("https://github.com/PMCC-BioinformaticsCore/macpie")
 
 ## Dependencies
 
-The simplest way is to use our docker container with all the R packages installed.
+The simplest way is to use our docker container with all the R packages
+installed.
+
 ``` r
 docker pull --platform linux/amd64 xliu81/macpie:latest
 ```
-Inside your docker desktop, open a terminal, paste the docker pull command and install, depending on your platform.
+
+Inside your docker desktop, open a terminal, paste the docker pull
+command and install, depending on your platform.
+
 ``` r
 docker run --rm -ti \
   -e PASSWORD=password \
@@ -36,7 +47,8 @@ docker run --rm -ti \
 
 ## Example
 
-This is a basic example which shows you how to import user-defined data and metadata with some basic QC.
+This is a basic example which shows you how to import user-defined data
+and metadata with some basic QC.
 
 ``` r
 library(macpie)
@@ -80,10 +92,5 @@ qc_stats$stats_summary
 
 #Plot qc metrics 
 plot_qc_metrics_heatmap(qc_stats$stats_summary)
-
-
-
-
-
 
 ```
