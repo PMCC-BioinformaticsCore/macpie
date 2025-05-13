@@ -5,3 +5,4 @@
 ^\.github$
 ^^docs$$
 ^^\.*\\.DS_Store$$
+^data-raw$

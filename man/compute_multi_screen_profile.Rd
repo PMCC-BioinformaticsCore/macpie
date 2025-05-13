@@ -38,8 +38,8 @@ Find similarities between expression profiles with fgsea
 }
 \examples{
 library(macpie)
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10",
-n_genes_profile = 100, direction = "up", num_cores = 1)
+data(mini_mac)
+mini_mac@tools$diff_exprs<-mini_mac@tools$diff_exprs[1:5]
+mini_mac <- compute_multi_screen_profile(mini_mac, target = "Staurosporine_10",
+n_genes_profile = 20, direction = "up", num_cores = 1)
 }
