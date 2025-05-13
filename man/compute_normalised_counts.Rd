@@ -26,6 +26,8 @@ number of samples}
 \item{k}{Parameter k for RUVSeq methods, check RUVSeq tutorial}
 
 \item{spikes}{List of genes to use as spike controls}
+
+\item{max_counts}{Maximum count for a gene across all samples}
 }
 \value{
 Data frame of normalised counts

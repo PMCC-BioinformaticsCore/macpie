@@ -21,7 +21,7 @@
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
-#' plot_mds(mac)
+#' p <- plot_mds(mac)
 #' @export
 #'
 plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL, n_labels = 50) {

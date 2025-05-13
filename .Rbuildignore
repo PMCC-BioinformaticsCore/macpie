@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
+^\.github$
+^^docs$$
+^^\.*\\.DS_Store$$
+^data-raw$

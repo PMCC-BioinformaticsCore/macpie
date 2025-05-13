@@ -7,7 +7,7 @@
 #' @importFrom stats p.adjust
 #' @importFrom methods is
 #' @importFrom magrittr %>%
-#' @returns enricment stats
+#' @returns enrichment stats
 #' @export
 #'
 #' @examples
@@ -24,8 +24,8 @@
 #' head(results)
 
 compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
-                            genesets = NULL, #pathway from enrichr
-                            background = "human"
+  genesets = NULL, #pathway from enrichr
+  background = "human"
 ) {
   #checking input
   if (!is(deg, "vector")) {
@@ -51,7 +51,7 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
   genesets <- lapply(genesets, unique)
   deg_genesets <- deg[deg %in% unique(unlist(genesets))]
   n_hits <- sapply(genesets, function(x, y)
-    length(intersect(x, y)), deg_genesets) #q
+              length(intersect(x, y)), deg_genesets) #q
   n_hits_updatebg <- n_hits != 0 #updating background
   genesets <- genesets[n_hits_updatebg] #updating background
   n_hits <- n_hits[n_hits > 0] #exlude 0 overlapping terms

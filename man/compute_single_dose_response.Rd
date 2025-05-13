@@ -20,10 +20,19 @@ compute_single_dose_response(
 
 \item{gene}{A gene name (must match a row name in the object).}
 
+\item{pathway}{A character string present in the list of enriched pathways.}
+
 \item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to cpm}
 
 \item{treatment_value}{A character string matching one value in metadata column "Treatment_1".}
+
+\item{control_value}{A character string matching one value in metadata column "Treatment_1".}
+
+\item{batch}{Either empty, a single value, or a vector corresponding to the
+number of samples}
+
+\item{k}{Parameter k for RUVSeq methods, check RUVSeq tutorial}
 }
 \value{
 A list with drc model, predicted values, and ggplot curve

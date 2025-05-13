@@ -1,3 +1,4 @@
+utils::globalVariables(c("combined_id", "column_name", "concentration", "predicted"))
 #' Model Gene Dose-Response Curve Using drc
 #'
 #' @param data A Seurat or TidySeurat object containing expression and metadata.
@@ -5,9 +6,15 @@
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
 #'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to cpm
 #' @param treatment_value A character string matching one value in metadata column "Treatment_1".
+#' @param control_value A character string matching one value in metadata column "Treatment_1".
+#' @param pathway A character string present in the list of enriched pathways.
+#' @param batch Either empty, a single value, or a vector corresponding to the
+#'   number of samples
+#' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @import drc
 #' @import tidyverse
 #' @importFrom scales pseudo_log_trans
+#' @importFrom stats predict
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
 #' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")

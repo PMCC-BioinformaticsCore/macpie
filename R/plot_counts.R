@@ -1,4 +1,4 @@
-utils::globalVariables(c(".data", "Treatments", "Expression", "spikes"))
+utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolorder", "Genes", ".N", "Replicate", "setDT"))
 #' Generate a box plot to show gene expression (CPM)
 #' This is the function to generate a box plot to show CPM levels of DE genes
 #' among selected treatment samples and control samples.
@@ -15,7 +15,7 @@ utils::globalVariables(c(".data", "Treatments", "Expression", "spikes"))
 #' @param batch To indicate patch factor
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter facet_wrap scale_x_discrete scale_fill_manual labs
 #' @import dplyr
-#' @importFrom data.table melt
+#' @importFrom data.table melt as.data.table setDT setcolorder
 #' @returns a ggplot2 object
 #' @export
 #'
@@ -38,9 +38,8 @@ plot_counts <- function(data = NULL,
                         treatment_samples = NULL,
                         control_samples = NULL,
                         color_by = NULL,
-                        normalisation = NULL, 
+                        normalisation = NULL,
                         batch = 1) {
-  
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by, normalisation) {
     if (!inherits(data, "Seurat")) {
@@ -86,7 +85,7 @@ plot_counts <- function(data = NULL,
   sub_count_matrix <- count_matrix[genes, colnames(count_matrix) %in% treatment_control, drop = FALSE]
   col_labels <- colnames(sub_count_matrix)
   colnames(sub_count_matrix) <- make.names(col_labels, unique = TRUE)  # makes them unique (e.g. DMSO_0, DMSO_0.1, ...)
-  dt <- as.data.table(sub_count_matrix, keep.rownames = "Genes")
+  dt <- data.table::as.data.table(sub_count_matrix, keep.rownames = "Genes")
   dt_long <- data.table::melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
   setDT(dt_long)
   data.table::set(dt_long, j = "Treatment", value = gsub("\\..*", "", dt_long$ReplicateID))

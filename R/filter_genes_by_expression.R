@@ -1,3 +1,4 @@
+utils::globalVariables(c("cell", "combined_id", "n_replicates"))
 #' Filter genes by expression and grouping
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns

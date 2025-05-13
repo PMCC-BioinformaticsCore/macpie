@@ -41,9 +41,12 @@ List of DE counts vs control
 Perform DE of multiple samples in a screen vs control
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)[50:120]
+data("mini_mac")
 control_samples <- "DMSO_0"
-treatment_samples <- mac$combined_id[!grepl("DMSO", mac$combined_id)]
-mac <- compute_multi_de(mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
+mini_mac$combined_id<-make.names(mini_mac$combined_id)
+treatment_samples <- c("Staurosporine_10", "Paclitaxel_10", 
+"Chlorambucil_10", "Vinblastine_sulfate_10", "Etoposide_10" , 
+"Cytarabine_10", "Camptothecin_10", "Anastrozole_10", 
+"Sb590885_10", "Fluvastatin_sodium_10")
+mini_mac_test<-compute_multi_de(mini_mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
 }

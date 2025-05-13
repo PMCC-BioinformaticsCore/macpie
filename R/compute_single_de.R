@@ -1,3 +1,4 @@
+utils::globalVariables(c("model_matrix"))
 #' Retrieve normalised counts of MAC-seq data
 #'
 #' This function retrieves  counts from a number of methods that are available
@@ -13,6 +14,7 @@
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
 #' @importFrom tibble rownames_to_column
+#' @importFrom SummarizedExperiment assay
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom stats model.matrix

@@ -1,3 +1,4 @@
+utils::globalVariables(c("tooltip_text", "group_id"))
 #' Plot MAC-seq data on a plate layout
 #' @importFrom stats median
 #' @importFrom gtools mixedsort
@@ -8,7 +9,7 @@
 #' @importFrom utils head
 #' @import tidyseurat
 #' @import rlang
-#' @import ggplot2
+#' @import ggplot2 
 #' @import ggiraph
 #' @importFrom dplyr select
 #' @param data A tidyseurat object merged with metadata. Must contain columns
@@ -17,13 +18,16 @@
 #'   a sample. Defaults to "nCount_RNA".
 #' @param annotation A string specifying which column in data will be used to
 #'   label a sample. Defaults to "Treatment_1".
+#' @param midpoint A value to be used in heatmap scale bar, it can be either mean value or median value.
 #' @return ggplot object
-#' @export
 #'
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(file_path)
 #' plot_plate_layout(mac,"nCount_RNA","Treatment_1")
+
+
+#' @export
 
 plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, midpoint = NULL) {
   

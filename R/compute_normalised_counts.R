@@ -10,6 +10,7 @@
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
+#' @param max_counts Maximum count for a gene across all samples
 #' @importFrom limma voom
 #' @importFrom Seurat as.SingleCellExperiment
 #' @import DESeq2

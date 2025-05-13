@@ -56,6 +56,6 @@ plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
                 clustering_distance_cols = poisd$dd,
                 cluster_rows = FALSE,
                 cluster_cols = FALSE,
-                col = macpie_colours$continuous_rev)
+                color = macpie_colours$continuous_rev)
   return(p)
 }

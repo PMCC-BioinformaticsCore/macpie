@@ -8,6 +8,7 @@ vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
 ---
 
 ```{r, include = FALSE}
@@ -371,7 +372,7 @@ Shows Nutlin-3’s effect on various p53 targets in cancer cell lines.
 
 #### 4.1. EC50 Curves
 
-```{r compute_EC50 curves, fig.width = 4, fig.height = 3}
+```{r compute_EC50_curves, fig.width = 4, fig.height = 3}
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
