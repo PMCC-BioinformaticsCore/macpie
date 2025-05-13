@@ -7,7 +7,7 @@
 #' @param samples Treatment group
 #' @param scale_y_log Boolean statement for log transformation 
 #' @import dplyr
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot aes geom_point
 #' @export
 #' @examples
 #' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")

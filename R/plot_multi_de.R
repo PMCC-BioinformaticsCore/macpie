@@ -111,7 +111,7 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(sub_lcpm,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous_rev)
+                  color = macpie_colours$continuous_rev)
   } else if (value == "log2FC") {
     # plot log2fc
     fc_common_genes <- de_df %>% 
@@ -124,7 +124,7 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous_rev)
+                  color = macpie_colours$continuous_rev)
   } else {
     # plot metric
     fc_common_genes <- de_df %>% 
@@ -137,7 +137,7 @@ plot_multi_de <- function(data = NULL,
     p <- pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
-                  col = macpie_colours$continuous_rev)
+                  color = macpie_colours$continuous_rev)
   }
   return(p)
 }

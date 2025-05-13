@@ -2,6 +2,7 @@ utils::globalVariables(c("Symbol", "Common.Organism.Name", "DB.Class.Key"))
 #' For a given gene set of human symbols return mouse symbols
 #' 
 #' @param gene_list List of human genes to be converted to mouse IDs
+#' @importFrom utils write.csv
 #' @returns genes
 #' @export
 #'

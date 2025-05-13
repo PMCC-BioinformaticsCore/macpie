@@ -14,6 +14,7 @@ utils::globalVariables(c("model_matrix"))
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
 #' @importFrom tibble rownames_to_column
+#' @importFrom SummarizedExperiment assay
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom stats model.matrix

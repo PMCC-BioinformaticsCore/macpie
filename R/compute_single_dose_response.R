@@ -14,6 +14,7 @@ utils::globalVariables(c("combined_id", "column_name", "concentration", "predict
 #' @import drc
 #' @import tidyverse
 #' @importFrom scales pseudo_log_trans
+#' @importFrom stats predict
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
 #' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
