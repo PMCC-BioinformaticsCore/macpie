@@ -127,15 +127,11 @@ among selected treatment samples and control samples.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">treatment_samples</span> <span class="op">&lt;-</span> <span class="st">"Staurosporine_0.1"</span></span></span>
-<span class="r-in"><span><span class="va">control_samples</span> <span class="op">&lt;-</span> <span class="st">"DMSO_0"</span></span></span>
-<span class="r-in"><span><span class="va">group_by</span> <span class="op">&lt;-</span> <span class="st">"combined_id"</span></span></span>
-<span class="r-in"><span><span class="va">color_by</span> <span class="op">&lt;-</span> <span class="st">"combined_id"</span></span></span>
-<span class="r-in"><span><span class="va">batch</span> <span class="op">&lt;-</span><span class="fl">1</span></span></span>
-<span class="r-in"><span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TBRG4"</span>, <span class="st">"MRPL52"</span>, <span class="st">"DCTPP1"</span>, <span class="st">"ZFP36L1"</span>, <span class="st">"LSM1"</span>, <span class="st">"POLR2G"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">plot_counts</span><span class="op">(</span><span class="va">mac</span>, genes <span class="op">=</span> <span class="va">genes</span>, group_by <span class="op">=</span> <span class="st">"combined_id"</span>, treatment_samples <span class="op">=</span> <span class="st">"Staurosporine_0.1"</span>, control_samples <span class="op">=</span> <span class="st">"DMSO_0"</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span><span class="op">@</span><span class="va">tools</span><span class="op">$</span><span class="va">diff_exprs</span><span class="op">$</span><span class="va">Staurosporine_10</span><span class="op">$</span><span class="va">gene</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu">plot_counts</span><span class="op">(</span><span class="va">mini_mac</span>, genes <span class="op">=</span> <span class="va">genes</span>, group_by <span class="op">=</span> <span class="st">"combined_id"</span>, </span></span>
+<span class="r-in"><span>treatment_samples <span class="op">=</span> <span class="st">"Staurosporine_10"</span>, </span></span>
+<span class="r-in"><span>control_samples <span class="op">=</span> <span class="st">"DMSO_0"</span>,</span></span>
 <span class="r-in"><span>normalisation <span class="op">=</span> <span class="st">"clr"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Normalizing layer: counts</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Normalizing across cells</span>
@@ -150,7 +146,7 @@ among selected treatment samples and control samples.</p>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupad, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
+  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupat, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
 </div>
 
 <div class="pkgdown">
