@@ -35,7 +35,7 @@ jobs:
         R CMD check --no-manual --ignore-vignettes --as-cran *.tar.gz
 
     - name: Upload check results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: R-CMD-check-results
         path: '*.Rcheck'
