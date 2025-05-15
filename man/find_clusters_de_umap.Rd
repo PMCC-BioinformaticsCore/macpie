@@ -20,9 +20,8 @@ A tidyseurat object with cluster information in the metadata slot
 Calculate clusters for umap based on DE analysis
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac <- compute_de_umap(mac)
-mac <- find_clusters_de_umap(mac)
-plot_de_umap(mac, group_by = "cluster", max_overlaps = 10)
+data(mini_mac)
+mini_mac <- compute_de_umap(mini_mac)
+mini_mac <- find_clusters_de_umap(mini_mac)
+plot_de_umap(mini_mac, group_by = "cluster", max_overlaps = 10)
 }

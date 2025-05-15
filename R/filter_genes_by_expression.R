@@ -10,9 +10,11 @@ utils::globalVariables(c("cell", "combined_id", "n_replicates"))
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' mac <- filter_genes_by_expression(mac, group_by = "combined_id", min_counts = 10, min_samples = 2)
+#' data(mini_mac)
+#' mini_mac <- filter_genes_by_expression(mini_mac,
+#'                                        group_by = "combined_id", 
+#'                                        min_counts = 10, min_samples = 2)
+
 filter_genes_by_expression <- function(data, 
                                        group_by = "combined_id",
                                        min_counts = 10,
