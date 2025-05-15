@@ -10,9 +10,11 @@
 />
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of macpie package is to provide the users of Mac-seq data with
+The goal of macpie package is to provide the users of MAC-seq data with
 the most recent set of tools for QC, visualisation and analysis for this
 high-throughput transcriptomic platform.
 
