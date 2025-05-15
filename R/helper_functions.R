@@ -1,3 +1,4 @@
+#' @import unikn
 library(unikn)
 library(ggplot2)
 library(colorspace)

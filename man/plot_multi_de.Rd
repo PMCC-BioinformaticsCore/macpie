@@ -51,5 +51,7 @@ to help you to extract shared DE genes.
 \examples{
 file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(file_path)
-plot_multi_de(mac, group_by = "combined_id", value = "lcpm", p_value_cutoff = 0.01, direction="up", n_genes = 10, control = "DMSO_0", by="fc")
+plot_multi_de(mac, group_by = "combined_id", 
+value = "lcpm", p_value_cutoff = 0.01, direction="up", 
+n_genes = 10, control = "DMSO_0", by="fc")
 }

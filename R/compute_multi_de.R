@@ -24,7 +24,8 @@
 #' "Chlorambucil_10", "Vinblastine_sulfate_10", "Etoposide_10" , 
 #' "Cytarabine_10", "Camptothecin_10", "Anastrozole_10", 
 #' "Sb590885_10", "Fluvastatin_sodium_10")
-#' mini_mac_test<-compute_multi_de(mini_mac, treatment_samples, control_samples, num_cores = 1, method = "edgeR")
+#' mini_mac_test<-compute_multi_de(mini_mac, treatment_samples, 
+#' control_samples, num_cores = 1, method = "edgeR")
 
 compute_multi_de <- function(data = NULL,
                      treatment_samples = NULL,

@@ -53,6 +53,8 @@ group_by <- "combined_id"
 color_by <- "combined_id"
 batch <-1
 genes <- c("TBRG4", "MRPL52", "DCTPP1", "ZFP36L1", "LSM1", "POLR2G")
-plot_counts(mac, genes = genes, group_by = "combined_id", treatment_samples = "Staurosporine_0.1", control_samples = "DMSO_0",
+plot_counts(mac, genes = genes, group_by = "combined_id", 
+treatment_samples = "Staurosporine_0.1", 
+control_samples = "DMSO_0",
 normalisation = "clr")
 }
