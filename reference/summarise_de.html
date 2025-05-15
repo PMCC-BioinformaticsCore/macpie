@@ -108,34 +108,35 @@ expression test.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">treatment_samples</span> <span class="op">&lt;-</span> <span class="st">"Staurosporine_0.1"</span></span></span>
-<span class="r-in"><span><span class="va">control_samples</span> <span class="op">&lt;-</span> <span class="st">"DMSO_0"</span></span></span>
-<span class="r-in"><span><span class="va">group_by</span> <span class="op">&lt;-</span> <span class="st">"combined_id"</span></span></span>
-<span class="r-in"><span><span class="va">top_table_edgeR</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_single_de.html">compute_single_de</a></span><span class="op">(</span><span class="va">mac</span>, <span class="va">treatment_samples</span>, <span class="va">control_samples</span>, method <span class="op">=</span> <span class="st">"edgeR"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">summarise_de</span><span class="op">(</span><span class="va">top_table_edgeR</span>, lfc_threshold <span class="op">=</span> <span class="fl">1</span>, padj_threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mini_mac"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">top_table</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span><span class="op">@</span><span class="va">tools</span><span class="op">$</span><span class="va">diff_exprs</span><span class="op">$</span><span class="va">Staurosporine_10</span></span></span>
+<span class="r-in"><span><span class="fu">summarise_de</span><span class="op">(</span><span class="va">top_table</span>, lfc_threshold <span class="op">=</span> <span class="fl">1</span>, padj_threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Total_genes_tested Significantly_upregulated Significantly_downregulated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>              <span style="text-decoration: underline;">21</span>381                       558                          39</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>                500                       361                          26</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: Total_significant &lt;int&gt;, Padj_threshold &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Log2FC_threshold &lt;dbl&gt;</span></span>
-<span class="r-in"><span><span class="fu">summarise_de</span><span class="op">(</span><span class="va">mac</span>, lfc_threshold <span class="op">=</span> <span class="fl">1</span>, padj_threshold <span class="op">=</span> <span class="fl">0.01</span>, multi<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 82 × 7</span></span>
+<span class="r-in"><span><span class="fu">summarise_de</span><span class="op">(</span><span class="va">mini_mac</span>, lfc_threshold <span class="op">=</span> <span class="fl">1</span>, </span></span>
+<span class="r-in"><span>padj_threshold <span class="op">=</span> <span class="fl">0.01</span>, multi<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    combined_id  Total_genes_tested Significantly_upregu…¹ Significantly_downre…²</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Media_0                   <span style="text-decoration: underline;">21</span>381                      0                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Paclitaxel_…              <span style="text-decoration: underline;">21</span>381                     24                      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Paclitaxel_1              <span style="text-decoration: underline;">21</span>381                    228                     11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Paclitaxel_…              <span style="text-decoration: underline;">21</span>381                    634                     45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> SN01004236_…              <span style="text-decoration: underline;">21</span>381                      0                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> SN01004236_1              <span style="text-decoration: underline;">21</span>381                      1                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> SN01004236_…              <span style="text-decoration: underline;">21</span>381                      0                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> SN01004272_…              <span style="text-decoration: underline;">21</span>381                     16                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> SN01004272_1              <span style="text-decoration: underline;">21</span>381                     11                      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> SN01004272_…              <span style="text-decoration: underline;">21</span>381                      8                      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 72 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Anastrozole…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> Camptotheci…                500                    363                     15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Capivaserti…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Ceralaserti…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> Chlorambuci…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> Cytarabine_…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> Erlotinib_h…                500                      2                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> Etoposide_10                500                      2                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> Fluvastatin…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Mk.2206_dih…                500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> Nutlin.3a_10                500                      2                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> Paclitaxel_…                500                      8                      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> Sb590885_10                 500                      0                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> Staurospori…                500                    359                     14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span> Vinblastine…                500                      3                      0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated names: ¹​Significantly_upregulated, ²​Significantly_downregulated</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 3 more variables: Total_significant &lt;int&gt;, padj_threshold &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Log2FC_threshold &lt;dbl&gt;</span></span>
@@ -149,7 +150,7 @@ expression test.</p>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupad, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
+  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupat, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
 </div>
 
 <div class="pkgdown">

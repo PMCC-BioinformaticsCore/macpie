@@ -95,45 +95,25 @@ number of genes (integer) or species</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">treatment_samples</span><span class="op">=</span><span class="st">"Staurosporine_0.1"</span></span></span>
 <span class="r-in"><span><span class="va">control_samples</span><span class="op">&lt;-</span><span class="st">"DMSO_0"</span></span></span>
-<span class="r-in"><span><span class="va">top_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_single_de.html">compute_single_de</a></span><span class="op">(</span><span class="va">mac</span>, <span class="va">treatment_samples</span>, <span class="va">control_samples</span>,</span></span>
+<span class="r-in"><span><span class="va">top_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_single_de.html">compute_single_de</a></span><span class="op">(</span><span class="va">mini_mac</span>, <span class="va">treatment_samples</span>, <span class="va">control_samples</span>,</span></span>
 <span class="r-in"><span>method <span class="op">=</span> <span class="st">"limma_voom"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">top_table</span><span class="op">$</span><span class="va">gene</span><span class="op">[</span><span class="va">top_table</span><span class="op">$</span><span class="va">p_value_adj</span><span class="op">&lt;</span><span class="fl">0.01</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/pathways.Rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">genesets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">genesets</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">compute_hyper_enrich_bg</span><span class="op">(</span><span class="va">top_genes</span>, <span class="va">genesets</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                Term Overlap      P.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Myc Targets V1                       Myc Targets V1  19/200 5.210332e-10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                             E2F Targets  15/200 7.840449e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Oxidative Phosphorylation Oxidative Phosphorylation  12/200 9.043413e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                               DNA Repair  10/150 1.473553e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism         Fatty Acid Metabolism   9/158 9.825725e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                     Mitotic Spindle  10/199 1.361250e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                           Adjusted.P.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Myc Targets V1                2.188340e-08</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                   1.646494e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Oxidative Phosphorylation     1.266078e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                    1.547231e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism         8.253609e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle               9.528750e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                    Genes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Myc Targets V1            DUT;PSMD3;MRPL9;CCT2;APEX1;PRPF31;TYMS;RUVBL2;LSM2;EIF2S1;G3BP1;CDK4;ETF1;MCM7;PSMD14;SNRPA1;DDX21;POLD2;TRA2B</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                                        DUT;PLK1;SMC6;CDKN3;TBRG4;CSE1L;EIF2S1;KIF18B;PAICS;CDK4;MCM7;SSRP1;WDR90;POLD2;TRA2B</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Oxidative Phosphorylation                                    SUCLG1;MRPL15;GPI;DLD;SDHC;TOMM22;NDUFV1;COX17;CYB5A;NDUFB6;NDUFA9;HSD17B10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                                                                       DUT;TYMS;ITPA;COX17;MPC2;NME4;MRPL40;TMED2;SSRP1;POLR2G</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism                                                               SDHC;SUCLG1;OSTC;PTPRG;CBR1;APEX1;DLD;HSD17B10;PCBD1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                                                         PLK1;SEPTIN9;CTTN;TUBGCP6;BCL2L11;FLNB;PXN;SHROOM1;PLEKHG2;CDC42</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                           Combined.Score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Myc Targets V1                 191.15411</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                     93.93610</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Oxidative Phosphorylation       46.42229</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                      43.85366</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism           28.57535</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                 25.56538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        Term Overlap    P.value Adjusted.P.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response         Androgen Response   1/100 0.01985198        0.0394069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling   IL-2/STAT5 Signaling   1/199 0.03921281        0.0394069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction             Apical Junction   1/200 0.03940690        0.0394069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism Xenobiotic Metabolism   1/200 0.03940690        0.0394069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       Genes Combined.Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response     ACTN1       27.16313</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling   AHCY       15.58983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction       ACTN1       15.52386</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism  AHCY       15.52386</span>
 </code></pre></div>
     </div>
   </div>
@@ -144,7 +124,7 @@ number of genes (integer) or species</p></dd>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupad, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
+  <p></p><p>Developed by Nenad Bartonicek, Xin Liu, Laura Twomey, Michelle Meier, Richard Lupat, Stuart Craig, David Yoannidis, Jason Li, Tim Semple, Kaylene J Simpson, Mark X Li, Susanne Ramm.</p>
 </div>
 
 <div class="pkgdown">
