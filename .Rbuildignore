@@ -3,6 +3,13 @@
 ^doc$
 ^Meta$
 ^\.github$
-^^docs$$
-^^\.*\\.DS_Store$$
+^docs$$
+^\.*\\.DS_Store$$
 ^data-raw$
+^LICENSE\.md$
+^README\.Rmd$
+^_pkgdown\.yaml$
+^dockers(/|$)
+^pkgdown(/|$)
+^scripts(/|$)
+^\.git$

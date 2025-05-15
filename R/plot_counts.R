@@ -20,15 +20,11 @@ utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolor
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' treatment_samples <- "Staurosporine_0.1"
-#' control_samples <- "DMSO_0"
-#' group_by <- "combined_id"
-#' color_by <- "combined_id"
-#' batch <-1
-#' genes <- c("TBRG4", "MRPL52", "DCTPP1", "ZFP36L1", "LSM1", "POLR2G")
-#' plot_counts(mac, genes = genes, group_by = "combined_id", treatment_samples = "Staurosporine_0.1", control_samples = "DMSO_0",
+#' data(mini_mac)
+#' genes <- mini_mac@tools$diff_exprs$Staurosporine_10$gene[1:6]
+#' plot_counts(mini_mac, genes = genes, group_by = "combined_id", 
+#' treatment_samples = "Staurosporine_10", 
+#' control_samples = "DMSO_0",
 #' normalisation = "clr")
 
 

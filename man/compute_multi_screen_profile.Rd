@@ -37,9 +37,8 @@ A tidyseurat object with screen_profile data frame in slot tools
 Find similarities between expression profiles with fgsea
 }
 \examples{
-library(macpie)
 data(mini_mac)
-mini_mac@tools$diff_exprs<-mini_mac@tools$diff_exprs[1:5]
+mini_mac@tools$diff_exprs<-mini_mac@tools$diff_exprs[1:3]
 mini_mac <- compute_multi_screen_profile(mini_mac, target = "Staurosporine_10",
 n_genes_profile = 20, direction = "up", num_cores = 1)
 }

@@ -96,11 +96,6 @@ mini_mac <- mini_mac %>%
 mini_mac@meta.data[["percent.mt"]] <- PercentageFeatureSet(mini_mac, pattern = "^mt-|^MT-")
 mini_mac@meta.data[["percent.ribo"]] <- PercentageFeatureSet(mini_mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 
-# Filter by read count per sample group
-# mini_mac <- filter_genes_by_expression(mini_mac, 
-#                                   group_by = "combined_id", 
-#                                   min_counts = 10, 
-#                                   min_samples = 2)
 
 # Example of a function from Seurat QC 
 VlnPlot(mini_mac, features = c("nFeature_RNA", "nCount_RNA"), 
@@ -138,13 +133,12 @@ mini_mac <- compute_multi_enrichr(mini_mac, genesets = enrichr_genesets)
 
 usethis::use_data(mini_mac, overwrite = TRUE)
 
-#generate umap from DE results
-# mini_mac <- compute_de_umap(mini_mac)
-# mini_mac <- find_clusters_de_umap(mini_mac, k = 3)
-# p <- plot_de_umap(mini_mac, group_by = "cluster", max_overlaps = 5)
-# girafe(ggobj = p, fonts = list(sans = "Open Sans"))
 
-
+# generate pathway dataset for hypergeometric enrichment test
+# convert the exiting pathways.Rds into data/
+file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
+genesets <- readRDS(file_path)
+usethis::use_data(genesets)
 
 
 

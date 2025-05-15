@@ -30,12 +30,8 @@ ggpplot plot
 Volcano plot of differentially expressed genes
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-treatment_samples="Staurosporine_0.1"
-control_samples<-"DMSO_0"
-top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
-plot_volcano(top_table)
-
+data("mini_mac")
+top_table <- mini_mac@tools$diff_exprs$Staurosporine_10
+plot_volcano(top_table = top_table, max.overlaps = 100)
 
 }

@@ -29,9 +29,8 @@
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' compute_normalised_counts(mac)
+#' data(mini_mac)
+#' compute_normalised_counts(mini_mac)
 compute_normalised_counts <- function(data = NULL,
                                     method = NULL,
                                     batch = NULL,

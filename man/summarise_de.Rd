@@ -32,12 +32,9 @@ Generate a table to summarise gene numbers from a differential
 expression test.
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-treatment_samples <- "Staurosporine_0.1"
-control_samples <- "DMSO_0"
-group_by <- "combined_id"
-top_table_edgeR <- compute_single_de(mac, treatment_samples, control_samples, method = "edgeR")
-summarise_de(top_table_edgeR, lfc_threshold = 1, padj_threshold = 0.05)
-summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+data("mini_mac")
+top_table <- mini_mac@tools$diff_exprs$Staurosporine_10
+summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
+summarise_de(mini_mac, lfc_threshold = 1, 
+padj_threshold = 0.01, multi=TRUE)
 }
