@@ -8,8 +8,8 @@ build:
   articles: true
 
 template:
-  logo: "man/figures/logo_hex.png"
-  favicon: "man/figures/logo_hex.png"
+  logo: "man/figures/logo.png"
+  favicon: "man/figures/logo.png"
   params:
     bootswatch: flatly    
     

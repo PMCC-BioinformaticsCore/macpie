@@ -4,7 +4,6 @@ output:
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 5
-    css: toc_style.css
 vignette: >
   %\VignetteIndexEntry{macpie}
   %\VignetteEngine{knitr::rmarkdown}
