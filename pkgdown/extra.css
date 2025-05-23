@@ -5,7 +5,6 @@
   right: 20px;
   width: 250px;
 }
-/* Push the main content over so it doesn’t get hidden */
-main {
+.article-content {
   margin-right: 280px;
 }
