@@ -1,0 +1,115 @@
+---
+title: "Check the metadata file"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 5
+    css: toc_style.css
+vignette: >
+  %\VignetteIndexEntry{macpie}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+
+
+## Metadata import and validation
+
+As part of the macpie package, we provide a set of functions to import and validate metadata. The metadata file should contain all the information about the samples, including sample names, experimental conditions, and other relevant variables. The metadata file has to be in a tabular format.
+
+
+
+**Key points**: 
+
+  - use **check_metadata** to check the metadata file for common errors
+  
+  - use **plot_metadata_heatmap** to visually inspect metadata integrity
+  
+  
+### Metadata input
+
+
+```{r setup}
+devtools::load_all()
+
+
+library(Seurat)
+library(edgeR)
+library(dplyr)
+library(leidenbase)
+library(gridExtra)
+library(enrichR)
+library(parallel)
+library(mcprogress)
+library(ggsci)
+library(ggiraph)
+library(pheatmap)
+library(tidyr)
+library(tibble)
+library(enrichR)
+library(variancePartition)
+library(glmGamPoi)
+library(PoiClaClu)
+library(Matrix)
+library(data.table)
+
+# Define project variables
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
+
+
+
+
+```
+
+
+### Check column names
+
+Check the column names of the metadata file. The metadata file should contain the following columns:
+
+```{r}
+colnames(metadata)
+```
+
+Make sure that the column names are correct and match the expected format.
+
+
+
+
+### Validate metadata 
+
+The `check_metadata` function will check the metadata file for common errors, such as missing values, incorrect data types, and other potential issues. It will also provide a summary of the metadata file, including the number of samples, the number of variables, and the number of missing values.
+
+
+```{r}
+# Validate metadata
+validate_metadata(metadata)
+```
+
+
+### Visualize metadata
+
+Lastly, let's visually inspect the large number of experimental variables, in order to correct artefacts and other metadata errors.
+
+```{r metadata_plot, fig.width = 8, fig.height = 6}
+plot_metadata_heatmap(metadata)
+
+
+```
+
+

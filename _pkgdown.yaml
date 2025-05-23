@@ -24,6 +24,13 @@ navbar:
           href: articles/macpie.html
         - text: "Multi-plate analysis"
           href: articles/multiplates.html
+        - text: "Metadata check"
+          href: articles/metadata_check.html
+        - text: "Quality control"
+        - text: "Transcriptional analyses"
+        - text: "Compound screening"
+        
+          
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:
