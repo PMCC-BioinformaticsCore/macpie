@@ -47,6 +47,10 @@ jobs:
         with:
           upload-snapshots: true
           # R CMD check flags:
-          args:       '--no-manual --as-cran --ignore-vignettes'
-          # R CMD build flags:
-          build_args: '--no-build-vignettes'
+          args:  
+            - --no-manual
+            - --as-cran
+            - --ignore-vignettes
+          # flags for R CMD build:
+          build_args:
+            - --no-build-vignettes
