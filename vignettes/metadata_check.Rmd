@@ -1,8 +1,10 @@
 ---
 title: "Check the metadata file"
 output:
-  rmarkdown::html_vignette:
+  rmarkdown::html_document:
+    theme: flatly
     toc: true
+    toc_float: true
     toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{macpie}
