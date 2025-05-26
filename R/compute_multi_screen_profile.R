@@ -68,7 +68,9 @@ compute_multi_screen_profile <- function(data = NULL,
   }
 
   #perform the enrichment analysis
-  fgsea_list <- pmclapply(de_list, function(x) {
+
+  #define when it's no support for mclapply
+  fgsea_fun <- function(x) {
     ordered_genes <- x %>%
       filter(!grepl("mt-", .data$gene, ignore.case = TRUE)) %>%
       filter(!grepl("Rp(s|l)", .data$gene, ignore.case = TRUE))
@@ -77,7 +79,15 @@ compute_multi_screen_profile <- function(data = NULL,
     result <- fgsea(geneset, ranks, minSize = 15, maxSize = 500)
     result$target <- unique(x$combined_id)
     return(result)
-  }, mc.cores = num_cores)
+  }
+  
+  #if it's on Windows, use lapply
+  if (.Platform$OS.type== "windows" || num_cores <= 1) {
+    fgsea_list <- lapply(de_list, fgsea_fun)
+  } else {
+      fgsea_list <- pmclapply(de_list, fgsea_fun, mc.cores= num_cores)
+    }
+  
 
   #reorder the NES direction (why though?)
   fgsea_df <- bind_rows(fgsea_list) %>%
