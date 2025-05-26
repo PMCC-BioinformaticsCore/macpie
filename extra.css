@@ -1,0 +1,10 @@
+/* Float the TOC panel */
+.toc {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 250px;
+}
+.article-content {
+  margin-right: 280px;
+}
