@@ -10,6 +10,10 @@
 #'
 #' @import ggplot2
 #' @importFrom stats reorder mad sd
+#' @examples
+#' data("mini_mac")
+#' qc_stats <- compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")
+#' 
 #' @export
 
 

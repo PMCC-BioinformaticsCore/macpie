@@ -28,12 +28,8 @@
 #' @return A ggplot object representing the RLE plot.
 #'
 #' @examples
-#' \dontrun{
-#' # Example Data
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac<-readRDS(rds_file)
-#' plot_rle(data = mac, label_column = "Row", log=TRUE)
-#' }
+#' data("mini_mac")
+#' p <- plot_rle(mini_mac, label_column = "Row")
 #'
 #' @importFrom Biobase rowMedians
 #' @importFrom grDevices boxplot.stats

@@ -29,7 +29,7 @@ A knee plot to show total number of total read counts for each gene in a given
 treatment group
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-plot_gene_ranks(mac, group_by = "combined_id", samples = "Staurosporine_10", scale_y_log = TRUE)
+data("mini_mac")
+p <- plot_gene_ranks(mini_mac,group_by = "combined_id", 
+samples = "Staurosporine_10", scale_y_log = TRUE)
 }

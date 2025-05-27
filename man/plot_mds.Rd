@@ -35,7 +35,7 @@ points. The function is used with gene.selection = "common" to increase the
 speed.
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-p <- plot_mds(mac)
+data("mini_mac")
+p <- plot_mds(mini_mac, group_by = "Sample_type", label = "Sample_type", 
+n_labels = 10, max_overlaps = 100)
 }

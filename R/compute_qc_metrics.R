@@ -14,9 +14,8 @@ utils::globalVariables(c("mac"))
 #'
 #' @import Seurat tidyseurat
 #' @examples
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac<-readRDS(rds_file)
-#' compute_qc_metrics(data = mac, group_by = "combined_id", order_by = "median")
+#' data(mini_mac)
+#' compute_qc_metrics(data = mini_mac, group_by = "combined_id", order_by = "median")
 #' @export
 compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   # Helper function to validate input data

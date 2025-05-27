@@ -19,9 +19,9 @@
 #' @import ggrepel
 #' @return ggplot object
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' p <- plot_mds(mac)
+#' data("mini_mac")
+#' p <- plot_mds(mini_mac, group_by = "Sample_type", label = "Sample_type", 
+#' n_labels = 10, max_overlaps = 100)
 #' @export
 #'
 plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL, n_labels = 50) {

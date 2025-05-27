@@ -10,9 +10,10 @@
 #' @importFrom ggplot2 ggplot aes geom_point
 #' @export
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' plot_gene_ranks(mac, group_by = "combined_id", samples = "Staurosporine_10", scale_y_log = TRUE)
+#' data("mini_mac")
+#' p <- plot_gene_ranks(mini_mac,group_by = "combined_id", 
+#' samples = "Staurosporine_10", scale_y_log = TRUE)
+
 
 
 plot_gene_ranks <- function(data = NULL,
