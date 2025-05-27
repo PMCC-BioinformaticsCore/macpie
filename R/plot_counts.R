@@ -22,7 +22,7 @@ utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolor
 #' @examples
 #' data(mini_mac)
 #' genes <- mini_mac@tools$diff_exprs$Staurosporine_10$gene[1:6]
-#' plot_counts(mini_mac, genes = genes, group_by = "combined_id", 
+#' p <- plot_counts(mini_mac, genes = genes, group_by = "combined_id", 
 #' treatment_samples = "Staurosporine_10", 
 #' control_samples = "DMSO_0",
 #' normalisation = "clr")

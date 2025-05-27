@@ -29,11 +29,7 @@ in user-provided genesets of enricher databases
 }
 \examples{
 data(mini_mac)
-treatment_samples="Staurosporine_0.1"
-control_samples<-"DMSO_0"
-top_table <- compute_single_de(mini_mac, treatment_samples, control_samples,
-method = "limma_voom")
-top_genes <- top_table$gene[top_table$p_value_adj<0.01]
+top_genes <- mini_mac@tools$diff_exprs[["Staurosporine_10"]]$gene
 result <- compute_single_enrichr(genes = top_genes, db = "MSigDB_Hallmark_2020", species = "human")
 head(result)
 }

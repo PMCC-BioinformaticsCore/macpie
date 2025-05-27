@@ -13,11 +13,10 @@ utils::globalVariables(c("Metric", "Value", "Normalized"))
 #' @import tidyr
 #' @importFrom scales rescale
 #' @examples
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac<-readRDS(rds_file)
-#' qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
+#' data("mini_mac")
+#' qc_stats <- compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")
 #' plot_qc_metrics_heatmap(stats_summary = qc_stats$stats_summary, group_by = "combined_id")
-#' 
+
 #' @export
 
 plot_qc_metrics_heatmap <- function(stats_summary = NULL, 
@@ -49,8 +48,6 @@ plot_qc_metrics_heatmap <- function(stats_summary = NULL,
   group_by <- validated_inputs$group_by
   metrics <- validated_inputs$metrics
   order_by <- validated_inputs$order_by
-  # abs z-score
-  var_stats$z_score <- abs(var_stats$z_score)
   # Reshape data to long format
   heatmap_data <- var_stats %>%
     select(all_of(c(group_by, metrics))) %>%

@@ -17,8 +17,6 @@ A tidyseurat object with umap_de data frame in slot tools
 Prepare DE-based umap
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac <- compute_de_umap(mac)
-
+data(mini_mac)
+mini_mac <- compute_de_umap(mini_mac)
 }

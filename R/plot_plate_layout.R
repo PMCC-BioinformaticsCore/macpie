@@ -22,9 +22,10 @@ utils::globalVariables(c("tooltip_text", "group_id"))
 #' @return ggplot object
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' plot_plate_layout(mac,"nCount_RNA","Treatment_1")
+#' 
+#' data("mini_mac")
+#' p <- plot_plate_layout(mini_mac, metric = "nCount_RNA",
+#' annotation = "Treatment_1", midpoint = "mean")
 
 
 #' @export
