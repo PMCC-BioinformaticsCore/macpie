@@ -4,14 +4,14 @@
 # macpie
 
 <img
-  src="man/figures/logo_hex.png"
+  src="man/figures/logo.png"
   style="float: right; height: 100px; margin: 0 0 1em 1em;"
   alt="macpie logo"
 />
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml/badge.svg)](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml)
 <!-- badges: end -->
 
 The goal of macpie package is to provide the users of MAC-seq data with
