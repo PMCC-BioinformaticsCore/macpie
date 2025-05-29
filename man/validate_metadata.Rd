@@ -32,7 +32,7 @@ issues, and generates a summary table grouped by \code{Plate_ID}.
 \examples{
 \dontrun{
 # Example CSV file
-file_path <- system.file("/extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+file_path <- system.file("/extdata/PMMSq033_metadata.csv", package = "macpie")
 metadata <- read_metadata(file_path)
 metadt_qc <- validate_metadata(metadata)
 }
