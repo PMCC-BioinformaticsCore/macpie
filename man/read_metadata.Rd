@@ -53,7 +53,7 @@ include:
 }
 \examples{
 # Example CSV file
-file_path <- system.file("/extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+file_path <- system.file("/extdata/PMMSq033_metadata.csv", package = "macpie")
 result <- read_metadata(file_path)
 
 }

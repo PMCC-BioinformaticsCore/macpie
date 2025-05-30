@@ -42,7 +42,9 @@ treatment group"><meta property="og:image" content="https://github.com/PMCC-Bioi
     <li>
       <a href="../articles/metadata_check.html">Metadata check</a>
     </li>
-    <li class="dropdown-header">Quality control</li>
+    <li>
+      <a href="../articles/differential_expression.html">Quality control</a>
+    </li>
     <li class="dropdown-header">Transcriptional analyses</li>
     <li class="dropdown-header">Compound screening</li>
   </ul></li>
@@ -108,10 +110,9 @@ treatment group</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">plot_gene_ranks</span><span class="op">(</span><span class="va">mac</span>, group_by <span class="op">=</span> <span class="st">"combined_id"</span>, samples <span class="op">=</span> <span class="st">"Staurosporine_10"</span>, scale_y_log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="plot_gene_ranks-1.png" alt="" width="700" height="433"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mini_mac"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_gene_ranks</span><span class="op">(</span><span class="va">mini_mac</span>,group_by <span class="op">=</span> <span class="st">"combined_id"</span>, </span></span>
+<span class="r-in"><span>samples <span class="op">=</span> <span class="st">"Staurosporine_10"</span>, scale_y_log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>

@@ -40,5 +40,5 @@ Find similarities between expression profiles with fgsea
 data(mini_mac)
 mini_mac@tools$diff_exprs<-mini_mac@tools$diff_exprs[1:2]
 mini_mac <- compute_multi_screen_profile(mini_mac, target = "Staurosporine_10",
-n_genes_profile = 20, direction = "up", num_cores = 1)
+n_genes_profile = 10, direction = "up", num_cores = 1)
 }

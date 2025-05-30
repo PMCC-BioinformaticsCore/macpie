@@ -16,11 +16,9 @@ utils::globalVariables(c("enrichment"))
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
-#' genesets <- readRDS(file_path)
-#' compute_multi_enrichr(mac, genesets = genesets)
+#' data(mini_mac)
+#' data(genesets)
+#' compute_multi_enrichr(mini_mac, genesets = genesets)
 compute_multi_enrichr <- function(data,
                                   genesets = NULL,
                                   species = NULL,

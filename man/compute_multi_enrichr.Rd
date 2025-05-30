@@ -35,9 +35,7 @@ A tidyseurat object with appended pathway_enrichment dataframe in slot tools
 Perform enrichR-style analysis on a screen
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-file_path <- system.file("extdata", "PMMSq033/pathways.Rds", package = "macpie")
-genesets <- readRDS(file_path)
-compute_multi_enrichr(mac, genesets = genesets)
+data(mini_mac)
+data(genesets)
+compute_multi_enrichr(mini_mac, genesets = genesets)
 }

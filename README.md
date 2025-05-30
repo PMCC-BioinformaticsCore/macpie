@@ -5,7 +5,7 @@
 
 <img
   src="man/figures/logo.png"
-  style="float: right; height: 100px; margin: 0 0 1em 1em;"
+  style="float: right; width: 10%; height: 10%;"
   alt="macpie logo"
 />
 
