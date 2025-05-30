@@ -2,10 +2,12 @@ pandoc: 3.1.1
 pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
+  differential_expression: differential_expression.html
   macpie: macpie.html
   metadata_check: metadata_check.html
   multiplates: multiplates.html
-last_built: 2025-05-23T07:13Z
+  quality_control: quality_control.html
+last_built: 2025-05-30T06:02Z
 urls:
   reference: https://github.com/PMCC-BioinformaticsCore/macpie.git/reference
   article: https://github.com/PMCC-BioinformaticsCore/macpie.git/articles

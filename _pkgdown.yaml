@@ -27,6 +27,7 @@ navbar:
         - text: "Metadata check"
           href: articles/metadata_check.html
         - text: "Quality control"
+          href: articles/differential_expression.html
         - text: "Transcriptional analyses"
         - text: "Compound screening"
         

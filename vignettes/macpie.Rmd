@@ -67,7 +67,7 @@ library(data.table)
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
@@ -102,9 +102,12 @@ plot_metadata_heatmap(metadata)
 
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
 
+
+
+
 ```{r load_data}
 # Import raw data
-project_rawdata <- system.file("extdata/PMMSq033/raw_matrix", package = "macpie")
+project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
 raw_counts_total <- Read10X(data.dir = project_rawdata)
 keep <- rowSums(cpm(raw_counts_total) >= 10) >= 2 
 raw_counts <- raw_counts_total[keep, ]

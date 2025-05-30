@@ -41,7 +41,9 @@ in user-provided genesets of enricher databases"><meta property="og:image" conte
     <li>
       <a href="../articles/metadata_check.html">Metadata check</a>
     </li>
-    <li class="dropdown-header">Quality control</li>
+    <li>
+      <a href="../articles/differential_expression.html">Quality control</a>
+    </li>
     <li class="dropdown-header">Transcriptional analyses</li>
     <li class="dropdown-header">Compound screening</li>
   </ul></li>
@@ -110,24 +112,31 @@ in user-provided genesets of enricher databases</p>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">treatment_samples</span><span class="op">=</span><span class="st">"Staurosporine_0.1"</span></span></span>
-<span class="r-in"><span><span class="va">control_samples</span><span class="op">&lt;-</span><span class="st">"DMSO_0"</span></span></span>
-<span class="r-in"><span><span class="va">top_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_single_de.html">compute_single_de</a></span><span class="op">(</span><span class="va">mini_mac</span>, <span class="va">treatment_samples</span>, <span class="va">control_samples</span>,</span></span>
-<span class="r-in"><span>method <span class="op">=</span> <span class="st">"limma_voom"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">top_table</span><span class="op">$</span><span class="va">gene</span><span class="op">[</span><span class="va">top_table</span><span class="op">$</span><span class="va">p_value_adj</span><span class="op">&lt;</span><span class="fl">0.01</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span><span class="op">@</span><span class="va">tools</span><span class="op">$</span><span class="va">diff_exprs</span><span class="op">[[</span><span class="st">"Staurosporine_10"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">gene</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">compute_single_enrichr</span><span class="op">(</span>genes <span class="op">=</span> <span class="va">top_genes</span>, db <span class="op">=</span> <span class="st">"MSigDB_Hallmark_2020"</span>, species <span class="op">=</span> <span class="st">"human"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Downloading gene sets from the Enrichr server.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                        Term Overlap    P.value Adjusted.P.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response         Androgen Response   1/100 0.01985198        0.0394069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling   IL-2/STAT5 Signaling   1/199 0.03921281        0.0394069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction             Apical Junction   1/200 0.03940690        0.0394069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism Xenobiotic Metabolism   1/200 0.03940690        0.0394069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       Genes Combined.Score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response     ACTN1       27.16313</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling   AHCY       15.58983</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction       ACTN1       15.52386</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism  AHCY       15.52386</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Term Overlap</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                                       Adipogenesis   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response             Interferon Gamma Response   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                               mTORC1 Signaling   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                       Angiogenesis    1/36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                   Apical Surface    1/44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway Reactive Oxygen Species Pathway    1/49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                   P.value Adjusted.P.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                    0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response       0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                    0.5983803        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                  0.6721497        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway 0.7112179        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                         Genes Combined.Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                     ELMOD3;GPAM;ATP1B3;DHCR7;CAT     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response         VAMP8;NMI;PTGS2;NAMPT;CIITA     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                XBP1;CTSC;NAMPT;DHCR7;SLC37A4     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                           S100A4     0.05482027</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                          CD160    -0.03836116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway                           CAT    -0.07015874</span>
 </code></pre></div>
     </div>
   </div>

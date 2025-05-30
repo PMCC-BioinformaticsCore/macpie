@@ -38,6 +38,11 @@ library(pheatmap)
 ```
 
 
+
+> **Data access**  
+> The full dataset (>10 MB of `.rds` files) is currently under restricted release and will become publicly available upon publication (at Zenodo).  
+> In the meantime, please contact us for early access.
+
 ## Differential gene expression
 
 **Key points**: 

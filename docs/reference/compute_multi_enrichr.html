@@ -40,7 +40,9 @@
     <li>
       <a href="../articles/metadata_check.html">Metadata check</a>
     </li>
-    <li class="dropdown-header">Quality control</li>
+    <li>
+      <a href="../articles/differential_expression.html">Quality control</a>
+    </li>
     <li class="dropdown-header">Transcriptional analyses</li>
     <li class="dropdown-header">Compound screening</li>
   </ul></li>
@@ -119,31 +121,28 @@ one of "up", "down", "both" (default).</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/pathways.Rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">genesets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">compute_multi_enrichr</span><span class="op">(</span><span class="va">mac</span>, genesets <span class="op">=</span> <span class="va">genesets</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>data layer is not found and counts layer is used</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">genesets</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">compute_multi_enrichr</span><span class="op">(</span><span class="va">mini_mac</span>, genesets <span class="op">=</span> <span class="va">genesets</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A Seurat-tibble abstraction: 308 × 21</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># </span><span style="color: #555555;">Features=21381 | Cells=308 | Active assay=RNA | Assays=RNA</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    .cell     orig.ident nCount_RNA nFeature_RNA percent.mt percent.ribo Plate_ID</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> AACAGGCA… PMMSq033         <span style="text-decoration: underline;">8</span>001         <span style="text-decoration: underline;">3</span>094      0.962         8.19 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> AACCAGCC… PMMSq033        <span style="text-decoration: underline;">69</span>701        <span style="text-decoration: underline;">12</span>649      0.211         2.56 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> AACCAGTT… PMMSq033        <span style="text-decoration: underline;">52</span>404        <span style="text-decoration: underline;">11</span>309      0.204         2.77 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> AACCGGCG… PMMSq033        <span style="text-decoration: underline;">71</span>499        <span style="text-decoration: underline;">12</span>849      0.203         2.32 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> AACCTAGT… PMMSq033        <span style="text-decoration: underline;">38</span>469         <span style="text-decoration: underline;">9</span>689      0.294         2.74 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> AACTCTAC… PMMSq033        <span style="text-decoration: underline;">67</span>371        <span style="text-decoration: underline;">12</span>665      0.194         2.12 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> AACTGTGT… PMMSq033        <span style="text-decoration: underline;">53</span>476        <span style="text-decoration: underline;">11</span>264      0.258         2.15 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> AAGATGTC… PMMSq033        <span style="text-decoration: underline;">43</span>015        <span style="text-decoration: underline;">10</span>336      0.274         2.53 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> AAGCATAT… PMMSq033        <span style="text-decoration: underline;">64</span>145        <span style="text-decoration: underline;">12</span>023      0.214         2.40 PMMSq033</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> AAGCTCAC… PMMSq033        <span style="text-decoration: underline;">69</span>879        <span style="text-decoration: underline;">12</span>851      0.205         2.33 PMMSq033</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># </span><span style="color: #555555;">Features=500 | Cells=308 | Active assay=RNA | Assays=RNA</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    .cell      orig.ident   nCount_RNA nFeature_RNA Plate_ID Well_ID Row   Column</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> AACAGGCAAT PMMSq033_mi…         65           29 PMMSq033 B02     B          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> AACCAGCCAG PMMSq033_mi…        522           97 PMMSq033 C02     C          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> AACCAGTTGA PMMSq033_mi…        415           82 PMMSq033 D02     D          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> AACCGGCGTA PMMSq033_mi…        578           93 PMMSq033 E02     E          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> AACCTAGTCC PMMSq033_mi…        286           72 PMMSq033 F02     F          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> AACTCTACAC PMMSq033_mi…        515           96 PMMSq033 G02     G          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> AACTGTGTCA PMMSq033_mi…        408           87 PMMSq033 H02     H          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> AAGATGTCCA PMMSq033_mi…        332           78 PMMSq033 I02     I          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> AAGCATATGG PMMSq033_mi…        498           92 PMMSq033 J02     J          2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> AAGCTCACCT PMMSq033_mi…        539          102 PMMSq033 K02     K          2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 298 more rows</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 14 more variables: Well_ID &lt;chr&gt;, Row &lt;chr&gt;, Column &lt;int&gt;, Species &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Cell_type &lt;chr&gt;, Model_type &lt;chr&gt;, Time &lt;int&gt;, Unit &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Treatment_1 &lt;chr&gt;, Concentration_1 &lt;dbl&gt;, Unit_1 &lt;chr&gt;, Sample_type &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Project &lt;chr&gt;, combined_id &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13 more variables: Species &lt;chr&gt;, Cell_type &lt;chr&gt;, Model_type &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Time &lt;fct&gt;, Unit &lt;chr&gt;, Treatment_1 &lt;chr&gt;, Concentration_1 &lt;fct&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Unit_1 &lt;chr&gt;, Sample_type &lt;chr&gt;, Project &lt;chr&gt;, combined_id &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   percent.mt &lt;dbl&gt;, percent.ribo &lt;dbl&gt;</span></span>
 </code></pre></div>
     </div>
   </div>

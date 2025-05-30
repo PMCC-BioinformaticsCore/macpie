@@ -1,0 +1,181 @@
+---
+title: "Quality Control"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{macpie}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+  
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(macpie)
+```
+
+
+## Quality control
+
+
+
+### Import data to tidySeurat object 
+
+
+> **Data access**  
+> The full dataset (>10 MB of `.rds` files) is currently under restricted release and will become publicly available upon publication (at Zenodo).  
+> In the meantime, please contact us for early access.
+
+
+Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
+
+
+```{r read_metadata}
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
+
+```
+
+
+
+```{r load_data}
+# Import raw data
+project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
+raw_counts_total <- Read10X(data.dir = project_rawdata)
+
+# Create tidySeurat object
+mac <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+
+# Join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+
+# Add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+# Filter by read count per sample group
+mac <- filter_genes_by_expression(mac, 
+                                  group_by = "combined_id", 
+                                  min_counts = 10, 
+                                  min_samples = 2)
+```
+For example, we can use the common QC plots from the Seurat package to visualise the number of genes, reads, and percentage of mitochondrial and ribosomal genes per sample.
+```{r violin_plot, fig.width = 8, fig.height = 4}
+# Calculate percent of mitochondrial and ribosomal genes
+mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
+mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+# Example of a function from Seurat QC 
+VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) 
+
+```
+
+In addition, we can use the power of tidyverse functions to further explore the dataset. For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots are useful for visualising any spatial anomalies or unexpected patterns.
+
+```{r subset_seurat, fig.width = 8, fig.height = 3}
+unique(mac$Project)
+mac <- mac %>%
+  filter(Project == "Current")
+
+# QC plot plate layout (all metadata columns can be used):
+p <- plot_plate_layout(mac, "nCount_RNA", "combined_id")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:0.8px;")  # <- slight darkening
+  ))
+```
+
+
+### Basic QC metrics
+
+#### Sample grouping with MDS plot
+
+
+As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
+
+```{r mds_plot, fig.width = 8, fig.height = 6}
+p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
+
+```
+
+Since we are operating from a standard Seurat object, we can also use the standard scRNA-seq workflow. 
+
+```{r qc_stats_umap, fig.width = 8, fig.height = 4}
+mac_sct <- SCTransform(mac) %>%
+  RunPCA() %>%
+  RunUMAP(dims = 1:30)
+DimPlot(mac_sct, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
+```
+
+#### Distribution of read counts
+
+We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
+
+```{r qc_stats_plot, fig.width = 8, fig.height = 4}
+qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
+qc_stats$stats_summary
+```
+#### Variability among all replicates
+
+In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. Therefore, we enabled access to several statistical metrics such as standard deviation (sd_value), robust z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap. 
+
+  - Standard deviation (sd_value) and interquartile range (IQR) both capture the spread of read counts within a single treatment condition. Use these when you want to understand how consistently reads cluster around the mean or median in one group.
+
+  - Median absolute deviation (mad_value) and the robust z‐score (z_score) highlight variability between treatment conditions. They make it easy to spot conditions whose overall read distributions deviate from the rest of the plate. 
+
+
+As you can see below, Staurosporine had the largest variability between the samples across all metrics. 
+
+```{r qc_metrics, fig.width = 8, fig.height = 4}
+plot_qc_metrics_heatmap(qc_stats$stats_summary)
+
+```
+
+
+
+#### Variability within a sample
+
+Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. It is therefore fairly important to estimate bioogical variability between the replicates. We provide a way to estimate inter-replicate variability using poisson distance within the function plot_distance.
+
+```{r, fig.width = 8, fig.height = 6}
+plot_distance(mac, "combined_id", treatment = "DMSO_0")
+```
+
+#### Estimate of the batch effect
+
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots. In our case, limma_voom provides the lowest average coefficient of variation, when compared to other methods such as "raw", Seurat "SCT" or "edgeR".
+
+```{r plot_rle, fig.width = 8, fig.height = 4}
+# First we will subset the data to look at control, DMSO samples only
+mac_dmso <- mac %>%
+  filter(Treatment_1 == "DMSO")
+
+# Run the RLE function
+plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
+
+```

@@ -42,7 +42,9 @@ speed."><meta property="og:image" content="https://github.com/PMCC-Bioinformatic
     <li>
       <a href="../articles/metadata_check.html">Metadata check</a>
     </li>
-    <li class="dropdown-header">Quality control</li>
+    <li>
+      <a href="../articles/differential_expression.html">Quality control</a>
+    </li>
     <li class="dropdown-header">Transcriptional analyses</li>
     <li class="dropdown-header">Compound screening</li>
   </ul></li>
@@ -119,9 +121,9 @@ label a sample.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_mds</span><span class="op">(</span><span class="va">mac</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mini_mac"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_mds</span><span class="op">(</span><span class="va">mini_mac</span>, group_by <span class="op">=</span> <span class="st">"Sample_type"</span>, label <span class="op">=</span> <span class="st">"Sample_type"</span>, </span></span>
+<span class="r-in"><span>n_labels <span class="op">=</span> <span class="fl">10</span>, max_overlaps <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> tidyseurat says: Key columns are missing. A data frame is returned for independent data analysis.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> tidyseurat says: Key columns are missing. A data frame is returned for independent data analysis.</span>
 </code></pre></div>

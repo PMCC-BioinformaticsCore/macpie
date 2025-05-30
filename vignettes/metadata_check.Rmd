@@ -41,32 +41,12 @@ As part of the macpie package, we provide a set of functions to import and valid
 
 
 ```{r setup}
-devtools::load_all()
 
-
-library(Seurat)
-library(edgeR)
-library(dplyr)
-library(leidenbase)
-library(gridExtra)
-library(enrichR)
-library(parallel)
-library(mcprogress)
-library(ggsci)
-library(ggiraph)
-library(pheatmap)
-library(tidyr)
-library(tibble)
-library(enrichR)
-library(variancePartition)
-library(glmGamPoi)
-library(PoiClaClu)
-library(Matrix)
-library(data.table)
+library(macpie)
 
 # Define project variables
 project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
 
 # Load metadata
 metadata <- read_metadata(project_metadata)
