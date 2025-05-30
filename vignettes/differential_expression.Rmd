@@ -1,0 +1,223 @@
+---
+title: "differential_expression"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{macpie}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(macpie)
+library(enrichR)
+library(tibble)
+library(parallel)
+library(mcprogress)
+library(PoiClaClu)
+library(Matrix)
+library(data.table)
+library(Seurat)
+library(tidyseurat)
+library(stringr)
+library(pheatmap)
+
+
+```
+
+
+## Differential gene expression
+
+**Key points**: 
+
+  -  use **compute_single_de** to perform a differential expression analysis for one treatment group vs control
+  -  use **compute_multi_de** to perform differential expression analyses for all treatment groups vs control
+  -  use volcano plot, box plot and heatmap to show results from the analyses and visualise gene expression levels  
+  -  use **enrichr** for pathway enrichment analysis
+
+
+```{r read_metadata}
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata(project_metadata)
+metadata$Time <- as.factor(metadata$Time)
+metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
+
+```
+
+
+
+```{r load_data}
+# Import raw data
+project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
+raw_counts <- Read10X(data.dir = project_rawdata)
+
+# Create tidySeurat object
+mac <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+
+# Join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+
+# Add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+
+# Filter by read count per sample group
+mac <- filter_genes_by_expression(mac, 
+                                  group_by = "combined_id", 
+                                  min_counts = 10, 
+                                  min_samples = 2)
+```
+
+```{r violin_plot, fig.width = 8, fig.height = 4}
+# Calculate percent of mitochondrial and ribosomal genes
+mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
+mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+
+```
+
+
+
+
+
+
+#### 3.1. Single comparison
+
+Similar to scRNA-seq data, MAC-seq gene expression counts have an excess of zero counts compared to bulk RNA-seq. Statistical models assuming a Poisson or negative binomial distribution may not fit the data well. For that reason, differential expression effects could be over or underestimated.
+
+Let's first perform the differential expression analysis with a couple of methods and visualise
+the results on a volcano plot.
+
+
+
+```{r de_analysis, fig.width = 8, fig.height = 6}
+# First perform the differential expression analysis
+treatment_samples <- "Staurosporine_10"
+control_samples <- "DMSO_0"
+top_table <- compute_single_de(mac, treatment_samples, control_samples, method = "limma_voom")
+
+# Let's visualise the results with a volcano plot
+plot_volcano(top_table, max.overlaps = 18)
+
+```
+
+Based on the results, we can quickly check gene expression levels in counts per million (CPM) for selected genes between treatment and control samples as described below. 
+
+```{r plot_counts, fig.width = 8, fig.height = 6}
+genes <- top_table$gene[1:6]
+group_by <- "combined_id"
+plot_counts(mac,genes, group_by, treatment_samples, control_samples, normalisation = "cpm", color_by = "combined_id")
+```
+
+Some plotting functions also have a "summarise" version that provides collapsed versions of the results in a table format.
+
+```{r de_single_summary}
+summarise_de(top_table, lfc_threshold = 1, padj_threshold = 0.05)
+```
+
+#### 3.2. Pathway analysis
+
+Differential gene expression results for individual comparisons of treatment vs control can be easily performed with functions from package <i>enrichR</i> and <i>fgsea</i>. In the following case, the effect of Staurosporine on breast cancer cells through Myc inactivation can be observed through pathway enrichment analyses. If you check the data from "DisGeNET", you will see that our mcf7 (breast cancer cell line) samples are correctly enriched for breast cancer profiles.
+
+```{r pathway_analysis_single, fig.width = 8, fig.height = 4}
+top_genes <- top_table %>%
+  filter(p_value_adj < 0.05) %>%
+  select(gene) %>%
+  pull()
+
+enriched <- enrichR::enrichr(top_genes, c("MSigDB_Hallmark_2020","DisGeNET",
+                                 "RNA-Seq_Disease_Gene_and_Drug_Signatures_from_GEO"))
+p1 <- enrichR::plotEnrich(enriched[[1]]) + 
+  macpie_theme(legend_position_ = 'right') + 
+  scale_fill_gradientn(colors = macpie_colours$divergent)
+
+gridExtra::grid.arrange(p1, ncol = 1)
+
+```
+
+#### 3.3. Differential gene expression - multiple comparisons
+
+Since MAC-seq is commonly used for high-throughput screening of compound libraries, we often want to compare multiple samples in a screen vs the control. This process can easily be parallelised. First we select a vector of "treatments" as combined_ids that do not contain the word "DMSO". (Warning, due to the limitations of "mclapply", parallelisation speedup currently only works on OSX and Linux machines, and not on Windows.)
+
+```{r de_multi, fig.width = 8, fig.height = 5}
+mac$combined_id <- make.names(mac$combined_id)
+
+treatments <- mac %>%
+  filter(Concentration_1 == 10) %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+```
+
+
+We often want to ask which genes are differentially expressed in more than one treatment group. 
+
+Here, we can visualise treatment groups with shared differentially expressed genes, defined as the top 5 DE genes from each single drug comparison (treatment vs control) that are found in at least 2 different treatment groups.
+
+The heatmap below shows shared differentially expressed genes with corresponding log2FC values.
+
+```{r plot_multi_de, fig.width=10, fig.height=6}
+plot_multi_de(mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+```
+
+
+The outputs from the analyses above can be represented in table format.
+
+```{r de_multi_summary}
+summarise_de(mac, lfc_threshold = 1, padj_threshold = 0.01, multi=TRUE)
+```
+
+#### 3.4. Pathway analysis - multiple comparisons
+
+The pathway enrichment analysis is done by using enrichR
+
+Summarise the outputs from multi de comparison in a table
+
+```{r enriched_pathways, fig.width = 8, fig.height = 12}
+
+# Load genesets from enrichr for a specific species or define your own
+enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
+
+enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
+  bind_rows() %>%
+  select(combined_id, Term, Combined.Score) %>%
+  pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
+  column_to_rownames(var = "Term") %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, log1p(.)))) %>%  # Replace NA with 0 across all columns
+  as.matrix()
+
+
+pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
+```
+
+
+**Quick check of some treatments**:
+
+**Nutlin.3a** is a MDM2-P53 inhibitor and stablises the p53 protein. It induces cell autophagy and apotopsis. Nutlin-activated p53 induces G1 and G2 arrest in cancer cell lines (see in the pathway enrichment heatmap). 
+
+**Ref**:
+Tovar C, et al. Proc Natl Acad Sci USA. 2006;103(6):1888–1893.
+Shows Nutlin-3’s effect on various p53 targets in cancer cell lines.
