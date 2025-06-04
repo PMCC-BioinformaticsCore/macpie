@@ -12,6 +12,9 @@ template:
   favicon: "man/figures/logo.png"
   params:
     bootswatch: flatly    
+  assets:
+    css:
+      - "pkgdown/extra.css"
     
 navbar:
   title: "macpie"   # Your package title as it should appear on the navbar.
@@ -20,16 +23,15 @@ navbar:
       href: index.html
     - text: "Vignettes"
       menu:
-        - text: "Introduction to macpie"
-          href: articles/macpie.html
-        - text: "Multi-plate analysis"
-          href: articles/multiplates.html
         - text: "Metadata check"
           href: articles/metadata_check.html
         - text: "Quality control"
-          href: articles/differential_expression.html
+          href: articles/quality_control.html
         - text: "Transcriptional analyses"
+          href: articles/differential_expression.html
         - text: "Compound screening"
+        - text: "Interoperability"
+          href: articles/macpie_conversion.html
         
           
     - text: "Reference"

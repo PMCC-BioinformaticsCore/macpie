@@ -1,0 +1,254 @@
+---
+title: "macpie_conversion"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{macpie}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+In this vignette, we demonstrate how to extend macpie for similar technologies such as DRUGseq. 
+
+
+```{r, include=FALSE}
+devtools::load_all("/home/rstudio/macpie/macpie/")
+```
+
+
+```{r}
+library(macpie)
+library(tibble)
+library(stringr)
+library(pheatmap)
+library(ggiraph)
+library(tidyseurat)
+library(purrr)
+```
+
+
+# DRUGseq data
+
+The DRUGseq dataset is a large-scale drug screening dataset that includes a large set of small molecules (N = 4,343) tested on U2OS cells. The dataset is part of the MoABox project, which aims to understand the mechanisms of action of different drugs.
+
+
+## Metadata 
+
+Three metadata files in Novartis_drugseq_U2OS_MoABox/ on [DRUGseq Github](https://github.com/Novartis/DRUG-seq/tree/main/data/Novartis_drugseq_U2OS_MoABox) and data can be downloaded from this ZENODO link: [Novartis/DRUG-seq U2OS MoABox Dataset Creators](https://zenodo.org/records/14291446).
+
+
+```{r}
+plate_well_metadata <- read.csv("/home/rstudio/macpie/DRUGseqData/DRUGseq_U2OS_MoABox_plate_wells_metadata_public.txt", sep = "\t")
+# compound_metadata <- read.csv("DRUGseqData/MoABox_compounds_metadata.txt", sep = "\t")
+# compound_target_metadata <- read.csv("DRUGseqData/MoABox_compounds_target_pairs_public.txt", sep = "\t")
+```
+
+
+As the metadata contains plate and well-level information for the 59,904 samples, we only read in the metadata for plate VH02012944, which is the plate we use in this vignette.
+
+```{r}
+metadata <- plate_well_metadata%>%filter(plate_barcode == "VH02012944")
+```
+
+
+
+### Convert DRUGseq metadata to macpie metadata format
+
+DRUGseq metadata format: 
+
+- Tested samples (well_type = ‘SA’) are represented as circles
+
+- The series of 16 Reference Control (well_type = ‘RC’) DMSO-treated wells are represented by filled squares in column 23
+
+- Non-effective wells (no treatment) are represented by empty squares (well_type = EMPTY) and annotated as the water cmpd_sample_id.
+
+- SA wells in column 24 consist of 3 replicates of 10 microMollar for each of 3 positive controls (BD-11-DV28, BTdCPU and Homoharringtonine).
+
+
+
+```{r}
+head(metadata)
+```
+
+Next, we convert the DRUGseq metadata to macpie metadata format. The macpie metadata format is a standardized format that includes the following columns:
+
+
+```{r}
+macpie_metadata <- metadata %>%
+  select(plate_barcode, well_id, well_index, row, col, well_type, cell_line_name, concentration, unit, hours_post_treatment, cmpd_sample_id) %>%
+  mutate(
+    Plate_ID = plate_barcode,
+    Well_ID = well_id,
+    Barcode = well_index,
+    Cell_type = cell_line_name,
+    Unit_1 = unit, 
+    Treatment_1 = cmpd_sample_id,
+    Sample_type = well_type,
+    Concentration_1 = as.numeric(concentration),
+    Row = LETTERS[row],
+    Column = as.integer(col),
+    Time = as.factor(hours_post_treatment),
+    Unit = "h",
+    Species = "human",
+    Model_type = "MoABox",
+    Sample_type = if_else(well_type == "SA" & col == 24,
+                                  "Positive Control",
+                                  well_type)
+
+)
+col_names <- c("Plate_ID", "Well_ID", "Row", "Column", "Species",
+               "Cell_type",  "Model_type", "Time", "Unit", "Treatment_1", 
+               "Concentration_1", "Unit_1",  "Sample_type", "Barcode")
+macpie_metadata <- macpie_metadata[, col_names]
+```
+
+
+
+```{r}
+head(macpie_metadata)
+```
+
+### Validate DRUGseq metadata
+
+
+Now, we can test the metadata validation function to ensure that the metadata is in the correct format and contains all the required columns.
+
+
+```{r}
+validate_metadata(macpie_metadata)
+```
+
+
+```{r}
+plot_metadata_heatmap(macpie_metadata)
+```
+
+
+## Data import
+
+One of the replicate plates `VH02012944` from batch 24. 
+
+DRUGseq data was downloaded from *./Exp_gzip.RData* from the above Zenodo link and saved as `Exp_batch24.Rds` locally for faster loading.
+
+Each batch is a list of plates, and each plate contains the UMI counts matrix and the corresponding metadata.
+
+
+```{r}
+# load("DRUGseqData/Exp_gzip.RData")
+# batch24 <- Exp$`24`
+# saveRDS(batch24, file = "DRUGseqData/Exp_batch24.Rds")
+batch24 <- readRDS("/home/rstudio/macpie/DRUGseqData/Exp_batch24.Rds")
+```
+
+
+
+```{r}
+data <- batch24$VH02012944
+counts <- data$UMI.counts
+colnames(counts) <- str_remove_all(colnames(counts), "VH02012944_")
+```
+
+
+Quick check of the UMI counts matrix dimensions and the first few row names:
+
+```{r}
+dim(data$UMI.counts)
+rownames(data$UMI.counts)[1:10]
+```
+
+```{r}
+counts <- rownames_to_column(as.data.frame(counts), var= "gene_id") %>%
+  separate(gene_id, into = c("gene_name", "chrom"), sep = ",") 
+counts[1:10,1:5]
+```
+
+
+```{r}
+counts$gene_name <- make.unique(counts$gene_name)
+counts <- counts %>%
+  select(-chrom) %>%
+  tibble::column_to_rownames(var = "gene_name")  %>%
+  as.matrix()
+```
+
+
+The UMI counts matrix and metadata are now ready to be used with macpie functions. We can create a tidySeurat object and join it with the metadata.
+
+```{r}
+as_mac<- CreateSeuratObject(counts = counts, 
+                                     assay = "RNA", 
+                                     project = "VH02012944")
+as_mac<- as_mac%>% inner_join(macpie_metadata, by = c(".cell"="Barcode"))
+```
+
+
+### Visualize plate layout 
+
+```{r}
+as_mac <- filter_genes_by_expression(as_mac, 
+                                     group_by = "Treatment_1",
+                                     min_counts = 5,
+                                     min_samples = 1)
+```
+
+
+
+```{r}
+p <- plot_plate_layout(as_mac, "nCount_RNA", "Sample_type")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:0.8px;")  # <- slight darkening
+  ))
+```
+
+
+
+```{r}
+# Calculate percent of mitochondrial and ribosomal genes
+as_mac[["percent.mt"]] <- PercentageFeatureSet(as_mac, pattern = "^mt-|^MT-")
+as_mac[["percent.ribo"]] <- PercentageFeatureSet(as_mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+# Example of a function from Seurat QC 
+VlnPlot(as_mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) 
+```
+
+
+```{r}
+p <- plot_mds(as_mac, group_by = "Sample_type", label = "Sample_type", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
+```
+
+As, there are no replicates for samples. For simplicity, we only plot the RLE plot for different types of controls. 
+
+```{r}
+plot_rle(as_mac %>% filter(Sample_type !="SA"), label_column = "Sample_type", normalisation = "raw")
+```
+
+
+## Summary
+
+This vignette demonstrates how to extend macpie for similar technologies such as DRUGseq. We have shown how to convert the DRUGseq metadata to macpie metadata format, validate the metadata, import the data, and visualize the plate layout, some basic QC.
+
+As the experimental design of DRUGseq plates is a bit different from MACseq. In MACseq experimental design, we prefer to have replicate wells in the same plate. While in DRUGseq, the replicates are in different plates. Functions to check variability among replicates like `compute_qc_metrics`, `plot_rle` and even checking clustering like PCA, UMAP, MDS plots are not that informative for a plate without replicate wells.
+
+For combing three replicate plates, user can refer to multi-plate analysis. 
+
+
+
+
