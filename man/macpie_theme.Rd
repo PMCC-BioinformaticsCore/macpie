@@ -16,9 +16,9 @@ macpie_theme(
 
 \item{show_y_title}{Logical; if \code{TRUE}, displays the y-axis title.}
 
-\item{x_labels_angle}{Numeric; rotation angle (in degrees) for x-axis text labels.}
+\item{legend_position_}{Character; position of the legend (e.g., \code{'bottom'}, \code{'none'}).}
 
-\item{legend_position}{Character; position of the legend (e.g., \code{'bottom'}, \code{'none'}).}
+\item{x_labels_angle}{Numeric; rotation angle (in degrees) for x-axis text labels.}
 }
 \value{
 A \code{ggplot2} theme object that can be added to a plot.

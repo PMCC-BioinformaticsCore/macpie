@@ -64,7 +64,7 @@ macpie_colours <- list(
 #'
 #' @param show_x_title Logical; if `TRUE`, displays the x-axis title.
 #' @param show_y_title Logical; if `TRUE`, displays the y-axis title.
-#' @param legend_position Character; position of the legend (e.g., `'bottom'`, `'none'`).
+#' @param legend_position_ Character; position of the legend (e.g., `'bottom'`, `'none'`).
 #' @param x_labels_angle Numeric; rotation angle (in degrees) for x-axis text labels.
 #' @return A `ggplot2` theme object that can be added to a plot.
 #' @examples
