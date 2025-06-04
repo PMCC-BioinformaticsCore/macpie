@@ -14,6 +14,8 @@ vignette: >
   
 ---
 
+
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -23,6 +25,18 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(macpie)
+library(enrichR)
+library(tibble)
+library(parallel)
+library(mcprogress)
+library(PoiClaClu)
+library(Matrix)
+library(data.table)
+library(Seurat)
+library(tidyseurat)
+library(stringr)
+library(pheatmap)
+library(ggiraph)
 ```
 
 
@@ -57,7 +71,7 @@ metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
 ```{r load_data}
 # Import raw data
 project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
-raw_counts_total <- Read10X(data.dir = project_rawdata)
+raw_counts <- Read10X(data.dir = project_rawdata)
 
 # Create tidySeurat object
 mac <- CreateSeuratObject(counts = raw_counts,
