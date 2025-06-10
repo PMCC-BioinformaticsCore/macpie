@@ -36,6 +36,7 @@ library(zinbwave)
 library(gdtools)
 library(ggiraph)
 library(drc)
+library(webchem)
 
 
 # Define longer length for description files
@@ -54,7 +55,7 @@ data_dir <- "inst/extdata"
 
 # Metadata ===================================================
 # Load metadata
-project_metadata <- file.path(data_dir, project_name, paste0(project_name, "_metadata.csv"))
+project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata_drugnames.csv", package = "macpie")
 metadata <- read_metadata(project_metadata)
 
 # Validate metadata
@@ -214,6 +215,21 @@ screen_profile_per_comparison %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
+######## Cheminformatics
+enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
+#to-do: shorten
+treatments <- mac %>%
+  select(combined_id) %>%
+  filter(!grepl("DMSO", combined_id)) %>%
+  pull() %>%
+  unique()
+# Update the mac object with differential expression
+mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
+mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
+mac <- compute_de_umap(mac)
+
+mac$smiles <- 
 
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
