@@ -94,7 +94,10 @@ Imports:
     glue,
     igraph,
     SummarizedExperiment,
-    unikn
+    unikn,
+    webchem,
+    randomForest,
+    MOFA2
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)

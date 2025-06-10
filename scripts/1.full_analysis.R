@@ -185,37 +185,6 @@ mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 
 
-# Aggregate data to visualise umap
-mac_agg <- aggregate_by_de(mac)
-mac_agg <- compute_de_umap(mac_agg)
-FeaturePlot(mac_agg,features = c("MYC"))
-
-mac_agg <- FindNeighbors(mac_agg, reduction = "umap_de", dims = 1:2)
-mac_agg <- FindClusters(mac_agg, resolution = 1.3)
-DimPlot(mac_agg, reduction = "umap_de")
-
-cell_coords <- Embeddings(mac_agg, reduction = "umap_de") %>%
-  as.data.frame() %>%
-  rownames_to_column("combined_id") %>%
-  left_join(mac_agg@meta.data %>% rownames_to_column("combined_id"), by = "combined_id")
-
-# Plot with clusters and labels
-ggplot(cell_coords, aes(x = UMAPde_1, y = UMAPde_2, color = seurat_clusters)) +
-  geom_point(size = 2) +
-  geom_text_repel(aes(label = combined_id), size = 3, max.overlaps = 10, force_pull = 1) +
-  theme_minimal() +
-  guides(color = guide_legend(title = "Cluster")) +
-  labs(x = "UMAP 1", y = "UMAP 2", title = "UMAP with Cell Names") +
-  theme(legend.position = "right")
-
-
-
-
-
-
-p <- plot_de_umap(mac_agg, group_by = "cluster", max_overlaps = 5)
-girafe(ggobj = p, fonts = list(sans = "Open Sans"))
-
 # Get all the differential expression information in a tabular format
 de_genes_per_comparison <- bind_rows(mac@tools$diff_exprs)
 enriched_pathways_per_comparison <- mac@tools$pathway_enrichment

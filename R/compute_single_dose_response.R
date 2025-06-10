@@ -17,7 +17,8 @@ utils::globalVariables(c("combined_id", "column_name", "concentration", "predict
 #' @importFrom stats predict
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
-#' \dontrun{rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
+#' \dontrun{
+#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac<-readRDS(rds_file)
 #' res <- compute_single_dose_response(data = mac,
 #' gene = "PTPRA",
