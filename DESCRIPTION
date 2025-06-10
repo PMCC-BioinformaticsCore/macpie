@@ -97,7 +97,10 @@ Imports:
     unikn,
     webchem,
     randomForest,
-    MOFA2
+    MOFA2,
+    Matrix, 
+    data.table, 
+    rcdk
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)
