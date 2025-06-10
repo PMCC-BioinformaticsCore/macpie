@@ -178,28 +178,7 @@ mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10")
 
 
-####### EC50s
-results<-list()
-treatments <- mac %>%
-  select(Treatment_1) %>%
-  filter(!grepl("DMSO", Treatment_1)) %>%
-  pull() %>%
-  unique()
-for(treatment in mac$Treatment_1){
-  res_gene<-list()
-  for(gene in row.names(mac@assays$RNA$counts)){
-  res <- compute_single_dose_response(data = mac,
-                                      gene = gene,
-                                      normalisation = "limma_voom",
-                                      treatment_value = "Staurosporine")
-  res_gene[[gene]]<-as.numeric(res$model$coefficients[4])
-  }
-  results[[treatment]]<-
-}
-
-
 # Aggregate data to visualise umap
-
 mac_agg <- aggregate_by_de(mac)
 mac_agg <- compute_de_umap(mac_agg)
 DimPlot(mac_agg, reduction = "umap_de")
@@ -325,7 +304,12 @@ head(lm_ranked, 20)  # Top 20 most significant predictors
 
 ############ MOFA
 
-# 1. View 1: pathway enrichment (wide)
+#load in the metadata on cell viability and confluence
+
+cell_viability <- read.csv("")
+
+
+
 compounds_10um <- mac %>%
   filter(Concentration_1 == 10) %>%
   select(combined_id) %>%
@@ -333,8 +317,35 @@ compounds_10um <- mac %>%
          
 pathway_mat <- mac@tools$pathway_enrichment %>%
   filter(combined_id %in% compounds_10um) %>%
+  filter(Adjusted.P.value < 0.05) %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = Term, values_from = Combined.Score) %>%
+  column_to_rownames("combined_id") %>%
+  as.data.frame() %>%
+  rownames_to_column("combined_id") %>%
+  left_join(
+    mac@meta.data %>% select(combined_id, Treatment_1) %>% distinct(),
+    by = "combined_id"
+  ) %>%
+  select(-combined_id) %>%
+  relocate(Treatment_1) %>%
+  column_to_rownames("Treatment_1") %>%
+  t()
+
+# 1. Combine all DE results
+all_de <- bind_rows(mac@tools$diff_exprs, .id = "comparison")
+
+# 2. Identify genes that are significant in at least one comparison
+signif_genes <- all_de %>%
+  filter(p_value_adj < 0.01) %>%
+  pull(gene) %>%
+  unique()
+
+# 3. Filter and reshape the matrix for only significant genes and relevant compounds
+gene_mat <- all_de %>%
+  filter(gene %in% signif_genes, combined_id %in% compounds_10um) %>%
+  select(combined_id, gene, metric) %>%  # Change 'logFC' to your desired metric
+  pivot_wider(names_from = gene, values_from = metric) %>%
   column_to_rownames("combined_id") %>%
   as.data.frame() %>%
   rownames_to_column("combined_id") %>%
@@ -358,10 +369,28 @@ desc_mat <- mac@tools$chem_descriptors %>%
 #  column_to_rownames("Treatment_1") %>%
 #  t()
 
+reads_counts <- mac %>%
+  filter(Concentration_1 == 10) %>%
+  select(Treatment_1, nCount_RNA) %>%
+  group_by(Treatment_1) %>%
+  summarise(read_count = log10(mean(nCount_RNA))) %>%
+  ungroup() %>%
+  deframe()
+
 # 4. Match sample names across views
-common_cols <- Reduce(intersect, list(colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
+common_cols <- Reduce(intersect, list(names(reads_counts), colnames(gene_mat), colnames(pathway_mat), colnames(desc_mat)))  # add fp_mat if used
 
 views <- list(
+  reads = t(as.matrix(reads_counts[common_cols])),
+  genes = gene_mat[, common_cols],
+  pathways = pathway_mat[, common_cols],
+  descriptors = desc_mat[, common_cols]
+  # , fingerprints = fp_mat[, common_cols]
+)
+
+views <- list(
+  #reads = t(as.matrix(reads_counts[common_cols])),
+  genes = gene_mat[, common_cols],
   pathways = pathway_mat[, common_cols],
   descriptors = desc_mat[, common_cols]
   # , fingerprints = fp_mat[, common_cols]
@@ -372,15 +401,18 @@ model_opts <- get_default_model_options(mofa_obj)
 train_opts <- get_default_training_options(mofa_obj)
 train_opts$seed <- 1  # for reproducibility
 
-
-
 mofa_obj <- prepare_mofa(mofa_obj, model_options = model_opts, training_options = train_opts)
 model <- run_mofa(mofa_obj, use_basilisk = TRUE)
 
 plot_factors(model, color_by = "group")  # coloring by treatment groups
-plot_weights(model, view = "descriptors", factor = 1)
+plot_weights(model, view = "pathways", factor = 1)
 plot_variance_explained(model)
 
+plot_top_weights(model,
+                 view = "genes",
+                 factor = 1,
+                 nfeatures = 10
+)
 ############ PROCEDURE TO MAKE A FUNCTION
 #1. open terminal and pull from github
 #git pull origin main
