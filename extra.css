@@ -1,10 +1,23 @@
-/* Float the TOC panel */
-.toc {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  width: 250px;
+/* pkgdown/extra.css */
+
+/* On large screens, swap the sidebar (col-3) and main content (col-9) */
+@media (min-width: 992px) {
+  .container .row {
+    display: flex;
+  }
+  /* content column first */
+  .container .row > .col-md-9 {
+    order: 1;
+  }
+  /* sidebar second */
+  .container .row > .col-md-3 {
+    order: 2;
+  }
 }
-.article-content {
-  margin-right: 280px;
+
+/* Optional: add some left margin so sidebar doesn’t hug the edge */
+@media (min-width: 992px) {
+  .container .row > .col-md-3 {
+    margin-left: 1rem;
+  }
 }

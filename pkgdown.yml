@@ -6,7 +6,7 @@ articles:
   macpie_conversion: macpie_conversion.html
   metadata_check: metadata_check.html
   quality_control: quality_control.html
-last_built: 2025-06-04T06:56Z
+last_built: 2025-06-11T06:41Z
 urls:
   reference: https://github.com/PMCC-BioinformaticsCore/macpie.git/reference
   article: https://github.com/PMCC-BioinformaticsCore/macpie.git/articles
