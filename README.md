@@ -3,12 +3,6 @@
 
 # macpie
 
-<img
-  src="man/figures/logo.png"
-  style="float: right; width: 10%; height: 10%;"
-  alt="macpie logo"
-/>
-
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml/badge.svg)](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml)
