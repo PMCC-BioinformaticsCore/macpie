@@ -8,14 +8,8 @@ build:
   articles: true
 
 template:
-  logo: "man/figures/logo.png"
-  favicon: "man/figures/logo.png"
-  params:
-    bootswatch: flatly    
-  assets:
-    css:
-      - "pkgdown/extra.css"
-    
+  bootstrap: 5
+
 navbar:
   title: "macpie"   # Your package title as it should appear on the navbar.
   left:
@@ -32,8 +26,6 @@ navbar:
         - text: "Compound screening"
         - text: "Interoperability"
           href: articles/macpie_conversion.html
-        
-          
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:

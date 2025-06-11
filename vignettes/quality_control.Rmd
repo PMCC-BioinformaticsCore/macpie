@@ -1,13 +1,9 @@
 ---
 title: "Quality Control"
 output:
-  rmarkdown::html_document:
-    theme: flatly
-    toc: true
-    toc_float: true
-    toc_depth: 5
+  rmarkdown::html_document
 vignette: >
-  %\VignetteIndexEntry{macpie}
+  %\VignetteIndexEntry{quality_control}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignetteBuild{true}

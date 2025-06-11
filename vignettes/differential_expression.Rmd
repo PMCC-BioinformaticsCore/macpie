@@ -1,13 +1,9 @@
 ---
 title: "differential_expression"
 output:
-  rmarkdown::html_document:
-    theme: flatly
-    toc: true
-    toc_float: true
-    toc_depth: 5
+  rmarkdown::html_document
 vignette: >
-  %\VignetteIndexEntry{macpie}
+  %\VignetteIndexEntry{differential_expression}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignetteBuild{true}
