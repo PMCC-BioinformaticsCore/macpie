@@ -14,8 +14,8 @@
 #' @examples
 #' data(mini_mac)
 #' top_genes <- mini_mac@tools$diff_exprs[["Staurosporine_10"]]$gene
-#' result <- compute_single_enrichr(genes = top_genes, db = "MSigDB_Hallmark_2020", species = "human")
-#' head(result)
+#' data(genesets)
+#' compute_single_enrichr(genes = top_genes, genesets = genesets, species="human")
 
 compute_single_enrichr <- function(genes = NULL, db = NULL, genesets = NULL, species = NULL) {
 
