@@ -16,7 +16,7 @@ rownames(mat) <- feat$V2
 set.seed(1)
 keep_genes<- sample(nrow(mat), 500)
 
-#drop genes to 300 
+
 mat_small <- mat[keep_genes, ,drop = FALSE]
 bar_small <- bar
 feat_small <- feat[keep_genes, ]
