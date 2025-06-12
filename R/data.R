@@ -1,6 +1,6 @@
 #' A small example MACseq plate
 #'
-#' A 384-cell × 300-gene subset of the PMMSq033 dataset, included for
+#' A 384-cell × 500-gene subset of the PMMSq033 dataset, included for
 #' runnable examples and fast CRAN checks.
 #'
 #' @format A \code{\link[Seurat]{Seurat}} object with one assay:
