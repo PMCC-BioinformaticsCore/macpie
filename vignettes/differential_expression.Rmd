@@ -29,9 +29,6 @@ library(Seurat)
 library(tidyseurat)
 library(stringr)
 library(pheatmap)
-
-
-
 ```
 
 
@@ -58,7 +55,6 @@ project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macp
 metadata <- read_metadata(project_metadata)
 metadata$Time <- as.factor(metadata$Time)
 metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
-
 ```
 
 
