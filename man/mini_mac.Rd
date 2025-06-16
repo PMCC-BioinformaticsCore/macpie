@@ -17,7 +17,7 @@ Prepared by subsetting \code{PMMSq033.rds} in \code{data/}
 data(mini_mac)
 }
 \description{
-A 384-cell × 300-gene subset of the PMMSq033 dataset, included for
+A 384-cell × 500-gene subset of the PMMSq033 dataset, included for
 runnable examples and fast CRAN checks.
 }
 \keyword{datasets}
