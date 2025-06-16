@@ -11,13 +11,20 @@
 #' @export
 #'
 #' @examples
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(file_path)
-#' mac <- compute_smiles(mac)
+#' mock_data <- tibble::tibble(
+#' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+#' )
+#' result <- compute_smiles(mock_data)
 
 compute_smiles <- function(data) {
-  if (!"Treatment_1" %in% colnames(data@meta.data)) {
-    stop("The input object must contain a column named 'Treatment_1'")
+  if (inherits(data, "tbl_df")) {
+    if (!"Treatment_1" %in% colnames(data)) {
+      stop("The input tibble must contain a column named 'Treatment_1'")
+    }
+  } else {
+    if (!"Treatment_1" %in% colnames(data@meta.data)) {
+      stop("The input object must contain a column named 'Treatment_1'")
+    }
   }
   
   # Clean compound names
