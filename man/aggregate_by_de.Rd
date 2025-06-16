@@ -29,8 +29,7 @@ This function performs the following steps:
 }
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac_collapsed <- aggregate_by_de(mac)
+data(mini_mac)
+mac_collapsed <- aggregate_by_de(mini_mac)
 
 }
