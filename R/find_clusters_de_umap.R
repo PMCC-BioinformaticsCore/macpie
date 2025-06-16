@@ -5,6 +5,7 @@
 #' @param k Number of nearest neighbors in buildSNNGraph used to construct a
 #'   shared nearest-neighbor (SNN) graph
 #' @importFrom scran buildSNNGraph
+#' @importFrom tibble rownames_to_column
 
 #' @returns A tidyseurat object with cluster information in the metadata slot
 #' @export
@@ -26,7 +27,8 @@ find_clusters_de_umap <- function(data = NULL, k = 10) {
   }
 
   #fetch data from the tidyseurat object
-  df_umap_data <- data@tools$umap_de
+  df_umap_data <- as.data.frame(data@reductions$umap_de@cell.embeddings) %>%
+    rownames_to_column("combined_id")
 
   validate_inputs(df_umap_data, k)
 

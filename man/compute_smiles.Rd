@@ -17,7 +17,8 @@ This function retrieves isomeric SMILES from PubChem based on compound names
 in the \code{Treatment_1} column of a tidyseurat object.
 }
 \examples{
-file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-mac <- readRDS(file_path)
-mac <- compute_smiles(mac)
+mock_data <- tibble::tibble(
+Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+)
+result <- compute_smiles(mock_data)
 }

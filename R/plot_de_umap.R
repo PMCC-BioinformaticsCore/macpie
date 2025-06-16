@@ -45,7 +45,8 @@ plot_de_umap <- function(data = NULL, group_by = NULL, label = NULL, max_overlap
   max_overlaps <- validated$max_overlaps
   data <- validated$data
 
-  df_umap_data <- data@tools[["umap_de"]]
+  df_umap_data <- as.data.frame(data@reductions$umap_de@cell.embeddings) %>%
+    rownames_to_column("combined_id")
   data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAP_1", "UMAP_2"))))
   df_umap_data <- df_umap_data %>%
     left_join(., data@meta.data, join_by("combined_id")) %>%

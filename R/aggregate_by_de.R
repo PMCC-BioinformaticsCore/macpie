@@ -18,6 +18,7 @@
 #' @import tidyverse 
 #' @import Seurat 
 #' @importFrom Matrix Matrix
+#' @importFrom tibble column_to_rownames
 #' @import tidyseurat
 #' @examples
 #' data(mini_mac)
