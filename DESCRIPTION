@@ -94,7 +94,6 @@ Imports:
     SummarizedExperiment,
     unikn,
     webchem,
-    randomForest,
     MOFA2,
     Matrix, 
     data.table, 
