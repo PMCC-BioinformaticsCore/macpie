@@ -57,12 +57,12 @@ build_mofa <- function(data,
     filter(combined_id %in% combined_ids) %>%
     dplyr::select(combined_id, all_of("additional_features")) %>%
     group_by(combined_id) %>%
-    summarise(across(all_of(additional_features), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
+    summarise(across(all_of("additional_features"), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
     left_join(
-      data@meta.data %>% dplyr::select(combined_id, Treatment_1) %>% distinct(),
+      data@meta.data %>% dplyr::select("combined_id", "Treatment_1") %>% distinct(),
       by = "combined_id"
     ) %>%
-    relocate(Treatment_1) %>%
+    relocate("Treatment_1") %>%
     dplyr::select(-combined_id) %>%
     column_to_rownames("Treatment_1") %>%
     t()
