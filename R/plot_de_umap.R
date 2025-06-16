@@ -47,18 +47,18 @@ plot_de_umap <- function(data = NULL, group_by = NULL, label = NULL, max_overlap
 
   df_umap_data <- as.data.frame(data@reductions$umap_de@cell.embeddings) %>%
     rownames_to_column("combined_id")
-  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAP_1", "UMAP_2"))))
+  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAPde_1", "UMAPde_2"))))
   df_umap_data <- df_umap_data %>%
     left_join(., data@meta.data, join_by("combined_id")) %>%
-    select(!!rlang::sym(group_by), !!rlang::sym(label), "UMAP_1", "UMAP_2") %>%
+    select(!!rlang::sym(group_by), !!rlang::sym(label), "UMAPde_1", "UMAPde_2") %>%
     unique()
 
-  p <- ggplot(df_umap_data, aes(x = .data$UMAP_1,
-                                y = .data$UMAP_2,
+  p <- ggplot(df_umap_data, aes(x = .data$UMAPde_1,
+                                y = .data$UMAPde_2,
                                 color = !!rlang::sym(group_by),
                                 label = !!rlang::sym(label))) +
-    geom_point_interactive(aes(x = .data$UMAP_1,
-                               y = .data$UMAP_2,
+    geom_point_interactive(aes(x = .data$UMAPde_1,
+                               y = .data$UMAPde_2,
                                color = !!rlang::sym(group_by),
                                tooltip = !!rlang::sym(label),
                                data_id = !!rlang::sym(label))) +
