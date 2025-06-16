@@ -85,7 +85,7 @@ compute_multiple_dose_response <- function(data,
   for (treatment_value in treatments) {
     meta <- data@meta.data %>%
       mutate(barcode = rownames(.)) %>%
-      filter(Treatment_1 %in% c(treatment_value, control_value))
+      filter("Treatment_1" %in% c(treatment_value, control_value))
     
     if (nrow(meta) < 3) next
     
