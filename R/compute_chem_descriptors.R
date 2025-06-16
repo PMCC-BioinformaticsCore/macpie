@@ -9,6 +9,7 @@
 #' @importFrom rcdk parse.smiles get.desc.names eval.desc
 #' @importFrom dplyr select where bind_rows mutate
 #' @importFrom stringr str_replace_all str_trim str_to_title
+#' @importFrom stats cor
 #' @export
 #'
 #' @examples
@@ -31,13 +32,13 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
   
   # Prepare compound names
   data$clean_compound_name <- data %>%
-    select(Treatment_1) %>%
+    select("Treatment_1") %>%
     pull() %>%
     str_replace_all("_", " ") %>%
     str_trim() %>%
     str_to_title()
   
-  smiles_list <- data %>% select(clean_compound_name, Treatment_1, smiles) %>% distinct()
+  smiles_list <- data %>% select("clean_compound_name", "Treatment_1", "smiles") %>% distinct()
   
   # Parse SMILES and name molecules
   mol <- parse.smiles(smiles_list$smiles[!is.na(smiles_list$smiles)])
@@ -66,7 +67,7 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
     select(where(~ n_distinct(.) > 1))
   
   # Remove highly correlated columns (R² > 0.6)
-  corr_mat <- cor(descriptor_df_clean %>% select(-clean_compound_name), use = "pairwise.complete.obs")^2
+  corr_mat <- cor(descriptor_df_clean %>% select(-"clean_compound_name"), use = "pairwise.complete.obs")^2
   upper_tri <- which(upper.tri(corr_mat) & corr_mat > r_squared, arr.ind = TRUE)
   cols_to_remove <- unique(colnames(corr_mat)[upper_tri[, 2]])
   

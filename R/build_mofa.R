@@ -15,15 +15,15 @@ build_mofa <- function(data,
   # If no combined IDs provided, default to highest concentration or DMSO treatments
   if (is.null(combined_ids)) {
     combined_ids <- data %>%
-      filter(Concentration_1 == max(as.numeric(as.character(meta$Concentration_1)))) %>%
+      filter("Concentration_1" == max(as.numeric(as.character(meta$Concentration_1)))) %>%
       pull(combined_id) %>% unique()
   }
   
   # Pathway Enrichment 
   pathway_mat <- tools$pathway_enrichment %>%
     filter(combined_id %in% combined_ids, !!sym(pathway_pval_col) < pathway_pval_thresh) %>%
-    dplyr::select(combined_id, Term, Combined.Score) %>%
-    pivot_wider(names_from = Term, values_from = !!sym(score_col)) %>%
+    dplyr::select("combined_id", "Term", "Combined.Score") %>%
+    pivot_wider(names_from = "Term", values_from = !!sym(score_col)) %>%
     left_join(meta %>% dplyr::select(combined_id, !!sym(metadata_col)) %>% distinct(), by = "combined_id") %>%
     relocate(!!sym(metadata_col)) %>%
     column_to_rownames(metadata_col) %>%
@@ -48,14 +48,14 @@ build_mofa <- function(data,
   
   # Chemical descriptors
   desc_mat <- tools$chem_descriptors %>%
-    dplyr::select(-clean_compound_name) %>%
+    dplyr::select(-"clean_compound_name") %>%
     column_to_rownames(metadata_col) %>%
     t()
   
   # Additional descriptors
   phenotype_mat <- data@meta.data %>%
     filter(combined_id %in% combined_ids) %>%
-    dplyr::select(combined_id, all_of(additional_features)) %>%
+    dplyr::select(combined_id, all_of("additional_features")) %>%
     group_by(combined_id) %>%
     summarise(across(all_of(additional_features), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
     left_join(
