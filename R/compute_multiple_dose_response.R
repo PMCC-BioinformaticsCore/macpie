@@ -15,6 +15,7 @@
 #' @import drc
 #' @importFrom dplyr filter mutate select pull distinct bind_rows
 #' @importFrom parallel mclapply
+#' @importFrom utils capture.output
 #' @return A data frame of EC50 values per gene and treatment.
 #'
 #' @examples
@@ -67,8 +68,8 @@ compute_multiple_dose_response <- function(data,
   )
   
   treatments <- data %>%
-    select(Treatment_1) %>%
-    filter(!grepl(control_value, Treatment_1)) %>%
+    select("Treatment_1") %>%
+    filter(!grepl("control_value", "Treatment_1")) %>%
     pull() %>%
     unique()
   
