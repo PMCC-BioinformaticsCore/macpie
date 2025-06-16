@@ -39,7 +39,7 @@ compute_smiles <- function(data) {
   
   # Retrieve SMILES and merge with CIDs
   smiles_df <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
-    mutate("CID" = as.character("CID")) %>%
+    mutate("CID" = as.character(.data$CID)) %>%
     left_join(cids, by = c("CID" = "cid")) %>%
     rename(smiles = "IsomericSMILES")
   

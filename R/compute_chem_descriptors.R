@@ -4,7 +4,7 @@
 #' It stores cleaned, non-redundant descriptors in `tools$chem_descriptors`.
 #'
 #' @param data A tidyseurat object with a `smiles` column and `Treatment_1` column.
-#' @param r R squared value, default of 0.6
+#' @param r_squared R squared value, default of 0.6
 #' @returns The same tidyseurat object with a new entry in `tools$chem_descriptors`.
 #' @importFrom rcdk parse.smiles get.desc.names eval.desc
 #' @importFrom dplyr select where bind_rows mutate
@@ -13,19 +13,28 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' file_path <- system.file("extdata", "PMMSq033/PMMSq033.rds", package = "macpie")
-#' data <- readRDS(file_path)
-#' data <- compute_smiles(data)
-#' data <- compute_chem_descriptors(data)
-#' }
+#' mock_data <- tibble::tibble(
+#' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+#' )
+#' result <- compute_smiles(mock_data)
+#' data <- compute_chem_descriptors(result)
 compute_chem_descriptors <- function(data, r_squared = 0.6) {
-  if (!"smiles" %in% colnames(data@meta.data)) {
-    stop("The input must contain a `smiles` column. Run compute_smiles() first.")
+  if (inherits(data, "tbl_df")) {
+    if (!"smiles" %in% colnames(data)) {
+      stop("The input must contain a `smiles` column. Run compute_smiles() first.")
+    }
+    if (!"Treatment_1" %in% colnames(data)) {
+      stop("The input tibble must contain a column named 'Treatment_1'")
+    }
+  } else {
+    if (!"smiles" %in% colnames(data@meta.data)) {
+      stop("The input must contain a `smiles` column. Run compute_smiles() first.")
+    }
+    if (!"Treatment_1" %in% colnames(data@meta.data)) {
+      stop("The input object must contain a column named 'Treatment_1'")
+    }
   }
-  if (!"Treatment_1" %in% colnames(data@meta.data)) {
-    stop("The input must contain a `Treatment_1` column.")
-  }
+  
   if (!inherits(r_squared, "numeric")) {
     stop("The r value must be numeric")
   }
@@ -77,7 +86,11 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
   descriptor_df_clean$Treatment_1 <- smiles_list$Treatment_1[!is.na(smiles_list$smiles)]
   
   # Store in @tools
-  data@tools$chem_descriptors <- descriptor_df_clean
-  
+  if (inherits(data, "tbl_df")) {
+    data <- data %>%
+      left_join(., descriptor_df_clean, join_by("Treatment_1"))
+  } else {
+    data@tools$chem_descriptors <- descriptor_df_clean
+  }
   return(data)
 }
