@@ -53,8 +53,13 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
   smiles_list <- smiles_list %>% filter(!is.na(.data$smiles))
   
   # Parse SMILES and name molecules
-  mol <- parse.smiles(smiles_list$smiles)
+  safe_parse <- function(s) {
+    tryCatch(parse.smiles(s)[[1]], error = function(e) NULL)
+  }
+  
+  mol <- lapply(smiles_list$smiles, safe_parse)
   names(mol) <- smiles_list$clean_compound_name
+  mol <- Filter(Negate(is.null), mol)
   
   # Filter safe descriptors (exclude 3D/charge-based)
   safe_descs <- setdiff(
