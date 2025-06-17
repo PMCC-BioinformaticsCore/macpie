@@ -50,7 +50,7 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
       )
     )
   
-  smiles_list <- smiles_list %>% filter(!is.na(smiles))
+  smiles_list <- smiles_list %>% filter(!is.na(.data$smiles))
   
   # Parse SMILES and name molecules
   mol <- parse.smiles(smiles_list$smiles)
