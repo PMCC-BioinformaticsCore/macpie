@@ -43,9 +43,14 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
   smiles_list <- data %>%
     select("Treatment_1", "smiles") %>%
     distinct() %>%
-    mutate(clean_compound_name = str_to_title(str_trim(str_replace_all("Treatment_1", "_", " "))))
+    mutate(clean_compound_name = str_to_title(
+      str_trim(
+        str_replace_all(.data$Treatment_1, "_", " ")
+        )
+      )
+    )
   
-  smiles_list <- smiles_list %>% filter(!is.na("smiles"))
+  smiles_list <- smiles_list %>% filter(!is.na(smiles))
   
   # Parse SMILES and name molecules
   mol <- parse.smiles(smiles_list$smiles)
