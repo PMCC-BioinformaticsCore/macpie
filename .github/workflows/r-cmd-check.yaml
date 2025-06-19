@@ -43,6 +43,23 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
 
+      # NEW: Install system Java & other lib dependencies on Ubuntu
+      - name: Install system dependencies on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
+          echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
+
+      # Install R package dependencies: rJava, rcdklibs, rcdk
+      - name: Install R package dependencies
+        run: |
+          Rscript -e 'install.packages(c("rJava","rcdklibs","rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
+
+      - name: Run tests
+	run: |
+	  Rscript -e 'library(rcdk); parse.smiles("CCO")'	
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
