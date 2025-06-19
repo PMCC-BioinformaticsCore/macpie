@@ -13,11 +13,13 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' mock_data <- tibble::tibble(
 #' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
 #' result <- compute_smiles(mock_data)
 #' data <- compute_chem_descriptors(result)
+#' }
 compute_chem_descriptors <- function(data, r_squared = 0.6) {
   if (inherits(data, "tbl_df")) {
     if (!"smiles" %in% colnames(data)) {
