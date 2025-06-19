@@ -51,12 +51,12 @@ jobs:
           sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
           echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
 
-      # Install R package dependencies: rJava, rcdklibs, rcdk
+      # NEW: Install R package dependencies: rJava, rcdklibs, rcdk
       - name: Install R package dependencies
         run: |
           Rscript -e 'install.packages(c("rJava","rcdklibs","rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
 
-      # Run test
+      # NEW: Run test
       - name: Run test
         run: |
           Rscript -e 'library(rcdk); parse.smiles("COO")'	
