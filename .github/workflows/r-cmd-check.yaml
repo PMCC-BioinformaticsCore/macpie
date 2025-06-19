@@ -45,6 +45,7 @@ jobs:
 
       # NEW: Install system Java & other lib dependencies for Ubuntu
       - name: Install Java & system dependencies
+	if: runner.os == 'Linux' 
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
