@@ -80,7 +80,7 @@ aggregate_by_de <- function(data, metric_col = "metric") {
     ) %>%
     mutate(cell_id = combined_id) %>%
     column_to_rownames("cell_id") %>%
-    select(-orig.ident)
+    select(-"orig.ident")
   
   # 3. Create new Seurat object with DE matrix as RNA assay
   seurat_new <- CreateSeuratObject(

@@ -29,7 +29,7 @@ compute_smiles <- function(data) {
   
   # Clean compound names
   data$clean_compound_name <- data %>%
-    select(Treatment_1) %>%
+    select("Treatment_1") %>%
     pull() %>%
     str_replace_all("_", " ") %>%
     str_trim() 
@@ -39,13 +39,13 @@ compute_smiles <- function(data) {
   
   # Retrieve SMILES and merge with CIDs
   smiles_df <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
-    mutate(CID = as.character(CID)) %>%
+    mutate("CID" = as.character(.data$CID)) %>%
     left_join(cids, by = c("CID" = "cid")) %>%
-    rename(smiles = IsomericSMILES)
+    rename(smiles = "IsomericSMILES")
   
   # Merge back into main object
   data <- data %>%
     left_join(., smiles_df, by = c("clean_compound_name" = "query")) %>%
-    select(-clean_compound_name)
+    select(-"clean_compound_name")
   return(data)
 }
