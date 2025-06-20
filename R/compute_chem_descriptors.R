@@ -15,7 +15,7 @@
 #' @examples
 #' \dontrun{
 #' mock_data <- tibble::tibble(
-#' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+#'   Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
 #' result <- compute_smiles(mock_data)
 #' data <- compute_chem_descriptors(result)
