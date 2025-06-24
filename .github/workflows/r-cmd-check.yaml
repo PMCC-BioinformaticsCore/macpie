@@ -60,9 +60,19 @@ jobs:
 
       # NEW: Check Java and R linkage
       - name: Check Java and R linkage
+        if: runner.os == 'Linux'
         run: |
           java -version
-          R CMD javareconf
+          echo "JAVA_HOME=${JAVA_HOME}"
+          echo "Trying to reconfigure R Java (will fail silently if no permission)"
+          sudo R CMD javareconf || true  # allow non-zero exit without failing
+
+      # Skip javareconf on Windows
+      - name: Check Java and R linkage (Windows - skip javareconf)
+        if: runner.os == 'Windows'
+        run: |
+          java -version
+          echo "Skipping R CMD javareconf on Windows"
 
       # NEW: Run test
       - name: Run test
