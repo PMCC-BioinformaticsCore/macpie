@@ -49,23 +49,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
-          echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
-          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-          sudo R CMD javareconf
 
       # NEW: Install R package dependencies: rJava, rcdklibs, rcdk
       - name: Install R package dependencies
         run: |
           Rscript -e 'install.packages(c("rJava", "rcdklibs", "rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
 
-      # NEW: Check Java and R linkage
+      # NEW: Print current Java config
       - name: Check Java and R linkage
         if: runner.os == 'Linux'
         run: |
           java -version
-          echo "JAVA_HOME=${JAVA_HOME}"
-          echo "Trying to reconfigure R Java (will fail silently if no permission)"
-          sudo R CMD javareconf || true  # allow non-zero exit without failing
+          Rscript -e 'library(rJava); .jinit(); cat("Java version in R:", .jcall("java/lang/System", "S", "getProperty", "java.version"), "\n")'
 
       # Skip javareconf on Windows
       - name: Check Java and R linkage (Windows - skip javareconf)
