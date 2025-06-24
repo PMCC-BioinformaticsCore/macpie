@@ -50,19 +50,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
           echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
-	  export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-	  sudo R CMD javareconf
+          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+          sudo R CMD javareconf
 
       # NEW: Install R package dependencies: rJava, rcdklibs, rcdk
       - name: Install R package dependencies
         run: |
-          Rscript -e 'install.packages(c("rJava","rcdklibs","rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
+          Rscript -e 'install.packages(c("rJava", "rcdklibs", "rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
 
-      # NEW: check Java Linkdage
+      # NEW: Check Java and R linkage
       - name: Check Java and R linkage
-	run: |
-	  java -version
-	  R CMD javareconf	
+        run: |
+          java -version
+          R CMD javareconf
 
       # NEW: Run test
       - name: Run test
