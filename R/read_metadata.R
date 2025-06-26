@@ -68,8 +68,13 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
       ~ if (n_distinct(.) < 10) as.factor(.) else .  # or < 20 if you want
     ))
 
+  #if there are multiple plates, append plate id to row/column/well id
+  data <- data %>%
+    mutate(across(c(Row, Column, Well_ID),
+                  ~ if (n_distinct(Plate_ID) > 1) paste0(Plate_ID, "_", .x) else .x))
+  
   # Match predefined columns with user columns
-  # Strict string matching required here as requested by Xin
+  # Strict string matching required here 
 
   match_columns <- function(data, predefined_columns) {
     user_columns <- colnames(data)
