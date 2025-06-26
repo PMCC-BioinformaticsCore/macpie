@@ -8,6 +8,7 @@ utils::globalVariables(c(".data", "Plate_ID"))
 #' @param metadata_file Path to the metadata CSV file path.
 #' @param legend A character value ("show" or "none") to control whether to display legends.
 #' @param output_file A file path and name to save the heatmaps as a graph (png, pdf, or jpg).
+#' @param plate Plate to be plotted. Default is first plate.
 #'
 #' @return Displays the plot as a ggplot object or saves it as a file (jpg, png, or pdf).
 #'
@@ -28,10 +29,14 @@ utils::globalVariables(c(".data", "Plate_ID"))
 #' @export
 
 
-plot_metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend = TRUE, output_file = NULL) {
+plot_metadata_heatmap <- function(metadata = NULL, 
+                                  metadata_file = NULL, 
+                                  legend = TRUE, 
+                                  output_file = NULL,
+                                  plate = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, metadata_file, legend, output_file) {
+  validate_inputs <- function(data, metadata_file, legend, output_file, plate) {
 
     #If neither present
     if (is.null(data) && is.null(metadata_file)) {
@@ -67,22 +72,30 @@ plot_metadata_heatmap <- function(metadata = NULL, metadata_file = NULL, legend 
     if (!(inherits(output_file, "NULL") || inherits(output_file, "character"))) {
       stop("The `output_file` should be either empty or provide the name of the output file.")
     }
-    return(list(metadata = metadata, legend = legend, output_file = output_file))
+    return(list(metadata = metadata, legend = legend, output_file = output_file, plate = plate))
   }
 
   # Validate inputs
-  validated <- validate_inputs(metadata, metadata_file, legend, output_file)
+  validated <- validate_inputs(metadata, metadata_file, legend, output_file, plate)
   metadata <- validated$metadata
   legend <- validated$legend
   output_file <- validated$output_file
-
+  plate <- validated$plate
+  
   metadata <- metadata %>%
     mutate(
       # keep row as A-P instead of numeric 1-16
       row = factor(str_extract(metadata$Well_ID, "^[A-P]")),
       col = as.numeric(str_extract(metadata$Well_ID, "\\d+"))
-    )
+    ) %>%
+    filter()
 
+  #if there is user input for plate id, subset metadata
+  if (!inherits(plate, "NULL")) {
+    metadata <- metadata %>%
+      filter(Plate_ID %in% plate)
+  }
+  
   if (!"Plate_ID" %in% colnames(metadata)) {
     stop("The metadata is missing a 'Plate_ID' column.")
   }
