@@ -69,10 +69,10 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
     ))
 
   #if there are multiple plates, append plate id to row/column/well id
-  data <- data %>%
-    mutate(across(c(Row, Column, Well_ID),
-                  ~ if (n_distinct(Plate_ID) > 1) paste0(Plate_ID, "_", .x) else .x))
-  
+  #data <- data %>%
+  #  mutate(across(c(Row, Column, Well_ID),
+  #                ~ if (n_distinct(Plate_ID) > 1) paste0(Plate_ID, "_", .x) else .x))
+  #
   # Match predefined columns with user columns
   # Strict string matching required here 
 
