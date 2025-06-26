@@ -5,6 +5,7 @@
 #'
 #' @param data A tidyseurat object with a `smiles` column and `Treatment_1` column.
 #' @param r_squared R squared value, default of 0.6
+#' @param descriptors Specify any descriptors of interest from rcdk 
 #' @returns The same tidyseurat object with a new entry in `tools$chem_descriptors`.
 #' @importFrom rcdk parse.smiles get.desc.names eval.desc
 #' @importFrom dplyr select where bind_rows mutate
@@ -18,9 +19,12 @@
 #'   Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
 #' result <- compute_smiles(mock_data)
-#' data <- compute_chem_descriptors(result)
+#' data <- compute_chem_descriptors(result, descriptors =
+#' "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
 #' }
-compute_chem_descriptors <- function(data, r_squared = 0.6) {
+compute_chem_descriptors <- function(data,
+                                     r_squared = 0.6,
+                                     descriptors = NULL) {
   if (inherits(data, "tbl_df")) {
     if (!"smiles" %in% colnames(data)) {
       stop("The input must contain a `smiles` column. Run compute_smiles() first.")
@@ -39,6 +43,10 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
   
   if (!inherits(r_squared, "numeric")) {
     stop("The r value must be numeric")
+  }
+  
+  if (!inherits(descriptors, "character")){
+    stop ("The descriptors must be character")
   }
   
   # Prepare compound names
@@ -68,6 +76,11 @@ compute_chem_descriptors <- function(data, r_squared = 0.6) {
     get.desc.names("all"),
     grep("charge|peoe|ATS", get.desc.names("all"), value = TRUE)
   )
+  
+  # Select the descriptors of interest 
+  if (!is.null(descriptors)){
+    safe_descs <- intersect(safe_descs, descriptors)
+  }
   
   # Evaluate descriptors
   descriptor_df <- bind_rows(lapply(mol, function(m) {

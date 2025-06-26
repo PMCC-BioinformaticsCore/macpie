@@ -4,12 +4,14 @@
 \alias{compute_chem_descriptors}
 \title{Compute chemical descriptors from SMILES}
 \usage{
-compute_chem_descriptors(data, r_squared = 0.6)
+compute_chem_descriptors(data, r_squared = 0.6, descriptors = NULL)
 }
 \arguments{
 \item{data}{A tidyseurat object with a \code{smiles} column and \code{Treatment_1} column.}
 
 \item{r_squared}{R squared value, default of 0.6}
+
+\item{descriptors}{Specify any descriptors of interest from rcdk}
 }
 \value{
 The same tidyseurat object with a new entry in \code{tools$chem_descriptors}.
@@ -19,9 +21,12 @@ This function parses SMILES strings and computes chemical descriptors using rcdk
 It stores cleaned, non-redundant descriptors in \code{tools$chem_descriptors}.
 }
 \examples{
+\dontrun{
 mock_data <- tibble::tibble(
-Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+  Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 )
 result <- compute_smiles(mock_data)
-data <- compute_chem_descriptors(result)
+data <- compute_chem_descriptors(result, descriptors =
+"org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
+}
 }
