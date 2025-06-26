@@ -1,5 +1,5 @@
 ---
-title: "drugseq_multiplates"
+title: "Multi-plates input for"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{drugseq_multiplates}
@@ -7,6 +7,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteBuild{true}
 ---
+
+As all other vignettes focus on getting data from one single plate. In this vignette, we demonstrate how to read in multiple plates at a time, in a situation like combining compounds or replicates from different plates. We're going to use DRUGseq data as an example, as each batch has three replicate plates. 
+
+
+# DRUGseq data
+
+The DRUGseq dataset is a large-scale drug screening dataset that includes a large set of small molecules (N = 4,343) tested on U2OS cells. The dataset is part of the MoABox project, which aims to understand the mechanisms of action of different drugs.
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -34,9 +42,7 @@ library(purrr)
 ```
 
 
-# DRUGseq data
 
-The DRUGseq dataset is a large-scale drug screening dataset that includes a large set of small molecules (N = 4,343) tested on U2OS cells. The dataset is part of the MoABox project, which aims to understand the mechanisms of action of different drugs.
 
 
 ## Metadata and data
@@ -54,7 +60,7 @@ Each batch is a list of plates, and each plate contains the UMI counts matrix an
 # load("DRUGseqData/Exp_gzip.RData")
 # batch24 <- Exp$`24`
 # saveRDS(batch24, file = "DRUGseqData/Exp_batch24.Rds")
-batch24 <- readRDS("DRUGseqData/Exp_batch24.Rds")
+batch24 <- readRDS("/home/rstudio/macpie/DRUGseqData/Exp_batch24.Rds")
 ```
 
 
@@ -158,6 +164,22 @@ min_sample_num <- min(table(as_mac$combined_id))
 mac_filtered <- filter_genes_by_expression(as_mac, group_by = "combined_id", min_counts = 10,
     min_samples = min_sample_num)
 
+```
+
+
+```{r}
+p <- plot_plate_layout(as_mac, "nCount_RNA", "combined_id") + facet_wrap(~orig.ident, ncol = 1) + 
+  theme(strip.text = element_text(size=10),
+        axis.text.x = element_text(size=10), 
+        axis.text.y = element_text(size=8),
+        legend.title = element_text(size=10),
+        legend.text = element_text(size=8),
+        trip.background = element_blank())
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:1px;")
+  ))
 ```
 
 
