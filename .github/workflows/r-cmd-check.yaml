@@ -27,7 +27,6 @@ jobs:
     env:
       GITHUB_PAT:     ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      JAVA_TOOL_OPTIONS: -Xmx2g  # Add 2G memory usage for Java
 
     steps:
       - uses: actions/checkout@v4
