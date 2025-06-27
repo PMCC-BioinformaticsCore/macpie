@@ -84,7 +84,8 @@ plot_counts <- function(data = NULL,
   dt <- data.table::as.data.table(sub_count_matrix, keep.rownames = "Genes")
   dt_long <- data.table::melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
   setDT(dt_long)
-  data.table::set(dt_long, j = "Treatment", value = gsub("\\..*", "", dt_long$ReplicateID))
+  # make sure just remove end of string for rep
+  data.table::set(dt_long, j = "Treatment", value = gsub("\\.[0-9]$", "", dt_long$ReplicateID)) 
   dt_long[, Replicate := sequence(.N), by = .(Genes, Treatment)]
   setcolorder(dt_long, c("Genes", "Treatment", "Replicate", "Expression"))
   n_samples <- length(colnames(sub_count_matrix))
