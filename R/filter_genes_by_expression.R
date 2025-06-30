@@ -25,7 +25,7 @@ filter_genes_by_expression <- function(data,
   }
   
   # Extract expression matrix
-  expr_mat <- GetAssayData(data, layer = "counts", assay = "RNA")
+  expr_mat <- GetAssayData(data, slot = "counts", assay = "RNA")
   
   # Get metadata and filter for nCount_RNA
   meta <- data@meta.data %>%
@@ -48,7 +48,7 @@ filter_genes_by_expression <- function(data,
   # Count expression
   expr_summary <- expr_long %>%
     group_by(gene, combined_id) %>%
-    summarise(n_replicates = sum(expr > min_counts), .groups = "drop") %>%
+    summarise(n_replicates = sum(expr > 0), .groups = "drop") %>%
     filter(n_replicates >= min_samples)
   
   # Keep only genes passing the filter in any group
@@ -58,7 +58,7 @@ filter_genes_by_expression <- function(data,
   # Filter all assay slots (counts, data, scale.data)
   for (slot in names(data@assays[["RNA"]]@layers)) {
     if (!is.null(data@assays[["RNA"]][slot]) &&
-      nrow(data@assays[["RNA"]][slot]) > 0) {
+        nrow(data@assays[["RNA"]][slot]) > 0) {
       data@assays[["RNA"]][slot] <- data@assays[["RNA"]][slot][genes_to_keep, , drop = FALSE]
     }
   }
