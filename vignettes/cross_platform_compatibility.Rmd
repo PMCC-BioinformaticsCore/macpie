@@ -1,0 +1,497 @@
+---
+title: "Cross platform compatibility"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cross_platform_compatibility}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+
+The DRUGseq dataset is a large-scale drug screening dataset that includes a large set of small molecules (N = 4,343) tested on U2OS cells. The dataset is part of the MoABox project, which aims to understand the mechanisms of action of different drugs. This dataset was retrieved from [Zenodo](https://doi.org/10.5281/zenodo.14291446) (Ozer et al., 2024).
+
+
+In this vignette, we demonstrate how to extend macpie for similar technologies such as DRUGseq. 
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+
+
+```{r set_wd, include=FALSE}
+dir <- "/home/rstudio/macpie/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+
+```{r setup}
+library(macpie)
+library(tibble)
+library(stringr)
+library(pheatmap)
+library(ggiraph)
+library(tidyseurat)
+library(purrr)
+```
+
+
+## Quick overview of this vignette:
+
+This vignette has two main sections. First section focuses on demonstrating how to extend macpie on a DRUGseq 384-well plate. We will show how to convert the DRUGseq metadata to macpie metadata format, validate the metadata, import the data, visualise the plate layout, and some basic QC.
+
+As the experimental design of DRUGseq plates is a bit different from MACseq. In MACseq experimental design, we prefer to have replicate wells in the same plate. While in DRUGseq, the replicates are in different plates. In the second section, we focus on showing importing data from multiple plates, QC, detecting any batch effects, and some basic transcriptional analyses like differential expression results. 
+
+
+
+# Converting a DRUGseq plate to a macpie object
+
+## Metadata 
+
+Experimental background and metadata files are in Novartis_drugseq_U2OS_MoABox/ on [DRUGseq Github](https://github.com/Novartis/DRUG-seq/tree/main/data/Novartis_drugseq_U2OS_MoABox) and data can be downloaded from this ZENODO link: [Novartis/DRUG-seq U2OS MoABox Dataset Creators](https://zenodo.org/records/14291446).
+
+
+```{r drugseq_metadata}
+plate_well_metadata <- read.csv(paste0(dir,"DRUGseqData/DRUGseq_U2OS_MoABox_plate_wells_metadata_public.txt"), sep = "\t")
+
+```
+
+
+As the metadata contains plate and well-level information for the 59,904 samples, we only read in the metadata for plate VH02012944, which is the plate we use in this vignette.
+
+```{r drugseq_metadata_subset}
+metadata <- plate_well_metadata%>%filter(plate_barcode == "VH02012944")
+```
+
+
+
+### Convert DRUGseq metadata to macpie metadata format
+
+
+DRUGseq metadata format:
+
+An example of a DRUGseq plate content format is also available on  on [DRUGseq Github](https://github.com/Novartis/DRUG-seq/tree/main/data/Novartis_drugseq_U2OS_MoABox).
+
+First, we can have a look at the content and column names: 
+
+```{r head_metadata}
+head(metadata)
+```
+
+Next, we convert relevant columns in DRUGseq metadata to macpie metadata format. The macpie metadata format is a standardized format that includes certain columns. 
+
+```{r convert_to_macpie_metadata}
+#extract relevant columns from DRUGseq plate 
+macpie_metadata <- metadata %>%
+  select(plate_barcode, well_id, well_index, row, col, well_type, cell_line_name, concentration, unit, hours_post_treatment, cmpd_sample_id) %>%
+  mutate(
+    Plate_ID = plate_barcode,
+    Well_ID = well_id,
+    Barcode = well_index,
+    Cell_type = "U2OS",
+    Unit_1 = unit, 
+    Treatment_1 = cmpd_sample_id,
+    Sample_type = well_type,
+    Concentration_1 = as.numeric(concentration),
+    Row = LETTERS[row],
+    Column = as.integer(col),
+    Time = as.factor(hours_post_treatment),
+    Unit = "h",
+    Species = "human",
+    Model_type = "2D_adherent",
+    Sample_type = if_else(well_type == "SA" & col == 24,
+                                  "Positive Control",
+                                  well_type)
+
+)
+
+#Column names for macpie
+col_names <- c("Plate_ID", "Well_ID", "Row", "Column", "Species",
+               "Cell_type",  "Model_type", "Time", "Unit", "Treatment_1", 
+               "Concentration_1", "Unit_1",  "Sample_type", "Barcode")
+macpie_metadata <- macpie_metadata[, col_names]
+```
+
+
+
+```{r check_macpie_metadata}
+head(macpie_metadata)
+```
+
+### Validate DRUGseq metadata
+
+
+Now, we can test the metadata validation function to ensure that the metadata is in the correct format and contains all the required columns.
+
+
+```{r validate_metadata}
+validate_metadata(macpie_metadata)
+```
+
+Visualizing and inspecting the metadata layout 
+
+```{r plot_metadata, fig.width = 8, fig.height = 6}
+plot_metadata_heatmap(macpie_metadata)
+```
+
+
+## Data import
+
+Let's import one of the replicate plates `VH02012944` from batch 24. 
+
+DRUGseq data was downloaded from *./Exp_gzip.RData* from the above Zenodo link and saved as `Exp_batch24.Rds` locally for faster loading.
+
+Each batch is a list of plates, and each plate contains the UMI counts matrix and the corresponding metadata.
+
+
+```{r drugseq_data}
+# load("DRUGseqData/Exp_gzip.RData")
+# batch24 <- Exp$`24`
+# saveRDS(batch24, file = "DRUGseqData/Exp_batch24.Rds")
+batch24 <- readRDS(paste0(dir,"DRUGseqData/Exp_batch24.Rds"))
+```
+
+
+
+```{r one_plate_in_batch24}
+data <- batch24$VH02012944
+counts <- data$UMI.counts
+colnames(counts) <- str_remove_all(colnames(counts), "VH02012944_")
+```
+
+
+Quick check of the UMI counts matrix dimensions and the first few row names:
+
+```{r check_rownames}
+dim(data$UMI.counts)
+rownames(data$UMI.counts)[1:10]
+```
+
+Row names of DRUGseq data are in the format of "gene_chromosome". But we only keep gene names for macpie data. 
+
+```{r check_count_matrix}
+counts <- rownames_to_column(as.data.frame(counts), var= "gene_id") %>%
+  separate(gene_id, into = c("gene_name", "chrom"), sep = ",") 
+counts[1:10,1:5]
+```
+
+
+```{r column_to_rownames}
+counts$gene_name <- make.unique(counts$gene_name)
+counts <- counts %>%
+  select(-chrom) %>%
+  tibble::column_to_rownames(var = "gene_name")  %>%
+  as.matrix()
+```
+
+
+The UMI counts matrix and metadata are now ready to be used with macpie functions. We can create a tidySeurat object and join it with the metadata.
+
+```{r mac_tidyseurat}
+as_mac<- CreateSeuratObject(counts = counts, 
+                                     assay = "RNA", 
+                                     project = "VH02012944")
+as_mac<- as_mac%>% inner_join(macpie_metadata, by = c(".cell"="Barcode"))
+```
+
+
+### Visualize plate layout
+
+Now, we can check UMI counts and sample types in the wells. 
+
+```{r filter_genes}
+as_mac <- filter_genes_by_expression(as_mac, 
+                                     group_by = "Treatment_1",
+                                     min_counts = 5,
+                                     min_samples = 1)
+```
+
+
+
+```{r plot_plate_layout, fig.width = 8, fig.height = 6}
+p <- plot_plate_layout(as_mac, "nCount_RNA", "Sample_type")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:0.8px;")  # <- slight darkening
+  ))
+```
+
+### Violin plot
+
+```{r violinplot, fig.width = 8, fig.height = 4}
+# Calculate percent of mitochondrial and ribosomal genes
+as_mac[["percent.mt"]] <- PercentageFeatureSet(as_mac, pattern = "^mt-|^MT-")
+as_mac[["percent.ribo"]] <- PercentageFeatureSet(as_mac, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+# Example of a function from Seurat QC 
+VlnPlot(as_mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) 
+```
+
+
+### Sample grouping 
+
+Same as the main vignette, we first visualise grouping of the samples based on top 500 expressed genes and limma’s MDS function.
+
+
+```{r mds_plot, fig.width=8, fig.height=6}
+p <- plot_mds(as_mac, group_by = "Sample_type", label = "Sample_type", n_labels = 30)
+girafe(ggobj = p, fonts = list(sans = "sans"))
+```
+
+### RLE plot
+
+As, there are no replicates for samples. For simplicity, we only plot the RLE plot for different types of controls. 
+
+```{r rle_plot, fig.width = 8, fig.height = 4}
+plot_rle(as_mac %>% filter(Sample_type !="SA"), label_column = "Sample_type", normalisation = "raw")
+```
+
+
+***
+<br>
+
+
+
+# Coverting multiple DRUGseq plates to a macpie object
+
+## Metadata and data
+
+In this part of the vignette, we need three replicate plates from batch 24.
+
+DRUGseq data was downloaded from *./Exp_gzip.RData* from the above Zenodo link and saved as `Exp_batch24.Rds` locally for faster loading.
+
+Each batch is a list of plates, and each plate contains the UMI counts matrix and the corresponding metadata.
+
+
+```{r plate_names}
+names(batch24)
+```
+
+This batch contains 3 replicate plates, each has the UMI counts matrix and the metadata.
+
+Now, we convert the metadata format to macpie metadata format. 
+
+The idea is to make a combined metadata and a combined count matrix for three plates with the `plate_ID` labelled. 
+
+```{r metdata_for_batch24}
+#make a combined metadata for three plates
+batch24_metadata <- batch24 %>% 
+  map_dfr(~ {
+    .x$Annotation %>%
+      mutate(
+        Plate_ID        = plate_barcode,
+        Well_ID         = well_id,
+        Barcode         = paste0(plate_barcode, "_", well_index),
+        Row             = LETTERS[row],
+        Column          = as.integer(col),
+        Species         = "human",
+        Cell_type       = "U2OS",
+        Model_type      = "2D_adherent",
+        Time            = as.factor(hours_post_treatment),
+        Unit            = "h",
+        Treatment_1     = cmpd_sample_id,
+        Concentration_1 = as.numeric(concentration),
+        Unit_1          = unit,
+        Sample_type     = if_else(well_type == "SA" & col == 24,
+                                  "Positive Control",
+                                  well_type)
+      )
+  })
+
+
+batch24_metadata <- batch24_metadata%>%select(-c(batch_id, plate_barcode,plate_index, well_id,
+                                                 well_index, col, row, biosample_id, external_biosample_id,
+                                                 cmpd_sample_id, well_type, cell_line_name, cell_line_ncn, concentration, unit, hours_post_treatment, Sample))
+```
+
+
+
+
+
+```{r count_matrix_for_batch24}
+# create a combined UMI matrix for 3 plates
+batch24_counts <- batch24 %>%
+  map(~ {
+    .x$UMI.counts %>%
+      as.data.frame() %>% 
+      rownames_to_column("gene_id") %>%
+      separate(col = gene_id, into = c("gene_name", "chrom"), sep = ",") %>%
+      mutate(gene_name = make.unique(gene_name)) %>%
+      select(-chrom) %>%
+      tibble::column_to_rownames(var = "gene_name") %>%
+      as.matrix()
+  })
+
+binded_counts <- do.call(cbind, batch24_counts)
+
+
+  
+```
+
+
+Then, we can read in the combined count matrix and metadata. 
+
+```{r load_data_batch24}
+as_mac <- CreateSeuratObject(counts = binded_counts, 
+  min.cells = 1, 
+  min.features = 1)
+
+as_mac<- as_mac%>% inner_join(batch24_metadata, by = c(".cell"="Barcode"))
+```
+
+
+## Filtering
+
+As filtering genes in three 384 well plates could take a while. We suggest to save a previously filtered object to work with. 
+
+```{r filter_genes_batch24}
+as_mac$combined_id <- paste0(as_mac$Treatment_1,"_", as_mac$Concentration_1)
+
+min_sample_num <- min(table(as_mac$combined_id))
+# mac_filtered <- filter_genes_by_expression(as_mac, 
+#                                            group_by = "combined_id", min_counts = 10,
+#                                            min_samples = min_sample_num)
+# 
+# saveRDS(mac_filtered, 
+#   file = paste0(dir, "DRUGseqData/macpie_filtered_batch24.Rds"))
+
+
+mac_filtered <- readRDS(paste0(dir, "/DRUGseqData/macpie_filtered_batch24.Rds"))
+```
+
+
+## Quality control
+
+Here, we focus on check the data quality across three replicate plates, especially any batch effects from this batch 24. 
+
+### Violin plot
+
+
+```{r violin_plots_batch24, fig.width=8, fig.height=6}
+mac_filtered[["percent.mt"]] <- PercentageFeatureSet(mac_filtered, pattern = "^mt-|^MT-")
+mac_filtered[["percent.ribo"]] <- PercentageFeatureSet(mac_filtered, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+# Example of a function from Seurat QC 
+VlnPlot(mac_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by = "Sample_type", split.by = "orig.ident") + theme(legend.position = 'right') +
+  scale_fill_manual(values = macpie_colours$discrete) 
+  
+```
+
+
+```{r plot_plates_batch24, fig.width = 8, fig.height = 12}
+p <- plot_plate_layout(mac_filtered, "nCount_RNA", "combined_id") + facet_wrap(~orig.ident, ncol = 1) + 
+  theme(strip.text = element_text(size=10),
+        axis.text.x = element_text(size=10), 
+        axis.text.y = element_text(size=8),
+        legend.title = element_text(size=10),
+        legend.text = element_text(size=8),
+        trip.background = element_blank())
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:1px;")
+  ))
+```
+
+
+
+### Sample grouping
+
+#### MDS plot
+
+Same as above, we first visualise grouping of the samples in MDS plot. 
+
+```{r mds_batch24, fig.width=8, fig.height=6}
+p <- plot_mds(mac_filtered, group_by = "Sample_type", label = "combined_id", n_labels = 30)
+
+p1 <- plot_mds(mac_filtered, group_by = "orig.ident", label = "combined_id", n_labels = 30)
+
+
+g <- patchwork::wrap_plots(list(p, p1), ncol = 1, nrow = 2, rel_widths = c(7, 7), rel_heights = c(10, 10))
+girafe(
+  ggobj      = g, 
+  width_svg  = 20,    # 10 inches wide
+  height_svg = 20,     #  8 inches tall
+  fonts      = list(sans = "sans"),
+  options    = list(opts_hover(css = "stroke:black; stroke-width:0.8px;"))
+)
+```
+
+
+#### UMAP and PCA
+
+Apart from MDS plot, we show that this data can also be applied to Seurat's SCTransform to visualise in UMAP or PCA plot. 
+
+```{r SCTransform_batch24, cache=FALSE}
+mac_sct <- SCTransform(mac_filtered) %>%
+    RunPCA() %>%
+    RunUMAP(dims = 1:30)
+```
+
+
+
+```{r umap_pca, fig.width=8, fig.height=6}
+DimPlot(mac_sct, reduction = "umap", group.by = "orig.ident", cols = macpie_colours$discrete)
+DimPlot(mac_sct, reduction = "pca", group.by = "orig.ident", cols = macpie_colours$discrete)
+```
+
+
+From MDS, UMAP and PCA plots, there are batch effects among three replicate plates. Only one compound: three wells of BA-51-N076_10 formed a distinct cluster. All wells were separted by plates. 
+
+
+### Distribution of UMI counts
+
+
+We also want to expect what is the distribution of UMIs across the experiment. To that end we use box plot to show distribution of UMI counts grouped across treatments.
+
+
+```{r qc_stats_batch24, fig.width=28, fig.height=6}
+qc_stats <- compute_qc_metrics(mac_filtered, group_by = "combined_id", order_by = "median")
+```
+
+
+### RLE plot
+
+According to DRUGseq metadata:
+
+  - Wells with water are labelled as EC-27-RY89
+
+  - Wells with DMSO are labelled as CB-43-EP73
+
+
+```{r rle_plot_DMSO_batch24, fig.width=10, fig.height=6}
+mac_filtered_dmso <- mac_filtered %>% filter(Treatment_1 == "CB-43-EP73")
+plot_rle(mac_filtered_dmso, label_column = "orig.ident", normalisation = "raw")+ scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot_rle(mac_filtered_dmso, label_column = "orig.ident", normalisation = "limma_voom")+ scale_x_discrete(drop = FALSE) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+*Note:* instead of discussing which correction methods we should use for this data, we only show the ways we detected batch effect here. As batch effect adjustment for sequencing data has been implemented in different methods, such as DESeq2, RUVSeq, edgeR. We highly recommend users thoroughly checking any batch effects and exploring suitable methods to correct for it. 
+
+In the next part of the vignette, we demonstrate a `batch` parameter has implemented in the differential expression test for batch correction. 
+
+
+<!-- ## Single comparison -->
+
+
+
+<!-- ```{r} -->
+<!-- mac_filtered$combined_id <- make.names(mac_filtered$combined_id) -->
+<!-- treatment_samples <- "BA.51.NO76.10" -->
+<!-- control_samples <- "CB.43.EP73.0" -->
+<!-- mac_filtered_nobatch <- compute_single_de(mac_filtered, treatment_samples, control_samples, method =  "limma_voom") -->
+<!-- plot_volcano(mac_filtered_nobatch, max.overlaps = 10) -->
+<!-- ``` -->
+
+
