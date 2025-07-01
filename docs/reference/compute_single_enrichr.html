@@ -24,7 +24,7 @@ in user-provided genesets of enricher databases"><meta property="og:image" conte
     <li><a class="dropdown-item" href="../articles/quality_control.html">Quality control</a></li>
     <li><a class="dropdown-item" href="../articles/differential_expression.html">Transcriptional analyses</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>Compound screening</h6></li>
-    <li><a class="dropdown-item" href="../articles/macpie_conversion.html">Interoperability</a></li>
+    <li><a class="dropdown-item" href="../articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="https://github.com/PMCC-BioinformaticsCore/macpie.git"><span class="fa fa-github"></span></a></li>
@@ -84,30 +84,119 @@ in user-provided genesets of enricher databases</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span><span class="op">@</span><span class="va">tools</span><span class="op">$</span><span class="va">diff_exprs</span><span class="op">[[</span><span class="st">"Staurosporine_10"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">gene</span></span></span>
-<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">compute_single_enrichr</span><span class="op">(</span>genes <span class="op">=</span> <span class="va">top_genes</span>, db <span class="op">=</span> <span class="st">"MSigDB_Hallmark_2020"</span>, species <span class="op">=</span> <span class="st">"human"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Downloading gene sets from the Enrichr server.</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                            Term Overlap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                                       Adipogenesis   5/200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response             Interferon Gamma Response   5/200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                               mTORC1 Signaling   5/200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                       Angiogenesis    1/36</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                   Apical Surface    1/44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway Reactive Oxygen Species Pathway    1/49</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   P.value Adjusted.P.value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                    0.5626019        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response       0.5626019        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                0.5626019        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                    0.5983803        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                  0.6721497        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway 0.7112179        0.9938373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                         Genes Combined.Score</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                     ELMOD3;GPAM;ATP1B3;DHCR7;CAT     0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response         VAMP8;NMI;PTGS2;NAMPT;CIITA     0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                XBP1;CTSC;NAMPT;DHCR7;SLC37A4     0.00000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                           S100A4     0.05482027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                          CD160    -0.03836116</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway                           CAT    -0.07015874</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">genesets</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">compute_single_enrichr</span><span class="op">(</span>genes <span class="op">=</span> <span class="va">top_genes</span>, genesets <span class="op">=</span> <span class="va">genesets</span>, species<span class="op">=</span><span class="st">"human"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                Term Overlap</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                                           Adipogenesis   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response                 Interferon Gamma Response   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                                   mTORC1 Signaling   5/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                           Angiogenesis    1/36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                       Apical Surface    1/44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway     Reactive Oxygen Species Pathway    1/49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response                                 Androgen Response   2/100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pperoxisome                                             Pperoxisome   2/104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bile Acid Metabolism                           Bile Acid Metabolism   2/112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cholesterol Homeostasis                     Cholesterol Homeostasis    1/74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                                     Mitotic Spindle   3/199</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction                                     Apical Junction   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Early                     Estrogen Response Early   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Late                       Estrogen Response Late   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Inflammatory Response                         Inflammatory Response   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> p53 Pathway                                             p53 Pathway   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism                         Xenobiotic Metabolism   3/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Protein Secretion                                 Protein Secretion    1/96</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Alpha Response                 Interferon Alpha Response    1/97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unfolded Protein Response                 Unfolded Protein Response   1/113</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling                           IL-2/STAT5 Signaling   2/199</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Complement                                               Complement   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                                             E2F Targets   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Epithelial Mesenchymal Transition Epithelial Mesenchymal Transition   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G2-M Checkpoint                                     G2-M Checkpoint   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hypoxia                                                     Hypoxia   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> KRAS Signaling Up                                 KRAS Signaling Up   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> TNF-alpha Signaling via NF-kB         TNF-alpha Signaling via NF-kB   2/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Spermatogenesis                                     Spermatogenesis   1/135</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Dn                                       UV Response Dn   1/144</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                                               DNA Repair   1/150</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism                         Fatty Acid Metabolism   1/158</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Up                                       UV Response Up   1/158</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apoptosis                                                 Apoptosis   1/161</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Glycolysis                                               Glycolysis   1/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> heme Metabolism                                     heme Metabolism   1/200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     P.value Adjusted.P.value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                      0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response         0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                  0.5626019        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                      0.5983803        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                    0.6721497        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway   0.7112179        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response                 0.7173573        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pperoxisome                       0.7373165        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bile Acid Metabolism              0.7736422        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cholesterol Homeostasis           0.8469498        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                   0.8776790        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction                   0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Early           0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Late            0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Inflammatory Response             0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> p53 Pathway                       0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism             0.8797767        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Protein Secretion                 0.9125226        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Alpha Response         0.9147201        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unfolded Protein Response         0.9432475        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling              0.9610868        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Complement                        0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                       0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Epithelial Mesenchymal Transition 0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G2-M Checkpoint                   0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hypoxia                           0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> KRAS Signaling Up                 0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> TNF-alpha Signaling via NF-kB     0.9619081        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Spermatogenesis                   0.9675986        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Dn                    0.9742425        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                        0.9778976        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism             0.9819787        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Up                    0.9819787        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apoptosis                         0.9833071        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Glycolysis                        0.9938373        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> heme Metabolism                   0.9938373        0.9938373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           Genes Combined.Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adipogenesis                       ELMOD3;GPAM;ATP1B3;DHCR7;CAT     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Gamma Response           VAMP8;NMI;PTGS2;NAMPT;CIITA     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> mTORC1 Signaling                  XBP1;CTSC;NAMPT;DHCR7;SLC37A4     0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Angiogenesis                                             S100A4     0.05482027</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Surface                                            CD160    -0.03836116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Reactive Oxygen Species Pathway                             CAT    -0.07015874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Androgen Response                                   ACTN1;CENPN    -0.10638314</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pperoxisome                                          PEX11A;CAT    -0.11483888</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bile Acid Metabolism                                 PEX11A;CAT    -0.12426327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Cholesterol Homeostasis                                   DHCR7    -0.10513242</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Mitotic Spindle                             SMC4;CDC42EP1;DOCK4    -0.11700205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apical Junction                              ACTN1;CLDN18;NLGN2    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Early                       PEX11A;XBP1;DHCR7    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estrogen Response Late                        XBP1;PLXNB1;DHCR7    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Inflammatory Response                            NMI;NAMPT;ROS1    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> p53 Pathway                                  VAMP8;S100A4;EPHX1    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Xenobiotic Metabolism                            AHCY;EPHX1;CAT    -0.11602410</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Protein Secretion                                          CTSC    -0.08378043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Interferon Alpha Response                                   NMI    -0.08260677</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unfolded Protein Response                                  XBP1    -0.06424828</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> IL-2/STAT5 Signaling                                  XBP1;AHCY    -0.05361359</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Complement                                           CTSC;DOCK4    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> E2F Targets                                           SMC4;CTCF    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Epithelial Mesenchymal Transition                    MGP;PDGFRB    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> G2-M Checkpoint                                       SMC4;CTCF    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hypoxia                                          S100A4;SLC37A4    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> KRAS Signaling Up                                  PTGS2;ANXA10    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> TNF-alpha Signaling via NF-kB                       PTGS2;NAMPT    -0.05276816</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Spermatogenesis                                            DMC1    -0.04312421</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Dn                                           PDGFRB    -0.03621412</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DNA Repair                                                EIF1B    -0.03214383</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fatty Acid Metabolism                                     EPHX1    -0.02733699</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UV Response Up                                            EPHX1    -0.02733699</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Apoptosis                                                PDGFRB    -0.02570532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Glycolysis                                              SLC37A4    -0.01119908</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> heme Metabolism                                             CAT    -0.01119908</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
