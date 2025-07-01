@@ -8,7 +8,8 @@ plot_metadata_heatmap(
   metadata = NULL,
   metadata_file = NULL,
   legend = TRUE,
-  output_file = NULL
+  output_file = NULL,
+  plate = NULL
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ plot_metadata_heatmap(
 \item{legend}{A character value ("show" or "none") to control whether to display legends.}
 
 \item{output_file}{A file path and name to save the heatmaps as a graph (png, pdf, or jpg).}
+
+\item{plate}{Plate to be plotted. Default is first plate.}
 }
 \value{
 Displays the plot as a ggplot object or saves it as a file (jpg, png, or pdf).

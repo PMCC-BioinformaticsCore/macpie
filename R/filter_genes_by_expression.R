@@ -30,7 +30,6 @@ filter_genes_by_expression <- function(data,
   # Get metadata and filter for nCount_RNA
   meta <- data@meta.data %>%
     tibble::rownames_to_column("cell") %>%
-    filter(.data$nCount_RNA >= min_counts) %>%
     select(cell, !!group_by)
   
   # Subset expression to those cells
@@ -59,7 +58,7 @@ filter_genes_by_expression <- function(data,
   # Filter all assay slots (counts, data, scale.data)
   for (slot in names(data@assays[["RNA"]]@layers)) {
     if (!is.null(data@assays[["RNA"]][slot]) &&
-      nrow(data@assays[["RNA"]][slot]) > 0) {
+        nrow(data@assays[["RNA"]][slot]) > 0) {
       data@assays[["RNA"]][slot] <- data@assays[["RNA"]][slot][genes_to_keep, , drop = FALSE]
     }
   }

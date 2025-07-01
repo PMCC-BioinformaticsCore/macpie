@@ -90,7 +90,7 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
       facet_wrap(~Plate_ID, ncol = 1) +
       geom_tile_interactive(aes(tooltip = tooltip_text,
                                 data_id = group_id), color = "grey90") +
-      scale_x_discrete(position = "top") +
+      scale_x_discrete(position = "bottom") +
       scale_fill_gradient2(
         high = macpie_colours$high,
         mid = "white",

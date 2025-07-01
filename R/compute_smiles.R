@@ -3,7 +3,8 @@
 #' This function retrieves isomeric SMILES from PubChem based on compound names
 #' in the `Treatment_1` column of a tidyseurat object.
 #'
-#' @param data A tidyseurat object with a column named `Treatment_1`.
+#' @param data A tidyseurat object
+#' @param compound_column Column with the generic name of a compound 
 #' @importFrom webchem get_cid pc_prop
 #' @importFrom stringr str_replace_all str_trim str_to_title
 #' @importFrom dplyr mutate left_join rename select pull
@@ -14,23 +15,22 @@
 #' mock_data <- tibble::tibble(
 #' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
-#' result <- compute_smiles(mock_data)
+#' result <- compute_smiles(mock_data, compound_column = "Treatment_1")
 
-compute_smiles <- function(data) {
-  if (inherits(data, "tbl_df")) {
-    if (!"Treatment_1" %in% colnames(data)) {
-      stop("The input tibble must contain a column named 'Treatment_1'")
-    }
+compute_smiles <- function(data, compound_column) {
+  if(inherits(data, "tbl_df")){
+    if (!compound_column %in% colnames(data)) {
+      stop("The compound_column does not exist in metadata.")
+    } 
   } else {
-    if (!"Treatment_1" %in% colnames(data@meta.data)) {
-      stop("The input object must contain a column named 'Treatment_1'")
-    }
+    if (!compound_column %in% colnames(data@meta.data)) {
+      stop("The compound_column does not exist in metadata.")
+    } 
   }
   
   # Clean compound names
   data$clean_compound_name <- data %>%
-    select("Treatment_1") %>%
-    pull() %>%
+    pull(!!sym(compound_column)) %>%
     str_replace_all("_", " ") %>%
     str_trim() 
   

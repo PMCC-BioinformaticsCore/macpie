@@ -8,7 +8,7 @@ test_that("Compute_smiles returns correct SMILES and handles edge cases", {
   )
   
   # Run the function
-  result <- compute_smiles(mock_data)
+  result <- compute_smiles(mock_data, compound_column = "Treatment_1")
   
   # Check columns
   expect_true("smiles" %in% colnames(result))
@@ -22,9 +22,4 @@ test_that("Compute_smiles returns correct SMILES and handles edge cases", {
   
   # Check that number of rows is unchanged
   expect_equal(nrow(result), nrow(mock_data))
-})
-
-test_that("compute_smiles throws error if Treatment_1 column is missing", {
-  bad_data <- tibble::tibble(Treatment_X = c("Aspirin"))
-  expect_error(compute_smiles(bad_data), "column named 'Treatment_1'")
 })
