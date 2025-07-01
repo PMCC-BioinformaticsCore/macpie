@@ -45,8 +45,8 @@ compute_chem_descriptors <- function(data,
     stop("The r value must be numeric")
   }
   
-  if (!inherits(descriptors, "character")){
-    stop ("The descriptors must be character")
+  if (!is.null(descriptors) && !is.character(descriptors)) {
+    stop("`descriptors` must be a character vector (or NULL to use the defaults)")
   }
   
   # Prepare compound names
