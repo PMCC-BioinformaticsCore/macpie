@@ -8,7 +8,7 @@ test_that("Compute_smiles returns correct SMILES and handles edge cases", {
   )
   
   # Run the function
-  result <- compute_smiles(mock_data)
+  result <- compute_smiles(mock_data, "Treatment_1")
   
   # Check columns
   expect_true("smiles" %in% colnames(result))
