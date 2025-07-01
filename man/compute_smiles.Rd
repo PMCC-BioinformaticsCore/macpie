@@ -4,10 +4,12 @@
 \alias{compute_smiles}
 \title{Annotate tidyseurat object with SMILES}
 \usage{
-compute_smiles(data)
+compute_smiles(data, compound_column)
 }
 \arguments{
-\item{data}{A tidyseurat object with a column named \code{Treatment_1}.}
+\item{data}{A tidyseurat object}
+
+\item{compound_column}{Column with the generic name of a compound}
 }
 \value{
 A tidyseurat object with a \code{smiles} column added to the metadata.

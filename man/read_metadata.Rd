@@ -9,9 +9,8 @@ read_metadata(
   header = TRUE,
   sep = ",",
   string_as_factors = FALSE,
-  predefined_columns = c("Plate_ID", "Well_ID", "Row", "Column", "Species", "Cell_type",
-    "Model_type", "Time", "Unit", "Treatment_1", "Concentration_1", "Unit_1",
-    "Sample_type", "Barcode", "Project")
+  predefined_columns = c("Plate_ID", "Well_ID", "Row", "Column", "Species",
+    "Treatment_1", "Concentration_1", "Sample_type", "Barcode")
 )
 }
 \arguments{
