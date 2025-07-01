@@ -48,7 +48,7 @@ filter_genes_by_expression <- function(data,
   # Count expression
   expr_summary <- expr_long %>%
     group_by(gene, combined_id) %>%
-    summarise(n_replicates = sum(expr > 0), .groups = "drop") %>%
+    summarise(n_replicates = sum(expr > min_counts), .groups = "drop") %>%
     filter(n_replicates >= min_samples)
   
   # Keep only genes passing the filter in any group
