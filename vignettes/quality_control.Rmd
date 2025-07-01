@@ -182,7 +182,9 @@ p <- ggplot(umap_data, aes(x = umap_1, y = umap_2)) +
 girafe(ggobj = p, fonts = list(sans = "sans"))
 ```
 
-#### 2.2.3 Distribution of read counts
+#### 2.3 Sample variability
+
+#### 2.3.1 Distribution of read counts
 
 In order to perform downstream analysis, we have to ensure that we have addressed technical variability and batch effects correctly. We will start of with the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. 
 
@@ -191,7 +193,7 @@ qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median
 qc_stats$stats_summary
 ```
 
-#### 2.2.4 Variability among all replicates
+#### 2.3.2 Variability among all replicates
 
 In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. Therefore, we enabled access to several statistical metrics such as standard deviation (sd_value), robust z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap. 
 
@@ -206,7 +208,7 @@ plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 ```
 
-#### 2.2.5 Variability within a sample
+#### 2.3.3 Variability within a sample
 
 Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. It is therefore fairly important to estimate bioogical variability between the replicates. We provide a way to estimate inter-replicate variability using poisson distance within the function plot_distance.
 
@@ -214,7 +216,7 @@ Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. 
 plot_distance(mac, "combined_id", treatment = "DMSO_0")
 ```
 
-#### 2.2.6. Correction of the batch effect
+#### 2.3.4 Evaluating the influecne of batch effects and normalizations
 
 Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots. In our case, limma_voom provides the lowest average coefficient of variation, when compared to other methods such as "raw", Seurat "SCT" or "edgeR". User can provide a vector of batches of the same length as the data - see example below.
 
