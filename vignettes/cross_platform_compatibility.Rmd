@@ -523,8 +523,7 @@ plot_counts(mac_filtered,genes, group_by, treatment_samples, control_samples, no
 
 ## Differential gene expression - multiple comparisons
 
-
-As there are 339 compounds with 10uM in the data, which could take quite a while (even on parallelisation speedup) to run. So, in the vignette we only include first   of them.
+As there are 339 compounds with 10uM in the data, which could take quite a while (around 24 mins for a M3 Pro 18GB memory on parallelisation speedup num_cores = 4) to run. For the purpose of this vignette, we saved the results of the differential expression analysis for all 339 compounds with 10uM in the data.
 
 
 ```{r}
@@ -534,9 +533,19 @@ treatments <- mac_filtered %>%
   pull() %>%
   unique()
 
-treatment_sub <- treatments[1:100]
   
-mac_filtered <- compute_multi_de(mac_filtered, treatments, control_samples = "CB_43_EP73_0", method = "limma_voom", num_cores = 2)
+# mac_filter_multi_de <- compute_multi_de(mac_filtered, treatments, control_samples = "CB_43_EP73_0", method = "limma_voom", num_cores = 4)
+# saveRDS(mac_filter_multi_de, 
+#   file = paste0(dir, "DRUGseqData/macpie_multi_de_batch24.rds")
+# )
+
+mac_filter_multi_de <- readRDS(paste0(dir, "DRUGseqData/macpie_multi_de_batch24.rds"))
 
 ```
+
+
+```{r plot_multi_de, fig.width=10, fig.height=6}
+plot_multi_de(mac_filter_multi_de, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 20, control = "CB_43_EP73_0", by="fc")
+```
+
 
