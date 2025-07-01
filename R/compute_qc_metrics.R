@@ -70,7 +70,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     geom_boxplot(outlier.colour = "NA") +
     geom_jitter(width = 0.1, aes(color = .data[[group_by]])) +
     theme_minimal() +
-    labs(x = group_by, y = "Read counts") +
+    labs(x = group_by, y = "UMI counts") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
   print(p)
   return(list(stats_summary = stats_summary, plot = p))
