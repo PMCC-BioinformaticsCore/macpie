@@ -2,7 +2,7 @@
 title: "Cross platform compatibility"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{cross_platform_compatibility}
+  %\VignetteIndexEntry{Cross platform compatibility}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignetteBuild{true}
@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 
 
 ```{r set_wd, include=FALSE}
-dir <- "/home/rstudio/macpie/"
+dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
@@ -202,18 +202,24 @@ as_mac<- as_mac%>% inner_join(macpie_metadata, by = c(".cell"="Barcode"))
 ```
 
 
-### Visualize plate layout
 
-Now, we can check UMI counts and sample types in the wells. 
+Filtering:
+
+We previously saved a filtered data set, which filtered out genes with < 5 reads in at least 1 replicate well for each treatment.    
+
 
 ```{r filter_genes}
-as_mac <- filter_genes_by_expression(as_mac, 
-                                     group_by = "Treatment_1",
-                                     min_counts = 5,
-                                     min_samples = 1)
+# as_mac <- filter_genes_by_expression(as_mac, 
+#                                      group_by = "Treatment_1",
+#                                      min_counts = 5,
+#                                      min_samples = 1)
+as_mac <- readRDS(paste0(dir, "/DRUGseqData/macpie_filtered_VH02012944.rds"))
 ```
 
 
+### Visualize plate layout
+
+Now, we can check UMI counts and sample types in the wells. 
 
 ```{r plot_plate_layout, fig.width = 8, fig.height = 6}
 p <- plot_plate_layout(as_mac, "nCount_RNA", "Sample_type")
@@ -352,12 +358,13 @@ as_mac<- as_mac%>% inner_join(batch24_metadata, by = c(".cell"="Barcode"))
 
 ## Filtering
 
-As filtering genes in three 384 well plates could take a while. We suggest to save a previously filtered object to work with. 
+As filtering genes in three 384-well plates could take a while. We suggest to save a previously filtered object to work with. 
 
 ```{r filter_genes_batch24}
 as_mac$combined_id <- paste0(as_mac$Treatment_1,"_", as_mac$Concentration_1)
 
 min_sample_num <- min(table(as_mac$combined_id))
+
 # mac_filtered <- filter_genes_by_expression(as_mac, 
 #                                            group_by = "combined_id", min_counts = 10,
 #                                            min_samples = min_sample_num)
@@ -377,7 +384,7 @@ Here, we focus on check the data quality across three replicate plates, especial
 ### Violin plot
 
 
-```{r violin_plots_batch24, fig.width=8, fig.height=6}
+```{r violin_plots_batch24, fig.width=10, fig.height=6}
 mac_filtered[["percent.mt"]] <- PercentageFeatureSet(mac_filtered, pattern = "^mt-|^MT-")
 mac_filtered[["percent.ribo"]] <- PercentageFeatureSet(mac_filtered, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
 # Example of a function from Seurat QC 
@@ -432,10 +439,10 @@ girafe(
 
 Apart from MDS plot, we show that this data can also be applied to Seurat's SCTransform to visualise in UMAP or PCA plot. 
 
-```{r SCTransform_batch24, cache=FALSE}
+```{r SCTransform_batch24, warning=FALSE}
 mac_sct <- SCTransform(mac_filtered) %>%
-    RunPCA() %>%
-    RunUMAP(dims = 1:30)
+    RunPCA(verbose = FALSE) %>%
+    RunUMAP(verbose = FALSE,dims = 1:30)
 ```
 
 
@@ -454,9 +461,16 @@ From MDS, UMAP and PCA plots, there are batch effects among three replicate plat
 
 We also want to expect what is the distribution of UMIs across the experiment. To that end we use box plot to show distribution of UMI counts grouped across treatments.
 
+```{r}
+length(unique(mac_filtered$combined_id))
+```
 
-```{r qc_stats_batch24, fig.width=28, fig.height=6}
-qc_stats <- compute_qc_metrics(mac_filtered, group_by = "combined_id", order_by = "median")
+
+As there are 341 unique combinations of compound_concentration, it's too messy to show in the vignette. In here, we only show 200 of them. 
+
+```{r qc_stats_batch24, fig.width=16, fig.height=6}
+compounds_subset <- unique(mac_filtered$combined_id)
+qc_stats <- compute_qc_metrics(mac_filtered %>% filter(combined_id %in% compounds_subset[1:200]), group_by = "combined_id", order_by = "median")
 ```
 
 
@@ -482,16 +496,47 @@ plot_rle(mac_filtered_dmso, label_column = "orig.ident", normalisation = "limma_
 In the next part of the vignette, we demonstrate a `batch` parameter has implemented in the differential expression test for batch correction. 
 
 
-<!-- ## Single comparison -->
+## Differential gene expression - single comparison
+
+In here, you can specify a single condition in the combined_id column and compare with DMSO (i.e.CB_43_EP73_0). By using the plate IDs in the column of orig.ident as the input for batch parameter, `compute_singe_de` function can perform differential expression analysis using the preferred method (limma voom in this example) with batch information. 
 
 
+```{r volcano_batch_corrected, fig.width=6, fig.height=5}
+mac_filtered$combined_id <- str_replace_all(mac_filtered$combined_id, "-","_")
+treatment_samples <- "FF_86_NH56_10"
+control_samples <- "CB_43_EP73_0"
+subset <- mac_filtered%>%filter(combined_id%in%c(treatment_samples,control_samples))
+batch <- subset$orig.ident
+top_table <- compute_single_de(mac_filtered, treatment_samples, control_samples, method =  "limma_voom", batch = batch)
+plot_volcano(top_table, max.overlaps = 6)
 
-<!-- ```{r} -->
-<!-- mac_filtered$combined_id <- make.names(mac_filtered$combined_id) -->
-<!-- treatment_samples <- "BA.51.NO76.10" -->
-<!-- control_samples <- "CB.43.EP73.0" -->
-<!-- mac_filtered_nobatch <- compute_single_de(mac_filtered, treatment_samples, control_samples, method =  "limma_voom") -->
-<!-- plot_volcano(mac_filtered_nobatch, max.overlaps = 10) -->
-<!-- ``` -->
+```
 
+Now we can visualise gene expression (in CPM) for the top 6 genes from the differential expression analysis. 
+
+```{r plot_counts_bc, fig.width=10, fig.height=8}
+genes <- top_table$gene[1:6]
+group_by <- "combined_id"
+plot_counts(mac_filtered,genes, group_by, treatment_samples, control_samples, normalisation = "cpm")
+```
+
+
+## Differential gene expression - multiple comparisons
+
+
+As there are 339 compounds with 10uM in the data, which could take quite a while (even on parallelisation speedup) to run. So, in the vignette we only include first   of them.
+
+
+```{r}
+treatments <- mac_filtered %>%
+  filter(Concentration_1 == 10) %>%
+  select(combined_id) %>%
+  pull() %>%
+  unique()
+
+treatment_sub <- treatments[1:100]
+  
+mac_filtered <- compute_multi_de(mac_filtered, treatments, control_samples = "CB_43_EP73_0", method = "limma_voom", num_cores = 2)
+
+```
 
