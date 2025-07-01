@@ -38,9 +38,8 @@
 
 read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors = FALSE,
                           predefined_columns = c("Plate_ID", "Well_ID", "Row", "Column", "Species",
-                                                 "Cell_type", "Model_type", "Time", "Unit",
-                                                 "Treatment_1", "Concentration_1", "Unit_1",
-                                                 "Sample_type", "Barcode", "Project")) {
+                                                 "Treatment_1", "Concentration_1", 
+                                                 "Sample_type", "Barcode")) {
   #check file exists
   if (!file.exists(file_path)) {
     stop("The file does not exist. Please provide a valid file path.")
@@ -68,38 +67,29 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
       ~ if (n_distinct(.) < 10) as.factor(.) else .  # or < 20 if you want
     ))
 
-  #if there are multiple plates, append plate id to row/column/well id
-  #data <- data %>%
-  #  mutate(across(c(Row, Column, Well_ID),
-  #                ~ if (n_distinct(Plate_ID) > 1) paste0(Plate_ID, "_", .x) else .x))
-  #
   # Match predefined columns with user columns
   # Strict string matching required here 
-
   match_columns <- function(data, predefined_columns) {
     user_columns <- colnames(data)
     matched_columns <- intersect(predefined_columns, user_columns)
     return(matched_columns)
   }
 
-  # Print predefined column names
-  #cat("Predefined column names:\n", paste(predefined_columns, collapse = ", "), "\n")
-
   # Match columns
   matched_columns <- match_columns(data, predefined_columns)
 
   #fix return outside a function error
   check_columns <- function(data, matched_columns) {
-    if (length(matched_columns) > 0) {
-      cleaned_data <- data[, matched_columns, drop = FALSE] %>%
+    if (length(matched_columns) == length(predefined_columns)) {
+      cleaned_data <- data %>%
         arrange("Barcode")
       return(cleaned_data)
     } else {
-      cat("Error: No columns matching predefined criteria found. Check your file.\n")
-      cat("Matched columns:\n", paste(matched_columns, collapse = ", "), "\n")
-      cat("Number of matched columns:\n", length(matched_columns), "\n")
+      cat("Error: Some required columns were missing. Check your file.\n")
+      cat("Missing columns:\n", paste(setdiff(predefined_columns, matched_columns), collapse = ", "), "\n")
       return(NULL)
     }
   }
-  check_columns(data = data, matched_columns = matched_columns)
+  output <- check_columns(data = data, matched_columns = matched_columns)
+  return(output)
 }
