@@ -1,7 +1,11 @@
 ---
-title: "Quality Control"
+title: "Quality control"
 output:
-  rmarkdown::html_document
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
 vignette: >
   %\VignetteIndexEntry{quality_control}
   %\VignetteEngine{knitr::rmarkdown}
@@ -19,55 +23,77 @@ knitr::opts_chunk$set(
 )
 ```
 
+## 1. Metadata import and validation
+
+As part of the macpie package, we provide a set of functions to import and validate metadata. The metadata file should contain all the information about the samples, including sample names, experimental conditions, and other relevant variables. The metadata file has to be in a tabular format, and while it can contain any information relevant for the user, it should at least contain columns **Plate_ID**, **Well_ID**, **Row**, **Column**, **Species**, **Sample_type**, **Treatment_1**, **Concentration_1** and **Barcode**. 
+
+**Key points**: 
+
+  - use **validate_metadata** to check the metadata file for common errors
+  - use **plot_metadata_heatmap** to visually inspect metadata integrity
+  
+### 1.1 Metadata input
+
 ```{r setup}
+#install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
+devtools::load_all()
 library(macpie)
-library(enrichR)
-library(tibble)
-library(parallel)
-library(mcprogress)
-library(PoiClaClu)
-library(Matrix)
-library(data.table)
-library(Seurat)
-library(tidyseurat)
-library(stringr)
-library(pheatmap)
-library(ggiraph)
+
+# Define project variables
+project_name <- "PMMSq033"
+#project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata("../inst/extdata/PMMSq033_metadata.csv")
+#metadata <- read_metadata(project_metadata)
 ```
 
+### 1.2 Check column names
 
-## Quality control
+```{r}
+colnames(metadata)
+```
+### 1.3 Validate metadata 
 
+The `validate_metadata` function will check the metadata file for common errors, such as missing values, incorrect data types, and other potential issues. It will also provide a summary of the metadata file, including the number of samples, the number of variables, and the number of missing values.
 
+```{r}
+# Validate metadata
+validate_metadata(metadata)
+```
 
-### Import data to tidySeurat object 
+### 1.4 Visualize metadata
 
+In order to correct artefacts and other metadata errors, it is good practice to visually inspect the large number of experimental variables. In case of multiple plates, once can specify which plate to visualise, though in our example there is only one present.
+
+```{r metadata_plot, fig.width = 8, fig.height = 6}
+plot_metadata_heatmap(metadata, plate = "PMMSq033")
+```
+
+## 2. Quality control
+
+### 2.1 Import data to tidySeurat object 
 
 > **Data access**  
 > The full dataset (>10 MB of `.rds` files) is currently under restricted release and will become publicly available upon publication (at Zenodo).  
 > In the meantime, please contact us for early access.
 
-
 Data is imported into a tidySeurat object, which allows the usage of both the regular Seurat functions, as well as the functionality of tidyverse. 
 
-
-```{r read_metadata}
-project_name <- "PMMSq033"
-project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
-
-# Load metadata
-metadata <- read_metadata(project_metadata)
-metadata$Time <- as.factor(metadata$Time)
-metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
-
-```
-
-
+In case of multiple plates, instead of one directory submit a vector of directories (or named directories, where names will become barcode prefixes) to the Read10X function. 
 
 ```{r load_data}
 # Import raw data
-project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
+#project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
+#raw_counts <- Read10X(data.dir = project_rawdata)
+
+# 1. Load your own gene counts per sample or 2. data from the publication
+project_rawdata <- "../inst/extdata/PMMSq033/raw_matrix/"
+project_name <- "PMMSq033"
 raw_counts <- Read10X(data.dir = project_rawdata)
+
+#for multiple plates:
+#raw_counts <- Read10X(data.dir = c("path1", "path2", ... "pathN"))
 
 # Create tidySeurat object
 mac <- CreateSeuratObject(counts = raw_counts,
@@ -90,7 +116,7 @@ mac <- filter_genes_by_expression(mac,
                                   min_counts = 10, 
                                   min_samples = 2)
 ```
-For example, we can use the common QC plots from the Seurat package to visualise the number of genes, reads, and percentage of mitochondrial and ribosomal genes per sample.
+For example, we can use the common QC plots from the Seurat package to visualise the number of genes, reads, and percentage of mitochondrial and ribosomal genes per sample. Similar to single-cell experiments, higher amounts of mitochondrial and ribosomal expression can point to reduced quality of the samples.
 ```{r violin_plot, fig.width = 8, fig.height = 4}
 # Calculate percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
@@ -100,10 +126,9 @@ mac[["percent.ribo"]] <- PercentageFeatureSet(mac, pattern = "^Rp[slp][[:digit:]
 VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
         ncol = 4, group.by = "Sample_type") & 
   scale_fill_manual(values = macpie_colours$discrete) 
-
 ```
 
-In addition, we can use the power of tidyverse functions to further explore the dataset. For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots are useful for visualising any spatial anomalies or unexpected patterns.
+In addition, we can use tidyverse functions to further explore the dataset. For example, let's subset the Seurat object based on the column "Project" in metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots are useful for visualising any spatial anomalies or unexpected patterns.
 
 ```{r subset_seurat, fig.width = 8, fig.height = 3}
 unique(mac$Project)
@@ -120,44 +145,59 @@ girafe(ggobj = p,
 ```
 
 
-### Basic QC metrics
+### 2.2 Basic QC metrics
 
-#### Sample grouping with MDS plot
+#### 2.2.1 Sample grouping with MDS plot
 
-
-As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. 
+As a first step, we should visualise grouping of the samples based on top 500 expressed genes and limma's MDS function. As a warning, samples that are treated with a lower concentration of compound will often cluster close to the negative (vehicle) control. Hovering over the individual dots reveals sample identity and grouping.
 
 ```{r mds_plot, fig.width = 8, fig.height = 6}
 p <- plot_mds(mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
-
 ```
+
+#### 2.2.2 Sample grouping with UMAP plot
 
 Since we are operating from a standard Seurat object, we can also use the standard scRNA-seq workflow. 
 
-```{r qc_stats_umap, fig.width = 8, fig.height = 4}
-mac_sct <- SCTransform(mac) %>%
-  RunPCA() %>%
-  RunUMAP(dims = 1:30)
-DimPlot(mac_sct, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
+```{r qc_stats_umap, fig.width = 8, fig.height = 4, warning=FALSE}
+mac_sct <- SCTransform(mac, verbose = FALSE) %>%
+  RunPCA(verbose = FALSE) %>%
+  RunUMAP(dims = 1:30, verbose = FALSE)
+
+# For standard Seurat approach use:
+# DimPlot(mac_sct, reduction = "umap", group.by = "Sample_type", cols = macpie_colours$discrete)
+
+umap_data <- cbind(Embeddings(mac_sct, "umap"), mac_sct@meta.data) %>%
+  tibble::as_tibble(rownames = "cell") %>%
+  mutate(
+    tooltip = combined_id
+  )
+
+# Merge with metadata using Barcode == cell
+p <- ggplot(umap_data, aes(x = umap_1, y = umap_2)) +
+  geom_point_interactive(aes(color = Sample_type, tooltip = tooltip), size = 2) +
+  scale_color_manual(values = macpie_colours$discrete) +
+  theme_minimal()
+girafe(ggobj = p, fonts = list(sans = "sans"))
 ```
 
-#### Distribution of read counts
+#### 2.2.3 Distribution of read counts
 
-We also want to expect what is the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. Read count is commonly directly proportional to the number of cells.
+In order to perform downstream analysis, we have to ensure that we have addressed technical variability and batch effects correctly. We will start of with the distribution of reads across the experiment. To that end we use box plot to show distribution of read counts grouped across treatments. 
 
 ```{r qc_stats_plot, fig.width = 8, fig.height = 4}
 qc_stats <- compute_qc_metrics(mac, group_by = "combined_id", order_by = "median")
 qc_stats$stats_summary
 ```
-#### Variability among all replicates
+
+#### 2.2.4 Variability among all replicates
 
 In relation to the previous plot, we want the user to have the ability to assess the dispersion of reads within a sample. Therefore, we enabled access to several statistical metrics such as standard deviation (sd_value), robust z score (z_score), mad (mad_value) and IQR (IQR) which can be used as a parameter to the function plot_qc_metrics individually, or assessed at once with the function plot_qc_metrics_heatmap. 
 
   - Standard deviation (sd_value) and interquartile range (IQR) both capture the spread of read counts within a single treatment condition. Use these when you want to understand how consistently reads cluster around the mean or median in one group.
 
   - Median absolute deviation (mad_value) and the robust z‐score (z_score) highlight variability between treatment conditions. They make it easy to spot conditions whose overall read distributions deviate from the rest of the plate. 
-
 
 As you can see below, Staurosporine had the largest variability between the samples across all metrics. 
 
@@ -166,9 +206,7 @@ plot_qc_metrics_heatmap(qc_stats$stats_summary)
 
 ```
 
-
-
-#### Variability within a sample
+#### 2.2.5 Variability within a sample
 
 Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. It is therefore fairly important to estimate bioogical variability between the replicates. We provide a way to estimate inter-replicate variability using poisson distance within the function plot_distance.
 
@@ -176,16 +214,20 @@ Due to the lower read counts per sample, MAC-seq is more variable than RNA-seq. 
 plot_distance(mac, "combined_id", treatment = "DMSO_0")
 ```
 
-#### Estimate of the batch effect
+#### 2.2.6. Correction of the batch effect
 
-Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots. In our case, limma_voom provides the lowest average coefficient of variation, when compared to other methods such as "raw", Seurat "SCT" or "edgeR".
+Several methods are available for scaling and normalizing transcriptomic data, with their effects most clearly visualized using RLE (Relative Log Expression) plots. In our case, limma_voom provides the lowest average coefficient of variation, when compared to other methods such as "raw", Seurat "SCT" or "edgeR". User can provide a vector of batches of the same length as the data - see example below.
 
 ```{r plot_rle, fig.width = 8, fig.height = 4}
 # First we will subset the data to look at control, DMSO samples only
 mac_dmso <- mac %>%
   filter(Treatment_1 == "DMSO")
 
-# Run the RLE function
-plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
+# Run the RLE function for raw data
+plot_rle(mac_dmso, label_column = "Row", normalisation = "raw")
 
+# Run the RLE function for normalised data
+plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
+# For multiple plates, once can add a vector with batch factors
+#plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom", batch = mac_dmso$Plate_ID)
 ```
