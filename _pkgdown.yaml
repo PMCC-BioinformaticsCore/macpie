@@ -17,15 +17,15 @@ navbar:
       href: index.html
     - text: "Vignettes"
       menu:
-        - text: "Metadata check"
-          href: articles/metadata_check.html
+        - text: "Overview"
+          href: articles/overview.html
         - text: "Quality control"
           href: articles/quality_control.html
         - text: "Transcriptional analyses"
           href: articles/differential_expression.html
         - text: "Compound screening"
-        - text: "Interoperability"
-          href: articles/macpie_conversion.html
+        - text: "Cross-platform compatibility"
+          href: articles/cross_platform_compatibility.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:
