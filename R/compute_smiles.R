@@ -15,7 +15,7 @@
 #' mock_data <- tibble::tibble(
 #' Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
-#' result <- compute_smiles(mock_data, compound_column = Treatment_1)
+#' result <- compute_smiles(mock_data, compound_column = "Treatment_1")
 
 compute_smiles <- function(data, compound_column) {
   if (!compound_column %in% colnames(data@meta.data)) {

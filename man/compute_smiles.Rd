@@ -22,5 +22,5 @@ in the \code{Treatment_1} column of a tidyseurat object.
 mock_data <- tibble::tibble(
 Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 )
-result <- compute_smiles(mock_data)
+result <- compute_smiles(mock_data, compound_column = Treatment_1)
 }
