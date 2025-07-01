@@ -30,10 +30,10 @@ MAC-seq is a cost-effective, high-throughput transcriptomic platform, developed 
 
 In this vignette we cover the basic functionality of <b>macpie</b>, from input, quality control to transcriptional and screen-related analyses. For more in-depth workflows, please refer to other vignettes:
 
-- [Quality control](articles/quality_control.html)
-- [Transcriptional analysis](articles/transcriptional_analysis.html)
-- [Compound screening](articles/compound_screening.html)
-- [Cross-platform compatibility](articles/cross_platform_compatibility.html)
+- [Quality control](quality_control.html)
+- [Transcriptional analysis](transcriptional_analysis.html)
+- [Compound screening](compound_screening.html)
+- [Cross-platform compatibility](cross_platform_compatibility.html)
 
 ### 1. Metadata import and QC
 
@@ -45,16 +45,22 @@ Metadata has to be in a tabular format and contain a standardised set of columns
 
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables, described in more depth in the [QC vignette](articles/quality_control.html). We will first visually inspect all experimental variables, in order to identify potential artefacts.
 
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 #install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
-devtools::load_all()
+library(macpie)
 library(enrichR)
 library(randomForest)
 
 # Load metadata
-#project_metadata <- system.file("../inst/extdata/PMMSq033_metadata.csv", package = "macpie")
-metadata <- read_metadata("../inst/extdata/PMMSq033_metadata.csv")
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
 
+# Load metadata
+metadata <- read_metadata(project_metadata)
 plot_metadata_heatmap(metadata)
 ```
 
@@ -92,7 +98,7 @@ plot_metadata_heatmap(metadata)
 
 ```{r load_read_data}
 # 1. Load your own gene counts per sample or 2. data from the publication
-project_rawdata <- "../inst/extdata/PMMSq033/raw_matrix/"
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
 project_name <- "PMMSq033"
 raw_counts <- Read10X(data.dir = project_rawdata)
 
@@ -116,11 +122,11 @@ mac <- mac %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id)) %>%
   mutate(combined_id = make.names(combined_id))
 
-# Filter by read count per sample group
-mac <- filter_genes_by_expression(mac, 
-                                  group_by = "combined_id", 
-                                  min_counts = 10, 
-                                  min_samples = 2)
+# # Filter by read count per sample group
+mac <- filter_genes_by_expression(mac,
+                                  group_by = "combined_id",
+                                  min_counts = 1,
+                                  min_samples = 1)
 ```
 
 #### 2.2 Basic QC metrics
