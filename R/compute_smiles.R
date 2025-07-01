@@ -18,9 +18,15 @@
 #' result <- compute_smiles(mock_data, compound_column = "Treatment_1")
 
 compute_smiles <- function(data, compound_column) {
-  if (!compound_column %in% colnames(data@meta.data)) {
-    stop("The compound_column does not exist in metadata.")
-  } 
+  if(inherits(data, "tbl_df")){
+    if (!compound_column %in% colnames(data)) {
+      stop("The compound_column does not exist in metadata.")
+    } 
+  } else {
+    if (!compound_column %in% colnames(data@meta.data)) {
+      stop("The compound_column does not exist in metadata.")
+    } 
+  }
   
   # Clean compound names
   data$clean_compound_name <- data %>%
