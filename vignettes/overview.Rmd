@@ -190,7 +190,7 @@ plot_rle(mac_dmso, label_column = "Row", normalisation = "limma_voom")
   -  use **compute_multi_de** to perform differential expression analyses for all treatment groups vs control
   -  use volcano plot, box plot and heatmap to show results from the analyses and visualise gene expression levels  
   -  use **enrichr** for pathway enrichment analysis
-  -  more detailed methods avaailable in vignette [Transcriptional analyses](articles/transcriptional_analyses.html)
+  -  more detailed methods available in vignette [Transcriptional analyses](articles/transcriptional_analyses.html)
   
 
 #### 3.1. Single comparison
