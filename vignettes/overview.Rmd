@@ -24,9 +24,9 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-MAC-seq is a cost-effective, high-throughput transcriptomic platform,  developed as a collaboration between Victorian Centre for Functional Genomics (VCFG) and Molecular Genomics Core (MGC) facilities at PeterMac Cancer Centre  (PeterMac), primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
+MAC-seq is a cost-effective, high-throughput transcriptomic platform, developed as a collaboration between Victorian Centre for Functional Genomics (VCFG) and Molecular Genomics Core (MGC) facilities at Peter MacCallum Cancer Centre (Peter Mac), primarily designed for small molecule screening. However, its versatility extends beyond this application, thanks to its integration with high-throughput microscopy and 3D cell culturing techniques. 
 
-<b>macpie</b> is a toolkit specifically developed for researchers working with MAC-seq data. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. <b>macpie</b> is a result of a collaborative effort by a workgroup at the PeterMac, with a substantial support of the VCFG amd MGC core facilities.
+<b>macpie</b> is a toolkit designed for researchers, originally with MAC-seq data in mind, but validated for general High-Throughput Transcriptomics (HTTr) data applications. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. <b>macpie</b> is a result of a collaborative effort by a workgroup at the PeterMac, with a substantial support of the VCFG amd MGC core facilities.
 
 In this vignette we cover the basic functionality of <b>macpie</b>, from input, quality control to transcriptional and screen-related analyses. For more in-depth workflows, please refer to other vignettes:
 
@@ -58,6 +58,19 @@ metadata <- read_metadata("../inst/extdata/PMMSq033_metadata.csv")
 plot_metadata_heatmap(metadata)
 ```
 
+> **Key Lessons for Robust Experimental Design**
+>
+> - Based on our experience, the specific metadata you need will vary greatly with your experiment's design. Here are some crucial lessons we've learned to help you achieve reliable results:
+>
+> - Plate Layout Matters: Always place replicate sample wells on the same assay plate, not across multiple plates.
+>
+> - Minimum Replicates: Aim for a minimum of 3 replicates per condition to ensure statistical robustness.
+>
+> - Strategic Negative Controls: For negative control wells, we recommend including 10 wells randomized across the same assay plate. This provides a more robust baseline.
+
+
+
+
 ### 2. Sequencing data import and QC 
 
 **Key points**: 
@@ -73,7 +86,7 @@ plot_metadata_heatmap(metadata)
 
 **Data access**:  
 
-  -  load your raw counts by providing Read10X function with a path to a directory containing matrix.mtx, barcodes.tsv and features.tsv, commonly "raw_matrix" from CellRanger or StarSolo output
+  -  load your raw counts by providing Read10X function with a path to a directory containing matrix.mtx.gz, barcodes.tsv.gz, and features.tsv.gz, commonly "raw_matrix" from CellRanger or StarSolo output
   -  the full manuscript dataset (>10 MB of `.rds` files) is currently under restricted release and will become publicly available upon publication (at Zenodo). In the meantime, please contact us for early access
   -  use data(mini_mac) to load a subsample (308 samples, 500 genes) of the full dataset, as in the commented code below
 
@@ -112,7 +125,7 @@ mac <- filter_genes_by_expression(mac,
 
 #### 2.2 Basic QC metrics
 
-We can use the common QC plots from the Seurat package to visualise the number of genes, reads, and percentage of mitochondrial and ribosomal genes per sample. 
+macpie allows you to use the common QC plots from the Seurat package to visualise the number of genes, reads, and percentage of mitochondrial and ribosomal genes per sample. 
 ```{r violin_plot, fig.width = 8, fig.height = 4}
 # Calculate the percent of mitochondrial and ribosomal genes
 mac[["percent.mt"]] <- PercentageFeatureSet(mac, pattern = "^mt-|^MT-")
@@ -124,7 +137,7 @@ VlnPlot(mac, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.r
   scale_fill_manual(values = macpie_colours$discrete) 
 ```
 
-In addition, we can apply tidyverse functions to further explore the dataset. For example, let's subset the Seurat object based on the column "Project" in the metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots provide a convenient way to inspect spatial patterns across a plate, helping to identify anomalies or unexpected trends. When hovering over the plot, sample groups are automatically highlighted to aid interpretation.
+In addition, you can apply tidyverse functions to further explore the dataset. For example, let's subset the Seurat object based on the column "Project" in the metadata and visualise the grouping of data on the plate vs on an MDS plot. Plate layout plots provide an interactive way to inspect spatial patterns across a plate, helping to identify anomalies or unexpected trends. When hovering over the plot, sample groups are automatically highlighted to aid interpretation.
 
 ```{r subset_seurat, fig.width = 8, fig.height = 3}
 unique(mac$Project)
@@ -335,11 +348,12 @@ ggplot(mac_screen_profile, aes(target, NES)) +
   facet_wrap(~pathway, scales = "free") +
   macpie_theme(x_labels_angle = 90, show_x_title = F)
 ```
+
 #### 4.3. Estimate of dose-response
 
 macpie can be used to calculate dose-response curves for individual genes, pathways or any other external measurement such as cell viability that is available in your metadata, based on the R package <b>drc</b> These are also available in a paralelisable format with the function “compute_multiple_dose_response”.
 
-```{r compute_EC50_curves, fig.width = 4, fig.height = 3}
+```{r compute_EC50_curves, fig.width = 6, fig.height = 3}
 treatments <- mac %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
