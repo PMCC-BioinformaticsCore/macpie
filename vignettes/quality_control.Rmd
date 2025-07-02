@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+This vignette focuses on metadata and data quality control, which can have a substantial impact on downstream analyses and interpretation in a high-throughput screen environment. We first demonstrate metadata import and validation, ensuring sample annotations are complete and ready for subsequent analyses. After loading raw gene expression data, either from single or multiple plates, we integrate data with metadata, and perform a series of QC checks to assess technical variability, detect anomalies, and correct for batch effects. Special attention should be taken to assess variability of samples that will be used across differential gene expression analysis, such as DMSO-treated or untreated samples.
 
 ## 1. Metadata import and validation
 
