@@ -22,7 +22,7 @@ navbar:
         - text: "Quality control"
           href: articles/quality_control.html
         - text: "Transcriptional analyses"
-          href: articles/differential_expression.html
+          href: articles/transcriptional_analyses.html
         - text: "Compound screening"
         - text: "Cross-platform compatibility"
           href: articles/cross_platform_compatibility.html
