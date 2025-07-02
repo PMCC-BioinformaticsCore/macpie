@@ -384,6 +384,10 @@ macpie provides an easy way to find smiles from compounds names, compute chemica
 
 In the example below, the number of rings on the structures is the most important for targeting the estrogen activity.
 
+
+
+
+
 ```{r compute_chemical_descriptors, fig.width = 8, fig.height = 5}
 # Add smiles based on a column with generic names of compounds
 #(warning, this process requires internet connection and can take a while)

@@ -35,17 +35,20 @@ As part of the macpie package, we provide a set of functions to import and valid
   
 ### 1.1 Metadata input
 
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
 ```{r setup}
 #install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
-devtools::load_all()
 library(macpie)
 
 # Define project variables
 project_name <- "PMMSq033"
-#project_metadata <- system.file("extdata/PMMSq033/PMMSq033_metadata.csv", package = "macpie")
-
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
 # Load metadata
-metadata <- read_metadata("../inst/extdata/PMMSq033_metadata.csv")
+metadata <- read_metadata(project_metadata)
 #metadata <- read_metadata(project_metadata)
 ```
 
@@ -89,9 +92,10 @@ In case of multiple plates, instead of one directory submit a vector of director
 #raw_counts <- Read10X(data.dir = project_rawdata)
 
 # 1. Load your own gene counts per sample or 2. data from the publication
-project_rawdata <- "../inst/extdata/PMMSq033/raw_matrix/"
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
 project_name <- "PMMSq033"
 raw_counts <- Read10X(data.dir = project_rawdata)
+
 
 #for multiple plates:
 #raw_counts <- Read10X(data.dir = c("path1", "path2", ... "pathN"))
