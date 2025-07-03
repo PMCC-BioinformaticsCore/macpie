@@ -5,7 +5,7 @@
 #'
 #' @param data A tidyseurat object
 #' @param compound_column Column with the generic name of a compound 
-#' @importFrom webchem get_cid pc_prop
+#' @importFrom webchem get_cid pc_prop cir_query
 #' @importFrom stringr str_replace_all str_trim str_to_title
 #' @importFrom dplyr mutate left_join rename select pull
 #' @returns A tidyseurat object with a `smiles` column added to the metadata.
@@ -34,18 +34,12 @@ compute_smiles <- function(data, compound_column) {
     str_replace_all("_", " ") %>%
     str_trim() 
   
-  # Retrieve compound CIDs from PubChem
-  cids <- get_cid(unique(data$clean_compound_name), from = "name", match = "first", verbose = FALSE)
-  
-  # Retrieve SMILES and merge with CIDs
-  smiles_df <- pc_prop(cids$cid, properties = "IsomericSMILES") %>%
-    mutate("CID" = as.character(.data$CID)) %>%
-    left_join(cids, by = c("CID" = "cid")) %>%
-    rename(smiles = "IsomericSMILES")
-  
+  webchem_res <- webchem::cir_query(data$clean_compound_name, "smiles", match = "first")
+  data <- data %>%
+    left_join(., webchem_res, join_by("clean_compound_name"=="query"))
+
   # Merge back into main object
   data <- data %>%
-    left_join(., smiles_df, by = c("clean_compound_name" = "query")) %>%
     select(-"clean_compound_name")
   return(data)
 }
