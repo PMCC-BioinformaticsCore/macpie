@@ -59,13 +59,6 @@ project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macp
 metadata <- read_metadata(project_metadata)
 
 
-
-
-
-# Import raw data
-#project_rawdata <- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"
-#raw_counts <- Read10X(data.dir = project_rawdata)
-
 # 1. Load your own gene counts per sample or 2. data from the publication
 project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
 

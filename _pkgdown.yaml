@@ -18,7 +18,7 @@ navbar:
     - text: "Vignettes"
       menu:
         - text: "Overview"
-          href: articles/overview.html
+          href: articles/macpie.html
         - text: "Quality control"
           href: articles/quality_control.html
         - text: "Transcriptional analyses"
