@@ -34,8 +34,9 @@ compute_smiles <- function(data, compound_column) {
     str_replace_all("_", " ") %>%
     str_trim() 
   
-  data$smiles <- cir_query(data$clean_compound_name, "smiles", match = "first")
-  
+  webchem_res <- webchem::cir_query(data$clean_compound_name, "smiles", match = "first")
+  data <- data %>%
+    left_join(., webchem_res, join_by("clean_compound_name"=="query"))
   # Merge back into main object
   data <- data %>%
     select(-"clean_compound_name")
