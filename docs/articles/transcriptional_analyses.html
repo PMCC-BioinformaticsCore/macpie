@@ -38,7 +38,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
-<li><a class="dropdown-item" href="../articles/overview.html">Overview</a></li>
+<li><a class="dropdown-item" href="../articles/macpie.html">Overview</a></li>
     <li><a class="dropdown-item" href="../articles/quality_control.html">Quality control</a></li>
     <li><a class="dropdown-item" href="../articles/transcriptional_analyses.html">Transcriptional analyses</a></li>
     <li><h6 class="dropdown-header" data-toc-skip>Compound screening</h6></li>
@@ -116,9 +116,6 @@ barcode prefixes) instead of one directory to the Read10X function.</p>
 <span><span class="co"># Load metadata</span></span>
 <span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_metadata.html">read_metadata</a></span><span class="op">(</span><span class="va">project_metadata</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Import raw data</span></span>
-<span><span class="co">#project_rawdata &lt;- "/home/rstudio/macpie/macpieData/PMMSq033/raw_matrix/"</span></span>
-<span><span class="co">#raw_counts &lt;- Read10X(data.dir = project_rawdata)</span></span>
 <span></span>
 <span><span class="co"># 1. Load your own gene counts per sample or 2. data from the publication</span></span>
 <span><span class="va">project_rawdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">dir</span>, <span class="st">"/macpieData/PMMSq033/raw_matrix"</span><span class="op">)</span></span>
