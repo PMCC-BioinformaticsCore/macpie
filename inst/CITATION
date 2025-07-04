@@ -3,7 +3,6 @@ citHeader("To cite the macpie package in publications, please use:")
 citEntry(
   entry = "Unpublished",
   title = "macpie: a scalable workflow for high-throughput transcriptomic profiling",
-  author = person(c("Nenad", "Bartonicek"), role = c("aut", "cph")),
   author = c(
     person("Nenad", "Bartonicek", email = "nenad.bartonicek@petermac.org", role = c("aut", "cph")),
     person("Xin", "Liu", role = "aut"),

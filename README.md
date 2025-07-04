@@ -3,6 +3,8 @@
 
 # macpie
 
+<img src="docs/logo.png" height="100px" align="right" class="pkgdown=hide"/>
+
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml/badge.svg)](https://github.com/PMCC-BioinformaticsCore/macpie/actions/workflows/r-cmd-check.yaml)
@@ -171,33 +173,29 @@ mini_mac <- compute_multi_de(mini_mac, treatments, control_samples = "DMSO_0", m
 # plot shared differentially expressed genes
 plot_multi_de(mini_mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 
-# Pathway analysis for single/multiple comparisons can refer to the transcriptional_analysis vignette
-
-
-# Highthoughput screening analysis
 
 ```
 
-## Cite
+## Citation
 
 ``` r
 citation("macpie")
 ```
 
 ``` r
-#> To cite the macpie package in publications, please use:
+#>To cite the macpie package in publications, please use:
 
-#>  Nenad Bartonicek (2025). “macpie: a scalable workflow for high-throughput transcriptomic
-#>  profiling.” Manuscript in preparation.
-#> 
-#> A BibTeX entry for LaTeX users is
-#>
+#>  Bartonicek N, Liu X, Twomey L, Meier M, Lupat R, Craig S, Yoannidis D, Li J, Semple T,
+#>  Simpson K, Li M, Ramm S (2025). “macpie: a scalable workflow for high-throughput
+#>  transcriptomic profiling.” Manuscript in preparation.
+
+#>A BibTeX entry for LaTeX users is
+
 #>  @Unpublished{,
 #>    title = {macpie: a scalable workflow for high-throughput transcriptomic profiling},
-#>    author = {{Nenad Bartonicek}},
-#>    author = {{Nenad Bartonicek}},
+#>    author = {Nenad Bartonicek and Xin Liu and Laura Twomey and Michelle Meier and Richard Lupat and Stuart Craig and David Yoannidis and #>Jason Li and Tim Semple and Kaylene J Simpson and Mark X Li and Susanne Ramm},
 #>    organization = {Peter MacCallum Cancer Centre},
 #>    year = {2025},
 #>    note = {Manuscript in preparation},
-#> }
+#>  }
 ```
