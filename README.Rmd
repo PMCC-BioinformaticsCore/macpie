@@ -144,7 +144,7 @@ p <- plot_mds(mini_mac, group_by = "Sample_type", label = "combined_id", n_label
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 
-# Correction of he batch effect
+# Correction of the batch effect
 # First we will subset the data to look at control, DMSO samples only
 mini_mac_dmso <- mini_mac %>%
   filter(Treatment_1 == "DMSO")
