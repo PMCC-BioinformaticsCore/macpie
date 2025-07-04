@@ -389,9 +389,9 @@ In the example below, the number of rings on the structures is the most importan
 
 
 ```{r compute_chemical_descriptors, fig.width = 8, fig.height = 5}
-# Add smiles based on a column with generic names of compounds
-#(warning, this process requires internet connection and can take a while)
-mac <- compute_smiles(mac, compound_column = "Compound_ID")
+# If missing from your metadata, add smiles based on a column with generic names of compounds
+# Warning, this process requires internet connection and about 1-2 minutes per plate (40 identifiers).
+#mac <- compute_smiles(mac, compound_column = "Compound_ID")
 
 # Calculate descriptors
 mac <- compute_chem_descriptors(mac)
