@@ -3,7 +3,7 @@
 
 # macpie
 
-<img src="docs/logo.png" height="100px" align="right" class="pkgdown=hide"/>
+<img src="docs/logo.png" height="100px" align="right" class="pkgdown-hide"/>
 
 <!-- badges: start -->
 
@@ -60,8 +60,25 @@ the `remotes` package installed first. If not, you can install it using:
 # First, install remotes if not already installed
 install.packages("remotes")
 
-# Then install macpie
-remotes::install_github("https://github.com/PMCC-BioinformaticsCore/macpie")
+# Make sure BiocManager is installed, and point your repos at both CRAN + Bioconductor
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+
+options(repos = BiocManager::repositories())
+
+# Install all the Bioconductor dependencies explicitly
+BiocManager::install(c(
+  "edgeR", "limma", "Biobase", "DESeq2", "RUVSeq",
+  "EDASeq", "fgsea", "scran", "glmGamPoi",
+  "BiocParallel", "SingleCellExperiment", "zinbwave",
+  "SummarizedExperiment"
+))
+
+# Install MOFA2 from its GitHub (it’s not on Bioconductor)
+remotes::install_github("bioFAM/MOFA2")
+
+# Finally, install macpie itself
+remotes::install_github("PMCC-BioinformaticsCore/macpie", dependencies = FALSE)
 ```
 
 ### Dependencies
@@ -80,7 +97,7 @@ command and install, depending on your platform.
 1.  Pull the Docker image
 
 ``` bash
-docker pull --platform linux/amd64 xliu81/macpie:latest
+docker pull --platform linux/amd64 xliu81/macpie:v1.0.0
 ```
 
 2.  Run the Docker container
