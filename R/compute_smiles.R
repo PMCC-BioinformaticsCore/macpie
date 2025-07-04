@@ -5,7 +5,7 @@
 #'
 #' @param data A tidyseurat object
 #' @param compound_column Column with the generic name of a compound 
-#' @importFrom webchem get_cid pc_prop
+#' @importFrom webchem get_cid pc_prop cir_query
 #' @importFrom stringr str_replace_all str_trim str_to_title
 #' @importFrom dplyr mutate left_join rename select pull
 #' @returns A tidyseurat object with a `smiles` column added to the metadata.
@@ -37,7 +37,7 @@ compute_smiles <- function(data, compound_column) {
   webchem_res <- webchem::cir_query(data$clean_compound_name, "smiles", match = "first")
   data <- data %>%
     left_join(., webchem_res, join_by("clean_compound_name"=="query"))
-  
+
   # Merge back into main object
   data <- data %>%
     select(-"clean_compound_name")
