@@ -389,9 +389,9 @@ In the example below, the number of rings on the structures is the most importan
 
 
 ```{r compute_chemical_descriptors, fig.width = 8, fig.height = 5}
-# If missing from your metadata, add smiles based on a column with generic names of compounds
-# Warning, this process requires internet connection and about 1-2 minutes per plate (40 identifiers).
-#mac <- compute_smiles(mac, compound_column = "Compound_ID")
+# Add smiles based on a column with generic names of compounds
+#(warning, this process requires internet connection and can take a while)
+mac <- compute_smiles(mac, compound_column = "Compound_ID")
 
 # Calculate descriptors
 mac <- compute_chem_descriptors(mac)
@@ -415,13 +415,13 @@ rf_ranked <- sort(rf_importance[, 1], decreasing = TRUE)
 
 # Top 20 important descriptors
 head(rf_ranked, 20)
-#>      WTPT.2     nRings5     MDEC.11     nRings7     MDEO.22     MDEO.11 
-#> 3.361393653 2.150421361 1.214784237 1.001001503 0.783327367 0.709299485 
-#>   khs.ssCH2 nSmallRings     MDEN.33     MDEC.14   topoShape      ALogp2 
-#> 0.474955644 0.366086694 0.115293479 0.085759728 0.077678537 0.007617685 
-#>     nRings4     MDEN.11    khs.dCH2     khs.tCH     khs.dNH    khs.aaNH 
-#> 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 
-#>     khs.dsN     khs.aaO 
+#>      WTPT.2     nRings5     MDEC.11     nRings7     MDEO.22     MDEO.11
+#> 3.361393653 2.150421361 1.214784237 1.001001503 0.783327367 0.709299485
+#>   khs.ssCH2 nSmallRings     MDEN.33     MDEC.14   topoShape      ALogp2
+#> 0.474955644 0.366086694 0.115293479 0.085759728 0.077678537 0.007617685
+#>     nRings4     MDEN.11    khs.dCH2     khs.tCH     khs.dNH    khs.aaNH
+#> 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000
+#>     khs.dsN     khs.aaO
 #> 0.000000000 0.000000000
 varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features")
 ```
