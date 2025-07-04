@@ -27,7 +27,7 @@ MAC-seq**](https://github.com/PMCC-BioinformaticsCore/dinoflow)
 
 Full documentation and step-by-step tutorials are available at:  
 [**macpie documentation
-site**](https://pmcc-bioinformaticscore.github.io/macpie/)
+site**](https://pmcc-bioinformaticscore.github.io/macpie/articles/macpie.html)
 
 ### Example Data
 
@@ -176,4 +176,28 @@ plot_multi_de(mini_mac, group_by = "combined_id", value = "log2FC", p_value_cuto
 
 # Highthoughput screening analysis
 
+```
+
+## Cite
+
+``` r
+citation("macpie")
+```
+
+``` r
+#> To cite the macpie package in publications, please use:
+
+#>  Nenad Bartonicek (2025). “macpie: a scalable workflow for high-throughput transcriptomic
+#>  profiling.” Manuscript in preparation.
+#> 
+#> A BibTeX entry for LaTeX users is
+#>
+#>  @Unpublished{,
+#>    title = {macpie: a scalable workflow for high-throughput transcriptomic profiling},
+#>    author = {{Nenad Bartonicek}},
+#>    author = {{Nenad Bartonicek}},
+#>    organization = {Peter MacCallum Cancer Centre},
+#>    year = {2025},
+#>    note = {Manuscript in preparation},
+#> }
 ```
