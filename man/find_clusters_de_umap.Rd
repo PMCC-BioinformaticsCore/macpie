@@ -23,5 +23,4 @@ Calculate clusters for umap based on DE analysis
 data(mini_mac)
 mini_mac <- compute_de_umap(mini_mac)
 mini_mac <- find_clusters_de_umap(mini_mac)
-plot_de_umap(mini_mac, group_by = "cluster", max_overlaps = 10)
 }

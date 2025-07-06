@@ -14,7 +14,6 @@
 #' data(mini_mac)
 #' mini_mac <- compute_de_umap(mini_mac)
 #' mini_mac <- find_clusters_de_umap(mini_mac)
-#' plot_de_umap(mini_mac, group_by = "cluster", max_overlaps = 10)
 find_clusters_de_umap <- function(data = NULL, k = 10) {
 
   validate_inputs <- function(df_umap_data, k) {
