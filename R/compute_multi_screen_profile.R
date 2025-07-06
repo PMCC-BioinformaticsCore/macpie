@@ -27,7 +27,7 @@ utils::globalVariables(c("NES"))
 #' data(mini_mac)
 #' mini_mac@tools$diff_exprs <- mini_mac@tools$diff_exprs[1:2]
 #' mini_mac <- compute_multi_screen_profile(mini_mac, target = "Staurosporine_10",
-#' n_genes_profile = 10, direction = "up", num_cores = 1)
+#' n_genes_profile = 20, direction = "up", num_cores = 1)
 
 compute_multi_screen_profile <- function(data = NULL,
                                          target = NULL,
@@ -58,9 +58,9 @@ compute_multi_screen_profile <- function(data = NULL,
   if (!is.null(target)) {
     geneset <- list(
       de_list[[target]] %>%
-        filter(!grepl("mt-", .data$gene, ignore.case = TRUE)) %>%
-        filter(!grepl("Rp(s|l)", .data$gene, ignore.case = TRUE)) %>%
-        filter(
+        filter(!grepl("^mt-|^MT-", .data$gene, ignore.case = TRUE)) %>%
+        filter(!grepl("^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA", .data$gene, ignore.case = TRUE)) %>%
+      filter(
           direction == "both" |
             (direction == "up" & .data$log2FC > 0) |
             (direction == "down" & .data$log2FC < 0)

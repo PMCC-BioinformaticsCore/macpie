@@ -4,13 +4,13 @@
 \alias{plot_de_umap}
 \title{Plot UMAP dimensionality reduction on DE genes}
 \usage{
-plot_de_umap(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL)
+plot_de_umap(data = NULL, color_by = NULL, label = NULL, max_overlaps = NULL)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
 "Well_ID", "Row", "Column"}
 
-\item{group_by}{A string specifying which column in data will be used to
+\item{color_by}{A string specifying which column in data will be used to
 color the samples.}
 
 \item{label}{A string specifying which column in data will be used to
@@ -26,6 +26,10 @@ Plot UMAP dimensionality reduction on DE genes
 }
 \examples{
 data(mini_mac)
-mini_mac <- compute_de_umap(mini_mac)
-p <- plot_de_umap(mini_mac)
+mini_mac_agg <- aggregate_by_de(mini_mac)
+mini_mac_agg <- compute_de_umap(mini_mac_agg)
+mini_mac_agg <- FindNeighbors(mini_mac_agg, reduction = "umap_de", dims = 1:2, verbose = FALSE)
+mini_mac_agg <- FindClusters(mini_mac_agg, resolution = 1, verbose = FALSE)
+mini_mac_agg <- compute_de_umap(mini_mac_agg)
+p <- plot_de_umap(mini_mac_agg)
 }

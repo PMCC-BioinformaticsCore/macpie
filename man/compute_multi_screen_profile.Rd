@@ -2,7 +2,8 @@
 % Please edit documentation in R/compute_multi_screen_profile.R
 \name{compute_multi_screen_profile}
 \alias{compute_multi_screen_profile}
-\title{Find similarities between expression profiles with fgsea}
+\title{Find similarities between expression profiles with fgsea.
+Mitochondrial/ribosomal genes are filtered from the analysis}
 \usage{
 compute_multi_screen_profile(
   data = NULL,
@@ -10,7 +11,9 @@ compute_multi_screen_profile(
   geneset = NULL,
   n_genes_profile = 200,
   direction = "both",
-  num_cores = parallel::detectCores() - 1
+  minSize = 15,
+  maxSize = 500,
+  num_cores = 1
 )
 }
 \arguments{
@@ -18,27 +21,33 @@ compute_multi_screen_profile(
 "Well_ID", "Row", "Column".}
 
 \item{target}{Value of a target expression profile in data (target) against
-which the others should be compared to}
+which the others should be compared to.}
 
 \item{geneset}{List of genes whose enrichment in expression profiles should
-be evaluated}
+be evaluated.}
 
-\item{n_genes_profile}{Number of genes for a target profile, default 200}
+\item{n_genes_profile}{Number of genes to take for a target profile from a
+ranked list, default 200.}
 
 \item{direction}{Direction of the expression of DE genes in the target
-profile: one of "up", "down" and "both", default both.}
+profile: one of "up", "down" and "both", default "both".}
 
-\item{num_cores}{Number of cores}
+\item{minSize}{Minimum size of gene sets to consider (default 15).}
+
+\item{maxSize}{Maximum size of gene sets to consider (default 500).}
+
+\item{num_cores}{Number of cores to use for parallel processing.}
 }
 \value{
-A tidyseurat object with screen_profile data frame in slot tools
+A tidyseurat object with screen_profile data frame in slot tools.
 }
 \description{
-Find similarities between expression profiles with fgsea
+Find similarities between expression profiles with fgsea.
+Mitochondrial/ribosomal genes are filtered from the analysis
 }
 \examples{
 data(mini_mac)
-mini_mac@tools$diff_exprs<-mini_mac@tools$diff_exprs[1:2]
+mini_mac@tools$diff_exprs <- mini_mac@tools$diff_exprs[1:2]
 mini_mac <- compute_multi_screen_profile(mini_mac, target = "Staurosporine_10",
-n_genes_profile = 10, direction = "up", num_cores = 1)
+n_genes_profile = 20, direction = "up", num_cores = 1)
 }
