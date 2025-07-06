@@ -3,7 +3,7 @@
 #'
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
-#' @param group_by A string specifying which column in data will be used to
+#' @param color_by A string specifying which column in data will be used to
 #'   color the samples.
 #' @param label A string specifying which column in data will be used to
 #'   label a sample.
@@ -17,60 +17,70 @@
 #'
 #' @examples
 #' data(mini_mac)
-#' mini_mac <- compute_de_umap(mini_mac)
-#' p <- plot_de_umap(mini_mac)
-plot_de_umap <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL) {
+#' mini_mac_agg <- aggregate_by_de(mini_mac)
+#' mini_mac_agg <- compute_de_umap(mini_mac_agg)
+#' mini_mac_agg <- Seurat::FindNeighbors(mini_mac_agg, reduction = "umap_de", dims = 1:2, verbose = FALSE)
+#' mini_mac_agg <- Seurat::FindClusters(mini_mac_agg, resolution = 1, verbose = FALSE)
+#' mini_mac_agg <- compute_de_umap(mini_mac_agg)
+#' p <- plot_de_umap(mini_mac_agg)
+plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlaps = NULL) {
 
   # Helper function to validate input data
-  validate_inputs <- function(data, group_by, label, max_overlaps) {
+  validate_inputs <- function(data, color_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
     }
-    group_by <- if (is.null(group_by)) "Sample_type" else group_by
+    color_by <- if (is.null(color_by)) "seurat_clusters" else color_by
     label <- if (is.null(label)) "combined_id" else label
     max_overlaps <- if (is.null(max_overlaps)) 20 else max_overlaps
     column_names <- data %>%
       head() %>%
       colnames()
-    if (!all(c(group_by, label) %in% column_names)) {
-      stop("Your column names are not present in the data or metadata.")
+    if (!all(c(color_by, label) %in% column_names)) {
+      stop("Your color or label arguments are not present in the data. Try running FindNeighbors.")
     }
-    list(data = data, group_by = group_by, label = label, max_overlaps = max_overlaps)
+    list(data = data, color_by = color_by, label = label, max_overlaps = max_overlaps)
   }
 
   # Validate inputs
-  validated <- validate_inputs(data, group_by, label, max_overlaps)
-  group_by <- validated$group_by
+  validated <- validate_inputs(data, color_by, label, max_overlaps)
+  color_by <- validated$color_by
   label <- validated$label
   max_overlaps <- validated$max_overlaps
   data <- validated$data
 
-  df_umap_data <- as.data.frame(data@reductions$umap_de@cell.embeddings) %>%
-    rownames_to_column("combined_id")
-  data@meta.data <- data@meta.data %>% select(-any_of(starts_with(c("UMAPde_1", "UMAPde_2"))))
-  df_umap_data <- df_umap_data %>%
-    left_join(., data@meta.data, join_by("combined_id")) %>%
-    select(!!rlang::sym(group_by), !!rlang::sym(label), "UMAPde_1", "UMAPde_2") %>%
-    unique()
-
-  p <- ggplot(df_umap_data, aes(x = .data$UMAPde_1,
-                                y = .data$UMAPde_2,
-                                color = !!rlang::sym(group_by),
-                                label = !!rlang::sym(label))) +
+  cell_coords <- Embeddings(data, reduction = "umap_de") %>%
+    as.data.frame() %>%
+    rownames_to_column("combined_id") %>%
+    left_join(data@meta.data, join_by("combined_id"))
+  
+  is_continuous <- is.numeric(cell_coords[[color_by]])
+  
+  # Plot with clusters and labels
+  p <- ggplot(cell_coords, aes(x = UMAPde_1, 
+                          y = UMAPde_2, 
+                          color = !!rlang::sym(color_by),
+                          label = !!rlang::sym(label))) +
     geom_point_interactive(aes(x = .data$UMAPde_1,
                                y = .data$UMAPde_2,
-                               color = !!rlang::sym(group_by),
+                               color = !!rlang::sym(color_by),
                                tooltip = !!rlang::sym(label),
                                data_id = !!rlang::sym(label))) +
-    geom_text_repel(aes(label = !!rlang::sym(label)),                    # Smart label repulsion
+    geom_text_repel(aes(label = !!rlang::sym(label)),                    
                     size = 3.5,
-                    max.overlaps = max_overlaps) +        # Add sample labels
-    theme_minimal() +                             # Minimal theme
+                    max.overlaps = max_overlaps) +        
+    theme_minimal() +                             
     labs(
       title = "UMAP plot",
       x = "Dimension 1",
       y = "Dimension 2"
     ) +
     theme_minimal()
+  
+  if (is_continuous) {
+    p <- p + scale_color_gradientn(colors = rev(macpie_colours$divergent))
+  } else {
+    p <- p + scale_color_manual(values = macpie_colours$discrete)
+  }
   p
 }

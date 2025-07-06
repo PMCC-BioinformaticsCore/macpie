@@ -35,6 +35,8 @@ plot_metadata_heatmap <- function(metadata = NULL,
                                   output_file = NULL,
                                   plate = NULL) {
 
+  summary_columns <- c("Species", "Cell_type", "Model_type", "Time", "Unit",
+                       "Treatment_1", "Concentration_1", "Unit_1", "Sample_type")
   # Helper function to validate input data
   validate_inputs <- function(data, metadata_file, legend, output_file, plate) {
 
@@ -106,7 +108,7 @@ plot_metadata_heatmap <- function(metadata = NULL,
   }
 
   hide_legends <- sapply(annotation_cols, function(col) {
-    length(unique(metadata[[col]])) > 20
+    length(unique(metadata[[col]])) > 10
   })
 
   unique_plate_ids <- unique(metadata$Plate_ID)
@@ -115,6 +117,14 @@ plot_metadata_heatmap <- function(metadata = NULL,
 
     heatmaps <- lapply(seq_along(annotation_cols), function(i) {
       annotation <- annotation_cols[i]
+      
+      # Only abbreviate values if they are NOT in summary_columns
+      if (!(annotation %in% summary_columns)) {
+        if (is.character(plate_data[[annotation]]) || is.factor(plate_data[[annotation]])) {
+          plate_data[[annotation]] <- substr(as.character(plate_data[[annotation]]), 1, 15)
+        }
+      }
+      
       scale_func <- if (is.factor(plate_data[[annotation]])) {
         scale_fill_manual(values = macpie_colours$discrete_40)
       } else if (is.numeric(plate_data[[annotation]])) {

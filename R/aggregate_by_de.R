@@ -90,7 +90,8 @@ aggregate_by_de <- function(data, metric_col = "metric") {
   )
   
   seurat_new <- seurat_new %>%
-    inner_join(metadata_collapsed,by = c(".cell" = "combined_id")) 
+    inner_join(metadata_collapsed,by = c(".cell" = "combined_id")) %>%
+    mutate(combined_id = .cell)
   
   # 4. Add all tools slots from original object
   for (tool_name in names(data@tools)) {
