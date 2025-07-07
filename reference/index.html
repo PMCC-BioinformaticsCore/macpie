@@ -21,7 +21,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes"><li><a class="dropdown-item" href="../articles/macpie.html">Overview</a></li>
     <li><a class="dropdown-item" href="../articles/quality_control.html">Quality control</a></li>
     <li><a class="dropdown-item" href="../articles/transcriptional_analyses.html">Transcriptional analyses</a></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Compound screening</h6></li>
+    <li><a class="dropdown-item" href="../articles/high_throughput_screens.html">Compound screening</a></li>
     <li><a class="dropdown-item" href="../articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -88,7 +88,7 @@
           <code><a href="compute_multi_screen_profile.html">compute_multi_screen_profile()</a></code>
 
         </dt>
-        <dd>Find similarities between expression profiles with fgsea</dd>
+        <dd>Find similarities between expression profiles with fgsea. Mitochondrial/ribosomal genes are filtered from the analysis</dd>
       </dl><dl><dt>
 
           <code><a href="compute_multiple_dose_response.html">compute_multiple_dose_response()</a></code>
@@ -221,6 +221,12 @@
 
         </dt>
         <dd>Generate heatmap of DE genes from multiple treatments This is the function to generate a heatmap of DE genes from running compute_multi_DE that shared by more than one treatment group. There are a few options available to help you to extract shared DE genes.</dd>
+      </dl><dl><dt>
+
+          <code><a href="plot_multi_screen_profile.html">plot_multi_screen_profile()</a></code>
+
+        </dt>
+        <dd>Plot multi-screen profile from fgsea results</dd>
       </dl><dl><dt>
 
           <code><a href="plot_plate_layout.html">plot_plate_layout()</a></code>
