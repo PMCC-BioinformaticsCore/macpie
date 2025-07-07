@@ -3,7 +3,7 @@
 
 # macpie
 
-<img src="docs/logo.png" height="100px" align="right" class="pkgdown-hide"/>
+<img src="docs/logo.png" alt="macpie logo" width="80" style="float:right; margin:0 0 10px 10px;" class="pkgdown-hide"/>
 
 <!-- badges: start -->
 
