@@ -31,7 +31,7 @@ Authors@R: c(person(given = "Nenad", family = "Bartonicek",
          role = "aut"))
 URL: https://github.com/PMCC-BioinformaticsCore/macpie.git
 Description: What the package does (one paragraph).
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
