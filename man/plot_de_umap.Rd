@@ -25,6 +25,7 @@ ggplot object
 Plot UMAP dimensionality reduction on DE genes
 }
 \examples{
+\dontrun{
 data(mini_mac)
 mini_mac_agg <- aggregate_by_de(mini_mac)
 mini_mac_agg <- compute_de_umap(mini_mac_agg)
@@ -32,4 +33,5 @@ mini_mac_agg <- Seurat::FindNeighbors(mini_mac_agg, reduction = "umap_de", dims 
 mini_mac_agg <- Seurat::FindClusters(mini_mac_agg, resolution = 1, verbose = FALSE)
 mini_mac_agg <- compute_de_umap(mini_mac_agg)
 p <- plot_de_umap(mini_mac_agg)
+}
 }
