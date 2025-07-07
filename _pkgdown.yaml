@@ -24,6 +24,7 @@ navbar:
         - text: "Transcriptional analyses"
           href: articles/transcriptional_analyses.html
         - text: "Compound screening"
+          href: articles/high_throughput_screens.html
         - text: "Cross-platform compatibility"
           href: articles/cross_platform_compatibility.html
     - text: "Reference"

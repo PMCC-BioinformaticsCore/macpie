@@ -3,6 +3,7 @@
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/LICENSE-text.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/LICENSE.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/cross_platform_compatibility.html</loc></url>
+<url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/high_throughput_screens.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/index.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/macpie.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/articles/quality_control.html</loc></url>
@@ -39,6 +40,7 @@
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_mds.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_metadata_heatmap.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_multi_de.html</loc></url>
+<url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_multi_screen_profile.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_plate_layout.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_qc_metrics.html</loc></url>
 <url><loc>https://github.com/PMCC-BioinformaticsCore/macpie.git/reference/plot_qc_metrics_heatmap.html</loc></url>

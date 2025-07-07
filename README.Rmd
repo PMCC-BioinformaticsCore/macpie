@@ -57,49 +57,65 @@ data("mini_mac", package = "macpie")
 
 ## Requirements
 
-- R version 4.3.3 or higher
+- **R ≥ 4.3.3**  
+
+  The package is developed on R 4.3.3, and installation (including all dependencies) has been tested on the latest R 4.5.0.
 
 
-### Installation 
 
-To install the development version of `macpie`, you can use the `remotes` package to install directly from GitHub. Make sure you have the `remotes` package installed first. If not, you can install it using:
-
-``` r
-# First, install remotes if not already installed
-install.packages("remotes")
-
-# Make sure BiocManager is installed, and point your repos at both CRAN + Bioconductor
-if (!requireNamespace("BiocManager", quietly=TRUE))
-  install.packages("BiocManager")
-
-options(repos = BiocManager::repositories())
-
-# Install all the Bioconductor dependencies explicitly
-BiocManager::install(c(
-  "edgeR", "limma", "Biobase", "DESeq2", "RUVSeq",
-  "EDASeq", "fgsea", "scran", "glmGamPoi",
-  "BiocParallel", "SingleCellExperiment", "zinbwave",
-  "SummarizedExperiment"
-))
-
-# Install MOFA2 from its GitHub (it’s not on Bioconductor)
-remotes::install_github("bioFAM/MOFA2")
-
-# Finally, install macpie itself
-remotes::install_github("PMCC-BioinformaticsCore/macpie", dependencies = FALSE)
-
-```
-
-### Dependencies
+### Installation and dependencies
 
 All required R packages are automatically installed:
 
-- via remotes::install_github() (when installing locally)
+- via pak::pkg_install (when installing locally)
 
 - or use our pre-built Docker image for a ready-to-use environment.
 
 
-### Using Docker image
+#### Installing locally
+
+To install the development version of `macpie`, we recommend using `pak` - a fast package installer to install directly from GitHub. Make sure you have the `pak` package installed first. 
+
+##### Configure your own GitHub PAT (optional)
+
+`pak` uses the GitHub API to resolve versions and fetch metadata—and unauthenticated requests are limited to 60 per hour. To avoid rate-limit errors, you can add your own Personal Access Token (PAT):
+
+```r
+# install gitcreds if you haven’t already
+install.packages("gitcreds")
+
+# this will prompt you to paste in your PAT
+gitcreds::gitcreds_set()
+
+```
+
+``` r
+# 1. Install pak (fast installer)
+if (!requireNamespace("pak", quietly=TRUE)) {
+  install.packages("pak")
+}
+
+# 2. Make sure Bioconductor repos are set
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+options(repos = BiocManager::repositories())
+
+# 3. Re-install macpie + exactly its Depends & Imports via pak
+pak::pkg_install(
+  "PMCC-BioinformaticsCore/macpie",
+  dependencies = c("Depends", "Imports")
+)
+
+# 4. Verify
+# Should load without error:
+library(macpie)
+
+```
+
+
+
+#### Using Docker image
 
 Have your docker desktop running, open a terminal, paste the docker pull command and install, depending on your platform.
 

@@ -325,7 +325,7 @@ mac_agg <- FindClusters(mac_agg, resolution = 1.3)
 cell_coords <- Embeddings(mac_agg, reduction = "umap_de") %>%
   as.data.frame() %>%
   rownames_to_column("combined_id") %>%
-  left_join(mac_agg@meta.data %>% rownames_to_column("combined_id"), by = "combined_id")
+  left_join(mac_agg@meta.data, by = "combined_id")
 
 # Plot with clusters and labels
 ggplot(cell_coords, aes(x = UMAPde_1, y = UMAPde_2, color = seurat_clusters)) +
@@ -346,9 +346,9 @@ mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores 
 mac_screen_profile <- mac@tools$screen_profile %>%
   mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
-  mutate(target = factor(target, levels = unique(target))) 
+  mutate(target_id = factor(target_id, levels = unique(target_id))) 
 
-ggplot(mac_screen_profile, aes(target, NES)) +
+ggplot(mac_screen_profile, aes(target_id, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
   facet_wrap(~pathway, scales = "free") +

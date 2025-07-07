@@ -15,30 +15,29 @@ vignette: >
 
 ## Introduction
 
-Demonstrate how to adapt **macpie**’s MACseq workflows to any high-throughput transcriptomic profiling (HTTr) data format such as DRUGseq. As the experimental design of DRUGseq plates is a bit different from MACseq. In MACseq experimental design, we prefer to have replicate wells in the same plate. While in DRUGseq, the replicates are in different plates. 
+This vignette is to demonstrate how to adapt **macpie**’s MACseq workflows to any high-throughput transcriptomic profiling (HTTr) data format such as DRUGseq. As the experimental design of DRUGseq plates is a bit different from MACseq. In MACseq experimental design, we prefer to have replicate wells in the same plate. While in DRUGseq, the replicates are in different plates. 
 
-In this vignette you will see:
+
+**Key points:**
+
+This vignette will cover the following two parts:
 
 **1. Converting a DRUGseq plate**
 
-  - How we map any plate layout fields from DRUGseq into **macpie**’s metadata format.
+  - Mapping DRUGseq plate layouts into **macpie**’s metadata format.
 
-  - How we validate the metadata format and content.
+  - Validating the metadata format and content.
 
-  - Visualizing well-by-well metrics in a 384-well plate.
-
-  - Some basic QC steps.
+  - Some basic QC steps from [QC vignette](articles/quality_control.html).
   
 
 **2. Converting multiple DRUGseq plates**
 
-  - How to import multiple plates into a single **macpie** object.
+  - Importing multiple plates into a single **macpie** object.
 
-  - How to detect batch effects across plates.
+  - Detecting batch effects across plates in the QC section.
 
-  - How to perform differential expression analysis on merged data.
-
-  - How to perform pathway enrichment analysis on merged data.
+  - Performing differential expression and pathway enrichment tests on merged data with limma-voom correction.
 
 
 
