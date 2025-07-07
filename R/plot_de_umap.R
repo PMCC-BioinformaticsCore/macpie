@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(mini_mac)
 #' mini_mac_agg <- aggregate_by_de(mini_mac)
 #' mini_mac_agg <- compute_de_umap(mini_mac_agg)
