@@ -97,8 +97,7 @@ Imports:
     MOFA2,
     Matrix, 
     data.table, 
-    rcdk, 
-    AUCell
+    rcdk
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)

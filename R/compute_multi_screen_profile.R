@@ -20,6 +20,7 @@ utils::globalVariables(c("NES"))
 #' @importFrom fgsea fgsea
 #' @importFrom stats setNames
 #' @importFrom tidyr drop_na
+#' @importFrom stats rnorm
 #' @returns A tidyseurat object with screen_profile data frame in slot tools.
 #' @export
 #'

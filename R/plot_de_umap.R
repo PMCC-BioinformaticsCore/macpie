@@ -15,7 +15,7 @@
 #' @returns ggplot object
 #' @export
 #'
-#' @examples
+# #' @examples
 plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlaps = NULL) {
 
   # Helper function to validate input data
