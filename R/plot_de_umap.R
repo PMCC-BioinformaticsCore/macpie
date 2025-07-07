@@ -22,7 +22,6 @@
 #' mini_mac_agg <- compute_de_umap(mini_mac_agg)
 #' mini_mac_agg <- Seurat::FindNeighbors(mini_mac_agg, reduction = "umap_de", dims = 1:2, verbose = FALSE)
 #' mini_mac_agg <- Seurat::FindClusters(mini_mac_agg, resolution = 1, verbose = FALSE)
-#' mini_mac_agg <- compute_de_umap(mini_mac_agg)
 #' p <- plot_de_umap(mini_mac_agg)
 #' }
 plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlaps = NULL) {
