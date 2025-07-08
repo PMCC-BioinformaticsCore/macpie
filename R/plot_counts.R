@@ -73,6 +73,7 @@ plot_counts <- function(data = NULL,
       zinb = compute_normalised_counts(data, method = "zinb", batch = batch),
       stop("Unsupported normalization method.")
     )
+  
   #calculate expression on full samples
   combined_id_barcodes <- data@meta.data[[group_by]]
   names(combined_id_barcodes) <- rownames(data@meta.data)
@@ -80,12 +81,14 @@ plot_counts <- function(data = NULL,
   treatment_control <- c(treatment_samples, control_samples)
   sub_count_matrix <- count_matrix[genes, colnames(count_matrix) %in% treatment_control, drop = FALSE]
   col_labels <- colnames(sub_count_matrix)
-  colnames(sub_count_matrix) <- make.names(col_labels, unique = TRUE)  # makes them unique (e.g. DMSO_0, DMSO_0.1, ...)
+  #colnames(sub_count_matrix) <- make.names(col_labels, unique = TRUE)  # makes them unique (e.g. DMSO_0, DMSO_0.1, ...)
+  colnames(sub_count_matrix) <- make.unique(col_labels, sep = "_repXXX")
   dt <- data.table::as.data.table(sub_count_matrix, keep.rownames = "Genes")
   dt_long <- data.table::melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
   setDT(dt_long)
+  
   # make sure just remove numbers after "." at end of string that were for replicate numbers
-  data.table::set(dt_long, j = "Treatment", value = gsub("\\.[0-9]{1,3}$", "", dt_long$ReplicateID)) 
+  data.table::set(dt_long, j = "Treatment", value = gsub("_repXXX\\d*$", "", dt_long$ReplicateID)) 
   dt_long[, Replicate := sequence(.N), by = .(Genes, Treatment)]
   setcolorder(dt_long, c("Genes", "Treatment", "Replicate", "Expression"))
   n_samples <- length(colnames(sub_count_matrix))
