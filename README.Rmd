@@ -164,7 +164,7 @@ docker run --rm -ti \
   -p 8787:8787 \
   --platform linux/amd64 \
   -v /path/to/your/macpie/:/home/rstudio/macpie:z\
-  xliu81/macpie:latest
+  xliu81/macpie:v1.0.0
 ```
 
 - Replace /path/to/your/macpie/ with the absolute path to your local repo.
