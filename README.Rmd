@@ -69,7 +69,7 @@ data("mini_mac", package = "macpie")
 
 All required R packages are automatically installed:
 
-- via pak::pkg_install (when installing locally)
+- via pak::pkg_install or devtools::install_github
 
 - or use our pre-built Docker image for a ready-to-use environment.
 
@@ -114,6 +114,35 @@ pak::pkg_install(
 library(macpie)
 
 ```
+
+Optially, you can also install the package by
+
+``` r
+
+# First, install devtools if not already installed
+install.packages("devtools")
+
+# Make sure BiocManager is installed, and point your repos at both CRAN + Bioconductor
+if (!requireNamespace("BiocManager", quietly=TRUE))
+  install.packages("BiocManager")
+
+options(repos = BiocManager::repositories())
+
+BiocManager::install(c(
+  "edgeR", "limma", "Biobase", "DESeq2", "RUVSeq",
+  "EDASeq", "fgsea", "scran", "glmGamPoi",
+  "BiocParallel", "SingleCellExperiment", "zinbwave",
+  "SummarizedExperiment"
+))
+
+
+# Install MOFA2 from its GitHub (it’s not on Bioconductor)
+devtools::install_github("bioFAM/MOFA2")
+
+# Finally, install macpie itself
+devtools::install_github("PMCC-BioinformaticsCore/macpie", dependencies = TRUE)
+```
+
 
 
 
