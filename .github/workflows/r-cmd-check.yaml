@@ -41,38 +41,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
-
-      # NEW: Install system Java & other lib dependencies for Ubuntu
-      - name: Install Java & system dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-11-jdk libcurl4-openssl-dev libxml2-dev libssl-dev
-
-      # NEW: Install R package dependencies: rJava, rcdklibs, rcdk
-      - name: Install R package dependencies
-        run: |
-          Rscript -e 'install.packages(c("rJava", "rcdklibs", "rcdk"), repos="https://packagemanager.rstudio.com/all/latest")'
-
-      # NEW: Print current Java config
-      - name: Check Java and R linkage
-        if: runner.os == 'Linux'
-        run: |
-          java -version
-          Rscript -e 'library(rJava); .jinit(); cat("Java version in R:", .jcall("java/lang/System", "S", "getProperty", "java.version"), "\n")'
-
-      # Skip javareconf on Windows
-      - name: Check Java and R linkage (Windows - skip javareconf)
-        if: runner.os == 'Windows'
-        run: |
-          java -version
-          echo "Skipping R CMD javareconf on Windows"
-
-      # NEW: Run test
-      - name: Run test
-        run: |
-          Rscript -e 'library(rcdk); parse.smiles("COO")'	
+          extra-packages: any::rcmdcheck	
 
       - uses: r-lib/actions/check-r-package@v2
         with:
