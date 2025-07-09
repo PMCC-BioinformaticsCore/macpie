@@ -7,7 +7,6 @@
 #' @param r_squared R squared value, default of 0.6
 #' @param descriptors Specify any descriptors of interest from rcdk 
 #' @returns The same tidyseurat object with a new entry in `tools$chem_descriptors`.
-#' @importFrom rcdk parse.smiles get.desc.names eval.desc
 #' @importFrom dplyr select where bind_rows mutate
 #' @importFrom stringr str_replace_all str_trim str_to_title
 #' @importFrom stats cor
@@ -64,7 +63,7 @@ compute_chem_descriptors <- function(data,
   
   # Parse SMILES and name molecules
   safe_parse <- function(s) {
-    tryCatch(parse.smiles(s)[[1]], error = function(e) NULL)
+    tryCatch(rcdk::parse.smiles(s)[[1]], error = function(e) NULL)
   }
   
   mol <- lapply(smiles_list$smiles, safe_parse)
@@ -73,8 +72,8 @@ compute_chem_descriptors <- function(data,
   
   # Filter safe descriptors (exclude 3D/charge-based)
   safe_descs <- setdiff(
-    get.desc.names("all"),
-    grep("charge|peoe|ATS", get.desc.names("all"), value = TRUE)
+    rcdk::get.desc.names("all"),
+    grep("charge|peoe|ATS", rcdk::get.desc.names("all"), value = TRUE)
   )
   
   # Select the descriptors of interest 
@@ -86,7 +85,7 @@ compute_chem_descriptors <- function(data,
   descriptor_df <- bind_rows(lapply(mol, function(m) {
     if (!is.null(m)) {
       suppressWarnings(
-        tryCatch(eval.desc(m, safe_descs), error = function(e) NULL)
+        tryCatch(rcdk::eval.desc(m, safe_descs), error = function(e) NULL)
       )
     } else {
       NULL
