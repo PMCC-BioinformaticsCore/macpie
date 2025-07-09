@@ -20,6 +20,9 @@ plot_qc_metrics_heatmap(
 
 \item{order_by}{The metric to use for sorting group_by values.}
 }
+\value{
+A ggplot object representing the heatmap of QC metrics.
+}
 \description{
 Plots multiple QC metrics from stats_summary as a heatmap, normalizing values between 0 and 1.
 }
