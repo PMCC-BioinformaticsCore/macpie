@@ -10,6 +10,7 @@
 #'
 #' @import PoiClaClu
 #' @import pheatmap
+#' @return it returns a pheatmap object
 #' @examples
 #' data(mini_mac)
 #' p <- plot_distance(mini_mac, group_by = "combined_id", treatment = "DMSO_0")
