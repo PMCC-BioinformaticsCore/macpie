@@ -23,6 +23,9 @@ plot_gene_ranks(
 
 \item{scale_y_log}{Boolean statement for log transformation}
 }
+\value{
+A ggplot object with a knee plot
+}
 \description{
 Generate a knee plot
 A knee plot to show total number of total read counts for each gene in a given
