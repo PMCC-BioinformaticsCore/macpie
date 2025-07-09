@@ -13,6 +13,9 @@ plot_qc_metrics(stats_summary, group_by, metrics)
 
 \item{metrics}{to specify one of the QC metrics from stats_summary calculated from QC_metrics}
 }
+\value{
+A ggplot object with a lollipop chart of the specified QC metrics.
+}
 \description{
 Plot QC metrics such as standard deviation (sd), median absolute deviation (MAD),
 interquartile range (IQR), or Z score
@@ -21,5 +24,5 @@ or read counts per condition/group of interest in a lollipop chart
 \examples{
 data("mini_mac")
 qc_stats <- compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")
-
+plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "sd_value")
 }
