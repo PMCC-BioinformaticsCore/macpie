@@ -13,6 +13,9 @@ plot_distance(data = NULL, group_by = NULL, treatment = NULL)
 
 \item{treatment}{to specify one treatment group in the group_by parameter}
 }
+\value{
+it returns a pheatmap object
+}
 \description{
 Plot a heatmap to show poisson distance on count matrix of pre-processed data.
 The poisson distance matrix is calculated on subset of wells that specify by two

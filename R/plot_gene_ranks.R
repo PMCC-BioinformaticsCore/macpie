@@ -8,6 +8,7 @@
 #' @param scale_y_log Boolean statement for log transformation 
 #' @import dplyr
 #' @importFrom ggplot2 ggplot aes geom_point
+#' @return A ggplot object with a knee plot
 #' @export
 #' @examples
 #' data("mini_mac")

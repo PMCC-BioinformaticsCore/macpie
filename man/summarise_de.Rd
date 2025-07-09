@@ -25,7 +25,7 @@ summarise_de(
 \item{group_by}{Name of the column that defines groups of replicates}
 }
 \value{
-a data table
+A tibble summarising the number of genes that are significantly
 }
 \description{
 Generate a table to summarise gene numbers from a differential

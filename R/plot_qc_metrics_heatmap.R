@@ -12,6 +12,7 @@ utils::globalVariables(c("Metric", "Value", "Normalized"))
 #' @import dplyr
 #' @import tidyr
 #' @importFrom scales rescale
+#' @return A ggplot object representing the heatmap of QC metrics.
 #' @examples
 #' data("mini_mac")
 #' qc_stats <- compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")

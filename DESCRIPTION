@@ -1,6 +1,6 @@
 Package: macpie
 Title: Scalable workflow for high-throughput transcriptomic profiling
-Version: 0.0.0.9000
+Version: 1.1.0
 Authors@R: c(person(given = "Nenad", family = "Bartonicek",
          email = "nenad.bartonicek@petermac.org",
          role = c("aut", "cre"),
@@ -43,7 +43,8 @@ Suggests:
     leidenbase,
     gridExtra,
     variancePartition,
-    pkgdown
+    pkgdown,
+    rcdk
 Config/testthat/edition: 3
 Imports:
     dplyr,
@@ -96,8 +97,7 @@ Imports:
     webchem,
     MOFA2,
     Matrix, 
-    data.table, 
-    rcdk
+    data.table
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)

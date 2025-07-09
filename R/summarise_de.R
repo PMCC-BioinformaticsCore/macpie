@@ -9,7 +9,7 @@ utils::globalVariables(c("p_value_adj", "log2FC", "Significantly_upregulated", "
 #' @param group_by Name of the column that defines groups of replicates
 #' @import dplyr
 #'
-#' @returns a data table
+#' @returns A tibble summarising the number of genes that are significantly
 #' @export
 #'
 #' @examples

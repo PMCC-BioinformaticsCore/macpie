@@ -10,10 +10,11 @@
 #'
 #' @import ggplot2
 #' @importFrom stats reorder mad sd
+#' @returns A ggplot object with a lollipop chart of the specified QC metrics.
 #' @examples
 #' data("mini_mac")
 #' qc_stats <- compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")
-#' 
+#' plot_qc_metrics(qc_stats, group_by = "combined_id", metrics = "sd_value")
 #' @export
 
 
