@@ -13,3 +13,4 @@
 ^pkgdown(/|$)
 ^scripts(/|$)
 ^\.git$
+^vignettes/\.build\.timestamp$
