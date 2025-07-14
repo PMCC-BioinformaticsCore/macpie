@@ -1,4 +1,4 @@
-utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolorder", "Genes", ".N", "Replicate", "setDT"))
+utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "Genes", ".N", "Replicate"))
 #' Generate a box plot to show gene expression (CPM)
 #' This is the function to generate a box plot to show CPM levels of DE genes
 #' among selected treatment samples and control samples.
@@ -15,7 +15,6 @@ utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "setcolor
 #' @param batch To indicate patch factor
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter facet_wrap scale_x_discrete scale_fill_manual labs
 #' @import dplyr
-#' @importFrom data.table melt as.data.table setDT setcolorder
 #' @returns a ggplot2 object
 #' @export
 #'
@@ -85,12 +84,19 @@ plot_counts <- function(data = NULL,
   colnames(sub_count_matrix) <- make.unique(col_labels, sep = "_repXXX")
   dt <- data.table::as.data.table(sub_count_matrix, keep.rownames = "Genes")
   dt_long <- data.table::melt(dt, id.vars = "Genes", variable.name = "ReplicateID", value.name = "Expression")
-  setDT(dt_long)
+  data.table::setDT(dt_long)
   
   # make sure just remove numbers after "." at end of string that were for replicate numbers
   data.table::set(dt_long, j = "Treatment", value = gsub("_repXXX\\d*$", "", dt_long$ReplicateID)) 
-  dt_long[, Replicate := sequence(.N), by = .(Genes, Treatment)]
-  setcolorder(dt_long, c("Genes", "Treatment", "Replicate", "Expression"))
+  # dt_long[, Replicate := sequence(.N), by = .(Genes, Treatment)] 
+  # convert the above code using data.table function to dplyr
+  dt_long <- dt_long %>%
+    dplyr::group_by(Genes, Treatment) %>%
+    dplyr::mutate(Replicate = dplyr::row_number()) %>%
+    dplyr::ungroup()
+  data.table::setDT(dt_long)
+  
+  data.table::setcolorder(dt_long, c("Genes", "Treatment", "Replicate", "Expression"))
   n_samples <- length(colnames(sub_count_matrix))
   p <- ggplot(dt_long, aes(x = Treatment, y = Expression, group = Treatment)) +
     geom_boxplot(aes(fill = Treatment)) + facet_wrap(~Genes, ncol = 3, scales = "free_y") +
