@@ -15,15 +15,9 @@
 #' @importFrom Seurat as.SingleCellExperiment
 #' @import DESeq2
 #' @import RUVSeq
-#' @importFrom SingleCellExperiment counts
-#' @importFrom EDASeq newSeqExpressionSet normCounts
 #' @importFrom Biobase pData
 #' @importFrom stats model.matrix residuals
-#' @importFrom parallel makeCluster
-#' @importFrom BiocParallel DoparParam
-#' @importFrom doParallel registerDoParallel
-#' @importFrom zinbwave zinbwave
-#' @importFrom parallel stopCluster
+#' @importFrom parallel makeCluster stopCluster
 #'
 #' @returns Data frame of normalised counts
 #' @export
@@ -142,11 +136,11 @@ compute_normalised_counts <- function(data = NULL,
       stop("Some or all of your control genes are not present in the dataset.")
     }
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts = as.matrix(counts),
+    set <- EDASeq::newSeqExpressionSet(counts = as.matrix(counts),
                                phenoData = data.frame(condition = coldata$condition,
                                                       row.names = colnames(counts)))
     set <- RUVg(set, cIdx = spikes, k = k)
-    normCounts(set)
+    EDASeq::normCounts(set)
   }
 
   normalize_ruvs <- function(data, batch, k) {
@@ -154,13 +148,13 @@ compute_normalised_counts <- function(data = NULL,
     genes <- rownames(counts)
 
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(as.matrix(counts),
+    set <- EDASeq::newSeqExpressionSet(as.matrix(counts),
                                phenoData = data.frame(condition = coldata$condition,
                                                       row.names = colnames(counts)))
     differences <- model_matrix
     set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
 
-    normCounts(set)
+    EDASeq::normCounts(set)
   }
 
   normalize_ruvr <- function(data, batch, k) {
@@ -171,7 +165,7 @@ compute_normalised_counts <- function(data = NULL,
     genes <- rownames(counts)
 
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts,
+    set <- EDASeq::newSeqExpressionSet(counts,
                                phenoData = data.frame(condition = coldata$condition,
                                                       row.names = colnames(counts)))
     design <- model_matrix
@@ -182,7 +176,7 @@ compute_normalised_counts <- function(data = NULL,
     fit <- glmFit(y, design)
     res <- residuals(fit, type = "deviance")
     set <- RUVr(set, genes, k = k, res)
-    normCounts(set)
+    EDASeq::normCounts(set)
   }
 
   normalize_zinb <- function(data, batch) {
@@ -199,16 +193,16 @@ compute_normalised_counts <- function(data = NULL,
     filtered_sce <- subset(data_sce, rowSums(counts(data_sce)) > 10)
     num_cores <- 8 # Change this based on your system
     cl <- makeCluster(num_cores)
-    registerDoParallel(cl)
-    p <- DoparParam()
-    system.time(zinb <- zinbwave(filtered_sce, K = 2,
+    doParallel::registerDoParallel(cl)
+    p <- BiocParallel::DoparParam()
+    system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = 2,
                                  epsilon=1000,
                                  BPPARAM = p,
                                  normalizedValues=TRUE,
                                  residuals = TRUE))
     normalised_values <- zinb@assays@data$normalizedValues
     stopCluster(cl)
-    registerDoParallel()
+    doParallel::registerDoParallel()
     return(normalised_values)
   }
 
