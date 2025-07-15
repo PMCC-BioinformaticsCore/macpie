@@ -24,7 +24,7 @@ plot_volcano(
 \item{max.overlaps}{Maximum number of overlaps of points for package ggrepel}
 }
 \value{
-ggpplot plot
+A ggplot object
 }
 \description{
 Volcano plot of differentially expressed genes
