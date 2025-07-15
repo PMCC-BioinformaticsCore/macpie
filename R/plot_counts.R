@@ -35,6 +35,11 @@ plot_counts <- function(data = NULL,
                         color_by = NULL,
                         normalisation = NULL,
                         batch = 1) {
+  if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop(
+      "plot_counts(): the following package is required but not installed: data.table",
+      "\nPlease install via `install.packages()`.")
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by, normalisation) {
     if (!inherits(data, "Seurat")) {
