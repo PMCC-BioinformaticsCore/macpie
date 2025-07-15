@@ -36,6 +36,11 @@ compute_multi_screen_profile <- function(data = NULL,
                                          minSize = 15,
                                          maxSize = 500,
                                          num_cores = 1) {
+  if (!requireNamespace("fgsea", quietly = TRUE)) {
+    stop(
+      "compute_multi_screen_profile(): the following package is required but not installed: fgsea",
+      "\nPlease install via `install.packages()`.")
+  }
   
   # Helper: validate input
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
