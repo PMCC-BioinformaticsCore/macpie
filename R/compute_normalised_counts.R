@@ -31,6 +31,15 @@ compute_normalised_counts <- function(data = NULL,
                                     k = NULL,
                                     spikes = NULL,
                                     max_counts = NULL) {
+  req_pkgs <- c("SingleCellExperiment", "EDASeq", "BiocParallel", "doParallel","zinbwave")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "compute_normalised_counts(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, method, batch, k, max_counts) {
     if (!inherits(data, "Seurat")) {
