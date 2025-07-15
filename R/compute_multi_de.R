@@ -11,8 +11,7 @@
 #' @param spikes List of genes to use as spike controls
 #' @param num_cores Number of cores
 #' @importFrom parallel detectCores
-#' @importFrom mcprogress pmclapply
-#' @importFrom glmGamPoi glm_gp 
+#' @importFrom rlang warn
 #' @returns List of DE counts vs control
 #' @export
 #'
@@ -35,6 +34,15 @@ compute_multi_de <- function(data = NULL,
                      batch = 1,
                      k = 2,
                      spikes = NULL) {
+  req_pkgs <- c("mcprogress", "glmGamPoi")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "compute_multi_de(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
 
   # Helper function to validate input data
   validate_inputs <- function(data, treatment_samples, control_samples, method, num_cores) {
@@ -80,7 +88,7 @@ compute_multi_de <- function(data = NULL,
   treatment_samples <- validated$treatment_samples
   num_cores <- validated$num_cores
 
-  de_list <- pmclapply(treatment_samples, function(x) {
+  de_list <- mcprogress::pmclapply(treatment_samples, function(x) {
     if (length(batch) == 1){
       result <- compute_single_de(data, x, control_samples, method, batch, k, spikes)
       result$combined_id <- x
