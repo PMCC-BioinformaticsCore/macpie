@@ -12,13 +12,9 @@ utils::globalVariables(c(".data", "Plate_ID"))
 #'
 #' @return Displays the plot as a ggplot object or saves it as a file (jpg, png, or pdf).
 #'
-#' @importFrom readr read_csv
 #' @importFrom dplyr %>% mutate filter
 #' @importFrom stringr str_extract
-#' @importFrom patchwork wrap_plots plot_annotation
-#' @importFrom grid unit
-#' @importFrom ggplot2 ggsave
-#' @importFrom ggplot2 ggplot aes geom_tile labs coord_fixed theme_minimal theme
+#' @importFrom ggplot2 ggplot aes geom_tile labs coord_fixed theme_minimal theme ggsave
 #' @importFrom ggplot2 element_text element_rect scale_fill_viridis_c scale_fill_viridis_d
 
 #' @examples
@@ -34,6 +30,15 @@ plot_metadata_heatmap <- function(metadata = NULL,
                                   legend = TRUE, 
                                   output_file = NULL,
                                   plate = NULL) {
+  req_pkgs <- c("readr", "patchwork","grid")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_metadata_heatmap: the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
 
   summary_columns <- c("Species", "Cell_type", "Model_type", "Time", "Unit",
                        "Treatment_1", "Concentration_1", "Unit_1", "Sample_type")
@@ -56,7 +61,7 @@ plot_metadata_heatmap <- function(metadata = NULL,
       #If metadata file present
       if (inherits(metadata_file, "character") && file.exists(metadata_file) && length(metadata_file) == 1) {
         tryCatch({
-          metadata <- read_csv(metadata_file, show_col_types = FALSE)
+          metadata <- readr::read_csv(metadata_file, show_col_types = FALSE)
         }, error = function(e) {
           stop("Could not load the metadata file, or multiple metadat files provided: ", e$message)
         })
@@ -137,7 +142,7 @@ plot_metadata_heatmap <- function(metadata = NULL,
 
       legend_setting <- if (legend && !hide_legends[i]) "right" else "none"
 
-      ggplot(plate_data, aes(x = as_factor(col), y = fct_rev(as_factor(row)), fill = .data[[annotation]])) +
+      ggplot(plate_data, aes(x = forcats::as_factor(col), y = forcats::fct_rev(forcats::as_factor(row)), fill = .data[[annotation]])) +
         geom_tile(color = "white") +
         scale_func +
         labs(title = annotation, x = "Column", y = "Row") +
@@ -151,7 +156,7 @@ plot_metadata_heatmap <- function(metadata = NULL,
           axis.title.y = element_text(size = 6),
           legend.title = element_text(size = 6),
           legend.text = element_text(size = 5),
-          legend.key.size = unit(0.4, "cm"),
+          legend.key.size = grid::unit(0.4, "cm"),
           legend.position = legend_setting,
           panel.border = element_rect(color = "black", fill = NA),
           plot.background = element_rect(color = "black")
@@ -162,8 +167,8 @@ plot_metadata_heatmap <- function(metadata = NULL,
       stop("No heatmaps were generated. Please check the input metadata and annotation columns.")
     }
 
-    combined_plot <- wrap_plots(heatmaps, ncol = 3) +
-      plot_annotation(
+    combined_plot <- patchwork::wrap_plots(heatmaps, ncol = 3) +
+      patchwork::plot_annotation(
         title = paste("Metadata Heatmap Grid - Plate ID:", plate_id),
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 8, face = "bold")
