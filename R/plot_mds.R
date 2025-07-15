@@ -13,10 +13,8 @@
 #' @param max_overlaps Maximum number of overlaps for ggrepel
 #' @importFrom limma plotMDS
 #' @importFrom utils head
-#' @importFrom ggsci scale_color_npg
 #' @importFrom ggiraph geom_point_interactive girafe
 #' @import edgeR
-#' @import ggrepel
 #' @return ggplot object
 #' @examples
 #' data("mini_mac")
@@ -25,7 +23,12 @@
 #' @export
 #'
 plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = NULL, n_labels = 50) {
-
+  if (!requireNamespace("ggrepel", quietly = TRUE)) {
+    stop(
+      "plot_mds(): the following package is required but not installed: ggrepel",
+      "\nPlease install via `install.packages()`.")
+  }
+  
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
@@ -84,7 +87,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
                                  color = .data$group, 
                                  tooltip = !!rlang::sym(label), 
                                  data_id = !!rlang::sym(label))) +
-      geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
+      ggrepel::geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
       scale_color_manual(values = macpie_colours$discrete) +
       labs(title = "MDS plot",
            x = "Dimension 1",
