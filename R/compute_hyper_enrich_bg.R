@@ -5,8 +5,6 @@
 #' @param background defaults to the number of genes in the geneset, otherwise a
 #'   number of genes (integer) or species
 #' @importFrom stats p.adjust
-#' @importFrom methods is
-#' @importFrom magrittr %>%
 #' @returns enrichment stats
 #' @export
 #'
@@ -26,10 +24,10 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
   background = "human"
 ) {
   #checking input
-  if (!is(deg, "vector")) {
+  if  (!is.vector(deg)) {
     stop("DEGs expected to be a vector of gene symbols\n")
   }
-  if (!is(genesets, "list")) {
+  if (!is.list(genesets)) {
     stop("Genesets expected to be a list of non-null names\n")
   }
   if (typeof(background) != "integer") {
