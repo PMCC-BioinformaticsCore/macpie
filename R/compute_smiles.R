@@ -5,7 +5,6 @@
 #'
 #' @param data A tidyseurat object
 #' @param compound_column Column with the generic name of a compound 
-#' @importFrom webchem get_cid pc_prop cir_query
 #' @importFrom stringr str_replace_all str_trim str_to_title
 #' @importFrom dplyr mutate left_join rename select pull
 #' @returns A tidyseurat object with a `smiles` column added to the metadata.
@@ -18,6 +17,11 @@
 #' result <- compute_smiles(mock_data, compound_column = "Treatment_1")
 
 compute_smiles <- function(data, compound_column) {
+  if (!requireNamespace("webchem", quietly = TRUE)) {
+    stop(
+      "compute_smiles(): the following package is required but not installed: webchem",
+      "\nPlease install via `install.packages()`.")
+  }
   if(inherits(data, "tbl_df")){
     if (!compound_column %in% colnames(data)) {
       stop("The compound_column does not exist in metadata.")
