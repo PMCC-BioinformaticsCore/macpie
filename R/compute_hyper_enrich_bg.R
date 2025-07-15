@@ -1,9 +1,16 @@
 #' Calculate enrichment of DE genes in a gene set
+#' Compute one‐sided hypergeometric p-values, z-scores, and combined scores
+#' for a list of differentially expressed genes (`deg`) against each entry in
+#' a list of gene sets (`genesets`).
 #' Internal function
 #' @param deg vector of differentially expressed genes
 #' @param genesets list of genes per pathway from enrichr
-#' @param background defaults to the number of genes in the geneset, otherwise a
-#'   number of genes (integer) or species
+#' @param background integer or `character` (`"human"`, `"mouse"`, or
+#'   `"geneset"`).  If `"human"`, uses an approximate universe of
+#'   **20 000** genes; if `"mouse"`, **22 000**; if `"geneset"`, the
+#'   total unique genes in `genesets`.  You may also supply a custom
+#'   integer (`n`) equal to the exact size of your tested universe.
+#'   
 #' @importFrom stats p.adjust
 #' @returns enrichment stats
 #' @export
