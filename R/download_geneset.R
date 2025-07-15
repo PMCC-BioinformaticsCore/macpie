@@ -4,8 +4,6 @@
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
 #' @param db Valid name of an enrichR database
 #'
-#' @importFrom httr2 request req_perform resp_body_string
-#' @importFrom purrr map list_rbind
 #' @returns List of genes per geneset
 #' @export
 #'
@@ -34,12 +32,12 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
     url <- paste0("https://maayanlab.cloud/Enrichr/")
   }
   tryCatch({
-    results_table <- request(paste0(url, "geneSetLibrary?mode=text&libraryName=", db)) %>%
-      req_perform() %>%           #perform request
-      resp_body_string() %>%      #extract body of the response
+    results_table <- httr2::request(paste0(url, "geneSetLibrary?mode=text&libraryName=", db)) %>%
+      httr2::req_perform() %>%           #perform request
+      httr2::resp_body_string() %>%      #extract body of the response
       strsplit(split = "\n") %>%  #split by newline
       .[[1]] %>%                #take the first element
-      map(~ {
+      purrr::map(~ {
         x <- strsplit(.x, "\t")[[1]] #split each pathway into components
         data.frame( # Convert to a tibble per list element for easier manipulation
           pathway_name = x[1],
@@ -47,7 +45,7 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
           gene = x[-(1:2)]
         )
       }) %>%
-      list_rbind() %>% #join into a data frame to
+      purrr::list_rbind() %>% #join into a data frame to
       filter(.data$gene != "") %>% #eliminate empty genes per pathway
       distinct(.data$pathway_name, .data$gene)
   }, error = function(e) {
