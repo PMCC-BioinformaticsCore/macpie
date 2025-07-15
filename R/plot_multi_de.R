@@ -14,6 +14,7 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
 #' @param gene_list External list of genes to plot the heatmap on
 #' @import dplyr
+#' @importFrom rlang .env
 #' @returns a pheatmap object
 #' @export
 #' @examples
@@ -32,6 +33,15 @@ plot_multi_de <- function(data = NULL,
                           control = "DMSO_0",
                           by = "fc",
                           gene_list = NULL) {
+  req_pkgs <- c("pheatmap", "purrr")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_multi_de: the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list) {
     if (!inherits(data, "Seurat")) {
