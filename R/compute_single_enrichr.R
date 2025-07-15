@@ -6,7 +6,6 @@
 #' @param db Valid name of an enrichR database
 #' @param genesets Named list of genes
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
-#' @import enrichR
 #' @importFrom dplyr filter distinct
 #' @returns Data frame of pathway-enrichment statistics
 #' @export
@@ -18,6 +17,11 @@
 #' compute_single_enrichr(genes = top_genes, genesets = genesets, species="human")
 
 compute_single_enrichr <- function(genes = NULL, db = NULL, genesets = NULL, species = NULL) {
+  if (!requireNamespace("enrichR", quietly = TRUE)) {
+    stop(
+      "compute_single_enrichr: the following package is required but not installed: enrichR",
+      "\nPlease install via `install.packages()`.")
+  }
 
   #first validate the inputs
   validate_inputs <- function(genes, db, genesets, species) {
