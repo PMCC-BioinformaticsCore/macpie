@@ -5,10 +5,9 @@
 #' @param y Name of the column with adjusted p-values
 #' @param fdr_cutoff Cutoff for labels to be plotted based on their adjusted p-values
 #' @param max.overlaps Maximum number of overlaps of points for package ggrepel
-#' @import forcats
 #' @import stringr
 #' @importFrom stats setNames
-#' @returns ggpplot plot
+#' @returns A ggplot object
 #' @export
 #'
 #' @examples
@@ -18,6 +17,12 @@
 #'
 plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff = 0.05, max.overlaps = 30) {
 
+  if (!requireNamespace("forcats", quietly = TRUE)) {
+    stop(
+      "read_metadata(): the following package is required but not installed: forcats",
+      "\nPlease install via `install.packages()`.")
+  }
+  
   # Helper function to validate input data
   validate_inputs <- function(top_table, x, y, fdr_cutoff, max.overlaps) {
     if (!inherits(as.data.frame(top_table), "data.frame")) {
@@ -60,7 +65,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
                                label = gene_labels)) +
       scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
       geom_point() +
-      geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = F) +
+      ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = F) +
       scale_color_manual(values = named_colors) + # Map colors dynamically
       # Boundaries
       geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +

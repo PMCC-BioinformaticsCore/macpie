@@ -32,12 +32,8 @@
 #' p <- plot_rle(mini_mac, label_column = "Row")
 #'
 #' @importFrom Biobase rowMedians
-#' @importFrom grDevices boxplot.stats
-#' @importFrom grDevices colorRampPalette
 #' @importFrom dplyr pull select arrange
 #' @import Seurat ggplot2 tidyseurat
-#' @importFrom RColorBrewer brewer.pal
-#' @importFrom colorspace darken
 #' @export
 
 # Main function
@@ -48,6 +44,16 @@ plot_rle <- function(data, barcodes = NULL,
                      batch = NULL, 
                      normalisation = NULL,
                      spikes = NULL) {
+  
+  req_pkgs <- c("colorspace", "grDevices")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_rle(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
 
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
@@ -144,7 +150,7 @@ plot_rle <- function(data, barcodes = NULL,
       fill_palette <- macpie_colours$discrete_40 #colorRampPalette(brewer.pal(12, "Paired"))(nlevels(rledf$feature))
 
       # Darken the palette for outlines
-      outline_palette <- darken(fill_palette, amount = 0.1)
+      outline_palette <- colorspace::darken(fill_palette, amount = 0.1)
 
       ggplot(rledf, aes(x = .data$sample, fill = .data$feature, color = .data$feature)) +
         geom_boxplot(aes(ymin = .data$ymin, lower = .data$lower, middle = .data$middle,

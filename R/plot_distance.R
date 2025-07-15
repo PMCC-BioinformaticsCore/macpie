@@ -8,8 +8,6 @@
 #' @param group_by A metadata column name to group data
 #' @param treatment to specify one treatment group in the group_by parameter
 #'
-#' @import PoiClaClu
-#' @import pheatmap
 #' @return it returns a pheatmap object
 #' @examples
 #' data(mini_mac)
@@ -17,7 +15,15 @@
 #' @export
 
 plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
-
+  req_pkgs <- c("PoiClaClu", "pheatmap")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_distance(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   validate_inputs <- function(data, group_by, treatment) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
@@ -45,7 +51,7 @@ plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
   mac_val  <- mac_val  %>% filter(.data[[group_by]] == treatment)
 
   # Poisson distance
-  poisd <- PoissonDistance(t(as.matrix(mac_val@assays$RNA$counts)))
+  poisd <- PoiClaClu::PoissonDistance(t(as.matrix(mac_val@assays$RNA$counts)))
   poisd_matrix <- as.matrix(poisd$dd)
   rownames(poisd_matrix) <- paste0(mac_val@meta.data[[group_by]], "_", mac_val$Well_ID)
   # Order the matrix
@@ -55,7 +61,7 @@ plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
   colnames(poisd_matrix) <- rownames(poisd_matrix)
   poisd_matix_reordered <- poisd_matrix[rownames(poisd_matrix), ]
 
-  p <- pheatmap(poisd_matix_reordered,
+  p <- pheatmap::pheatmap(poisd_matix_reordered,
                 clustering_distance_rows = poisd$dd,
                 clustering_distance_cols = poisd$dd,
                 cluster_rows = FALSE,

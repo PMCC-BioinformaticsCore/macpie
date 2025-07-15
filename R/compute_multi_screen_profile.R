@@ -17,10 +17,8 @@ utils::globalVariables(c("NES"))
 #' @param maxSize Maximum size of gene sets to consider (default 500).
 #' @param num_cores Number of cores to use for parallel processing.
 #' 
-#' @importFrom fgsea fgsea
-#' @importFrom stats setNames
+#' @importFrom stats setNames rnorm
 #' @importFrom tidyr drop_na
-#' @importFrom stats rnorm
 #' @returns A tidyseurat object with screen_profile data frame in slot tools.
 #' @export
 #'
@@ -38,6 +36,11 @@ compute_multi_screen_profile <- function(data = NULL,
                                          minSize = 15,
                                          maxSize = 500,
                                          num_cores = 1) {
+  if (!requireNamespace("fgsea", quietly = TRUE)) {
+    stop(
+      "compute_multi_screen_profile(): the following package is required but not installed: fgsea",
+      "\nPlease install via `install.packages()`.")
+  }
   
   # Helper: validate input
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
@@ -83,7 +86,7 @@ compute_multi_screen_profile <- function(data = NULL,
       filter(!grepl("^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA", .data$gene, ignore.case = TRUE))
     ranks <- ordered_genes$log2FC + rnorm(nrow(ordered_genes), sd = 1e-6)
     names(ranks) <- ordered_genes$gene
-    result <- fgsea(geneset, ranks, minSize = minSize, maxSize = maxSize)
+    result <- fgsea::fgsea(geneset, ranks, minSize = minSize, maxSize = maxSize)
     result$target_id <- unique(x$combined_id)
     return(result)
   }
@@ -92,7 +95,7 @@ compute_multi_screen_profile <- function(data = NULL,
   fgsea_list <- if (.Platform$OS.type == "windows" || num_cores <= 1) {
     lapply(de_list, fgsea_fun)
   } else {
-    pmclapply(de_list, fgsea_fun, mc.cores = num_cores)
+    mcprogress::pmclapply(de_list, fgsea_fun, mc.cores = num_cores)
   }
   
   # Merge and normalize NES if target was used

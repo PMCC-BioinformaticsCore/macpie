@@ -11,6 +11,7 @@ utils::globalVariables(c("enrichment"))
 #' @param species One of "human", "mouse", "fly", "yeast", "worm" or "fish"
 #' @importFrom dplyr reframe
 #' @importFrom tidyr unnest
+#' @importFrom rlang .env
 #'
 #' @returns A tidyseurat object with appended pathway_enrichment dataframe in slot tools
 #' @export

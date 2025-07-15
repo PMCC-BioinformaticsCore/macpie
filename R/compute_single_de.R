@@ -14,7 +14,6 @@ utils::globalVariables(c("model_matrix"))
 #' @param spikes List of genes to use as spike controls
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
 #' @importFrom tibble rownames_to_column
-#' @importFrom SummarizedExperiment assay
 #' @import DESeq2
 #' @import RUVSeq
 #' @importFrom stats model.matrix
@@ -36,6 +35,11 @@ compute_single_de <- function(data = NULL,
                                         batch = 1,
                                         k = 2,
                                         spikes = NULL) {
+  if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+    stop(
+      "compute_single_de(): the following package is required but not installed: SummarizedExperiment",
+      "\nPlease install via `install.packages()`.")
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, method, treatment_samples, control_samples) {
     if (!inherits(data, "Seurat")) {
@@ -183,11 +187,11 @@ compute_single_de <- function(data = NULL,
       stop("Some or all of your control genes are not present in the dataset.")
     }
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
+    set <- EDASeq::newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
     set <- RUVg(set, cIdx = spikes, k = k)
 
-    dge <- DGEList(counts = normCounts(set),
+    dge <- DGEList(counts = EDASeq::normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method = "upperquartile")
@@ -216,12 +220,12 @@ compute_single_de <- function(data = NULL,
       model.matrix(~0 + combined_id + batch)
 
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
+    set <- EDASeq::newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
     differences <- makeGroups(combined_id)
     set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
 
-    dge <- DGEList(counts = normCounts(set),
+    dge <- DGEList(counts = EDASeq::normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method = "upperquartile")
@@ -253,7 +257,7 @@ compute_single_de <- function(data = NULL,
       model.matrix(~0 + combined_id + batch)
 
     #k defines number of sources of variation, two have been chosen for row and column
-    set <- newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
+    set <- EDASeq::newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
                                phenoData = pheno_data)
     dge <- DGEList(counts = data@assays$RNA$counts,
                    samples = pheno_data$condition,
@@ -265,7 +269,7 @@ compute_single_de <- function(data = NULL,
     res <- residuals(fit, type = "deviance")
     set <- RUVr(set, genes, k = k, res)
 
-    dge <- DGEList(counts = normCounts(set),
+    dge <- DGEList(counts = EDASeq::normCounts(set),
                    samples = pheno_data$condition,
                    group = pheno_data$condition)
     dge <- calcNormFactors(dge, method = "upperquartile")
@@ -293,15 +297,15 @@ compute_single_de <- function(data = NULL,
     filtered_sce <- data_sce[rowSums(counts(data_sce)) > 50, ]
     num_cores <- 8 # Change this based on your system
     cl <- makeCluster(num_cores)
-    registerDoParallel(cl)
-    p <- DoparParam()
-    system.time(zinb <- zinbwave(filtered_sce, K = 2,
+    doParallel::registerDoParallel(cl)
+    p <- BiocParallel::DoparParam()
+    system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = 2,
                      epsilon=1000,
                      BPPARAM = p,
                      observationalWeights = TRUE))
 
-    weights <- assay(zinb, "weights")
-    dge <- DGEList(assay(zinb))
+    weights <- SummarizedExperiment::assay(zinb, "weights")
+    dge <- DGEList(SummarizedExperiment::assay(zinb))
     dge <- calcNormFactors(dge, method = "TMMwsp")
 
     dge$weights <- weights
@@ -324,7 +328,7 @@ compute_single_de <- function(data = NULL,
       rename("log2FC" = "logFC", "metric" = "F", "p_value" = "PValue", "p_value_adj" = "FDR") %>%
       rownames_to_column("gene")
     stopCluster(cl)
-    registerDoParallel()
+    doParallel::registerDoParallel()
     return(as.data.frame(top_table))
   }
 

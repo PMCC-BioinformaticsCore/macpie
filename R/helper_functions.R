@@ -14,7 +14,6 @@
 #' * `scale_3`: Three-color scale for small categorical data.
 #' @import unikn
 #' @import ggplot2
-#' @import colorspace
 #' @examples
 #' macpie_colours$discrete
 #' barplot(rep(1, 10), col = macpie_colours$discrete_40, border = NA)

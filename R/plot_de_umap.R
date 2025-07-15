@@ -8,16 +8,22 @@
 #' @param label A string specifying which column in data will be used to
 #'   label a sample.
 #' @param max_overlaps Maximum number of overlaps for ggrepel
-#' @importFrom umap umap
 #' @importFrom ggiraph geom_point_interactive girafe
-#' @import ggrepel
 #' @import ggplot2
 #' @returns ggplot object
 #' @export
 #'
 # #' @examples
 plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlaps = NULL) {
-
+  req_pkgs <- c("umap", "ggrepel")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_de_umap(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, color_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
@@ -59,7 +65,7 @@ plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlap
                                color = !!rlang::sym(color_by),
                                tooltip = !!rlang::sym(label),
                                data_id = !!rlang::sym(label))) +
-    geom_text_repel(aes(label = !!rlang::sym(label)),                    
+    ggrepel::geom_text_repel(aes(label = !!rlang::sym(label)),                    
                     size = 3.5,
                     max.overlaps = max_overlaps) +        
     theme_minimal() +                             

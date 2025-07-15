@@ -1,14 +1,10 @@
 utils::globalVariables(c("tooltip_text", "group_id"))
 #' Plot MAC-seq data on a plate layout
 #' @importFrom stats median
-#' @importFrom gtools mixedsort
-#' @importFrom forcats fct_reorder
-#' @importFrom rlang sym
 #' @importFrom dplyr mutate
-#' @importFrom rlang .data
+#' @importFrom rlang .data sym
 #' @importFrom utils head
 #' @import tidyseurat
-#' @import rlang
 #' @import ggplot2 
 #' @import ggiraph
 #' @importFrom dplyr select
@@ -31,6 +27,17 @@ utils::globalVariables(c("tooltip_text", "group_id"))
 #' @export
 
 plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, midpoint = NULL) {
+  
+  
+  req_pkgs <- c("gtools", "forcats")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_plate_layout(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   
   # Helper function to validate input data
   validate_inputs <- function(data, metric, annotation, midpoint) {

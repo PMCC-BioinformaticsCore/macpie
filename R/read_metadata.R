@@ -15,7 +15,6 @@
 #'   file. Defaults to a predefined set of column names:
 #'   \code{c("Plate_ID", "Well_ID", "Row", "Column", "Species", "Cell_type", "Model_type",
 #'   "Time", "Unit", "Treatment_1", "Concentration_1", "Unit_1", "Sample_type", "Barcode", "Project")}.
-#' @import readxl
 #' @importFrom utils read.csv
 #' @return A data frame containing only the matched columns if at least one
 #'   predefined column is found. Returns `NULL` and prints an error message if
@@ -44,6 +43,11 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
   if (!file.exists(file_path)) {
     stop("The file does not exist. Please provide a valid file path.")
   }
+  if (!requireNamespace("readxl", quietly = TRUE)) {
+    stop(
+       "read_metadata(): the following package is required but not installed: readxl",
+       "\nPlease install via `install.packages()`.")
+   }
 
   # Read the metadata file based on its format
   read_file <- function(file_path) {

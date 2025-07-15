@@ -18,6 +18,11 @@ utils::globalVariables(c("mac"))
 #' compute_qc_metrics(data = mini_mac, group_by = "combined_id", order_by = "median")
 #' @export
 compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
+  if (!requireNamespace("forcats", quietly = TRUE)) {
+    stop(
+      "compute_qc_metrics(): the following package is required but not installed: forcats",
+      "\nPlease install via `install.packages()`.")
+  }
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, order_by) {
     if (!inherits(data, "Seurat")) {
@@ -53,7 +58,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
               IQR = round(stats::IQR(.data$nCount_RNA), 3),
               .groups = "drop")# Calculate qc metrics per group
   if (order_by == "median") {
-    meta[[group_by]] <- fct_reorder(meta[[group_by]], meta$nCount_RNA, median)
+    meta[[group_by]] <- forcats::fct_reorder(meta[[group_by]], meta$nCount_RNA, median)
   } else if (order_by %in% colnames(stats_summary)) {
     # Order by a group-level summary metric
     ordering <- stats_summary %>%
@@ -62,7 +67,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     meta[[group_by]] <- factor(meta[[group_by]], levels = ordering)
   } else if (order_by %in% colnames(meta)) {
     # Order by a per-cell metadata column (like Row, Column, Time, etc.)
-    meta[[group_by]] <- fct_reorder(meta[[group_by]], meta[[order_by]], median)
+    meta[[group_by]] <- forcats::fct_reorder(meta[[group_by]], meta[[order_by]], median)
   } else {
     stop(glue::glue("`order_by` = '{order_by}' not found in stats_summary or metadata"))
   }

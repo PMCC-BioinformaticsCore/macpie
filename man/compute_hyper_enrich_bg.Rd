@@ -3,6 +3,9 @@
 \name{compute_hyper_enrich_bg}
 \alias{compute_hyper_enrich_bg}
 \title{Calculate enrichment of DE genes in a gene set
+Compute one‐sided hypergeometric p-values, z-scores, and combined scores
+for a list of differentially expressed genes (\code{deg}) against each entry in
+a list of gene sets (\code{genesets}).
 Internal function}
 \usage{
 compute_hyper_enrich_bg(deg = NULL, genesets = NULL, background = "human")
@@ -12,14 +15,20 @@ compute_hyper_enrich_bg(deg = NULL, genesets = NULL, background = "human")
 
 \item{genesets}{list of genes per pathway from enrichr}
 
-\item{background}{defaults to the number of genes in the geneset, otherwise a
-number of genes (integer) or species}
+\item{background}{integer or \code{character} (\code{"human"}, \code{"mouse"}, or
+\code{"geneset"}).  If \code{"human"}, uses an approximate universe of
+\strong{20 000} genes; if \code{"mouse"}, \strong{22 000}; if \code{"geneset"}, the
+total unique genes in \code{genesets}.  You may also supply a custom
+integer (\code{n}) equal to the exact size of your tested universe.}
 }
 \value{
 enrichment stats
 }
 \description{
 Calculate enrichment of DE genes in a gene set
+Compute one‐sided hypergeometric p-values, z-scores, and combined scores
+for a list of differentially expressed genes (\code{deg}) against each entry in
+a list of gene sets (\code{genesets}).
 Internal function
 }
 \examples{

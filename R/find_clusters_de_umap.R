@@ -4,7 +4,6 @@
 #'   "Well_ID", "Row", "Column".
 #' @param k Number of nearest neighbors in buildSNNGraph used to construct a
 #'   shared nearest-neighbor (SNN) graph
-#' @importFrom scran buildSNNGraph
 #' @importFrom tibble rownames_to_column
 
 #' @returns A tidyseurat object with cluster information in the metadata slot
@@ -15,6 +14,11 @@
 #' mini_mac <- compute_de_umap(mini_mac)
 #' mini_mac <- find_clusters_de_umap(mini_mac)
 find_clusters_de_umap <- function(data = NULL, k = 10) {
+  if (!requireNamespace("scran", quietly = TRUE)) {
+    stop(
+      "find_clusters_de_umap(): the following package is required but not installed: scran",
+      "\nPlease install via `install.packages()`.")
+  }
 
   validate_inputs <- function(df_umap_data, k) {
     if (!inherits(df_umap_data, "data.frame") && length(df_umap_data) > 0) {
@@ -35,7 +39,7 @@ find_clusters_de_umap <- function(data = NULL, k = 10) {
   set.seed(1)
   ## Set number of Nearest-Neighbours (NNs)
   ## Build the k-NN graph
-  g <- buildSNNGraph(t(df_umap_data[, 2:3]), k = k)
+  g <- scran::buildSNNGraph(t(df_umap_data[, 2:3]), k = k)
   ## Run walktrap clustering
   g_walk <- igraph::cluster_walktrap(g)
   ## Get the cluster labels
