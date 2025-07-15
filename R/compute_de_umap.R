@@ -5,7 +5,6 @@
 #'   "Well_ID", "Row", "Column".
 #' @importFrom dplyr bind_rows select
 #' @importFrom tidyr pivot_wider
-#' @importFrom umap umap
 #' @importFrom stats dist
 #' @returns A tidyseurat object with umap_de data frame in slot tools
 #' @export
