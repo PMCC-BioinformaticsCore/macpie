@@ -13,9 +13,7 @@ utils::globalVariables(c(".", ".data", "gene", "log2FC", "metric"))
 #' @param control The control group to be included in the final heatmap, usually DMSO_0
 #' @param by Extract top n genes by either absolute fold change or by adjusted p-value
 #' @param gene_list External list of genes to plot the heatmap on
-#' @import pheatmap
 #' @import dplyr
-#' @importFrom purrr map2_dfr
 #' @returns a pheatmap object
 #' @export
 #' @examples
@@ -68,7 +66,7 @@ plot_multi_de <- function(data = NULL,
   validate_inputs(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list)
   #extract de information from the object data
   all_de <- data@tools$diff_exprs
-  de_df <- unique(map2_dfr(all_de, names(all_de), ~ mutate(.x, source = .y)))
+  de_df <- unique(purrr::map2_dfr(all_de, names(all_de), ~ mutate(.x, source = .y)))
 
 
   filtered_de_df <- de_df %>%
@@ -109,7 +107,7 @@ plot_multi_de <- function(data = NULL,
     colnames(lcpm) <- combined_id_barcodes[colnames(lcpm)]
     sub_lcpm <- lcpm[features, colnames(lcpm) %in% common_genes_treatments]
     #plot lcpm
-    p <- pheatmap(sub_lcpm,
+    p <- pheatmap::pheatmap(sub_lcpm,
                   cexRow = 0.1,
                   cexCol = 0.2,
                   color = macpie_colours$continuous_rev)
@@ -122,7 +120,7 @@ plot_multi_de <- function(data = NULL,
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene 
     storage.mode(fc_matrix) <- "numeric"
-    p <- pheatmap(fc_matrix,
+    p <- pheatmap::pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
                   color = macpie_colours$continuous_rev)
@@ -135,7 +133,7 @@ plot_multi_de <- function(data = NULL,
     fc_matrix <- as.matrix(fc_common_genes[, -1])
     rownames(fc_matrix) <- fc_common_genes$gene
     storage.mode(fc_matrix) <- "numeric"
-    p <- pheatmap(fc_matrix,
+    p <- pheatmap::pheatmap(fc_matrix,
                   cexRow = 0.1,
                   cexCol = 0.2,
                   color = macpie_colours$continuous_rev)
