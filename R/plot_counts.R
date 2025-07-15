@@ -1,5 +1,6 @@
 utils::globalVariables(c(".data", "Treatment", "Expression", "spikes", "Genes", ".N", "Replicate"))
 #' Generate a box plot to show gene expression (CPM)
+#' 
 #' This is the function to generate a box plot to show CPM levels of DE genes
 #' among selected treatment samples and control samples.
 #'
