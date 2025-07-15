@@ -17,7 +17,6 @@
 #' @return A new tidyseurat object with collapsed metadata 
 #' @import tidyverse 
 #' @import Seurat 
-#' @importFrom Matrix Matrix
 #' @importFrom tibble column_to_rownames
 #' @import tidyseurat
 #' @examples
@@ -26,6 +25,11 @@
 #'
 #' @export
 aggregate_by_de <- function(data, metric_col = "metric") {
+  if (!requireNamespace("Matrix", quietly = TRUE)) {
+    stop(
+      "aggregate_by_de(): the following package is required but not installed: Matrix",
+      "\nPlease install via `install.packages()`.")
+  }
   
   validate_inputs <- function(de_list) {
     if (!inherits(de_list, "list") || length(de_list) == 0) {
