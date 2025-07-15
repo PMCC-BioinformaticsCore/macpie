@@ -15,7 +15,15 @@
 #' @export
 
 plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
-
+  req_pkgs <- c("PoiClaClu", "pheatmap")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "plot_distance(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
   validate_inputs <- function(data, group_by, treatment) {
     if (!inherits(data, "Seurat")) {
       stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
