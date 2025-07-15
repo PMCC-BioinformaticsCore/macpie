@@ -12,6 +12,15 @@
 #' head(genesets[["Adipogenesis"]])
 
 download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
+  req_pkgs <- c("httr2", "purrr")
+  missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    stop(
+      "download_geneset(): the following packages are required but not installed: ",
+      paste(missing, collapse = ", "),
+      "\nPlease install via `install.packages()`."
+    )
+  }
 
   #first validate the inputs
   validate_inputs <- function(species, db) {
