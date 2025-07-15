@@ -102,9 +102,22 @@ pak::pkg_install(
 # 4. Verify
 # Should load without error:
 library(macpie)
+
+# Optional Depencies
+# To unlock all macpie features, intall the "Suggests" packages:
+pak::pkg_install(c(
+  "testthat", "devtools","leidenbase", "gridExtra", "variancePartition", 
+  "rcdk", "SingleCellExperiment", "doParallel", "BiocParallel",
+  "zinbwave", "EDASeq", "SummarizedExperiment", "mcprogress",
+  "glmGamPoi", "fgsea", "webchem", "data.table", "PoiClaClu",
+  "pheatmap", "purrr", "httr2", "readr", "patchwork",
+  "scran", "Matrix", "umap", "ggrepel", "forcats",
+  "gtools", "colorspace", "enrichR", "readxl", "MOFA2"
+))
+
 ```
 
-Optially, you can also install the package by
+Optionally, you can also install the package by
 
 ``` r
 
@@ -117,15 +130,28 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 
 options(repos = BiocManager::repositories())
 
-BiocManager::install(c(
-  "edgeR", "limma", "Biobase", "DESeq2", "RUVSeq",
-  "EDASeq", "fgsea", "scran", "glmGamPoi",
-  "BiocParallel", "SingleCellExperiment", "zinbwave",
-  "SummarizedExperiment"
+# Install CRAN packages (Imports + Suggests) 
+install.packages(c(
+  # Imports
+  "dplyr", "ggplot2", "rlang", "tidyseurat", "stringr", "tibble", "ggiraph",
+  "tidyr", "scales", "drc", "tidyverse", "glue", "igraph", "unikn",
+  # Suggests
+  "leidenbase", "gridExtra", "variancePartition","rcdk", "doParallel", 
+  "mcprogress", "fgsea", "webchem", "data.table","PoiClaClu", "pheatmap", 
+  "purrr", "httr2", "readr", "patchwork", "Matrix", "umap", "ggrepel", 
+  "forcats", "gtools", "colorspace", "enrichR", "readxl"
 ))
 
+# Install Bioconductor packages (Imports + Suggests) 
+BiocManager::install(c(
+  # Imports
+  "edgeR", "limma", "Biobase", "Seurat", "DESeq2", "RUVSeq",
+  # Suggests
+  "SingleCellExperiment", "BiocParallel", "zinbwave", "EDASeq",
+  "SummarizedExperiment", "glmGamPoi", "scran"
+))
 
-# Install MOFA2 from its GitHub (it’s not on Bioconductor)
+# Install MOFA2 from its GitHub (it’s not on Bioconductor) - this is a Suggests package
 devtools::install_github("bioFAM/MOFA2")
 
 # Finally, install macpie itself
