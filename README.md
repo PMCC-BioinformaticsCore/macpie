@@ -103,8 +103,8 @@ pak::pkg_install(
 # Should load without error:
 library(macpie)
 
-# Optional Depencies
-# To unlock all macpie features, intall the "Suggests" packages:
+# Optional dependencies
+# To unlock all macpie features, install the "Suggests" packages:
 pak::pkg_install(c(
   "testthat", "devtools","leidenbase", "gridExtra", "variancePartition", 
   "rcdk", "SingleCellExperiment", "doParallel", "BiocParallel",
