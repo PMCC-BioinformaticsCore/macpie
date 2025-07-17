@@ -113,8 +113,6 @@ compute_chem_descriptors <- function(data,
       select(-all_of(cols_to_remove))
   }
 
-  descriptor_df_clean$Treatment_1 <- smiles_list$combined_id
-  
   # Store in @tools
   if (inherits(data, "tbl_df")) {
     data <- data %>%
