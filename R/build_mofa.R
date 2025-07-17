@@ -1,6 +1,5 @@
 build_mofa <- function(data, 
                              combined_ids = NULL, 
-                             treatment_ID = "Compound_ID",
                              metadata_columns = NULL,
                              de_metric = "metric", 
                              de_pval_thresh = 0.01,
@@ -17,20 +16,13 @@ build_mofa <- function(data,
     stop("Please provide a list of combined_ids, these should correspond to your DE comparisons.")
   }
   
-  if(treatment_ID == "combined_id"){
-    cat("Warning: your parameter treatment_ID should not point to a column that contains 
-        concentration information.")
-  }
-  
   # Pathway Enrichment 
   pathway_mat <- tools$pathway_enrichment %>%
     filter(combined_id %in% combined_ids, !!sym(pathway_pval_col) < pathway_pval_thresh) %>%
     dplyr::select("combined_id", "Term", "Combined.Score") %>%
     pivot_wider(names_from = "Term", values_from = !!sym(pathway_score_col)) %>%
-    left_join(meta %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(), by = "combined_id") %>%
-    relocate(!!sym(treatment_ID)) %>%
-    column_to_rownames(treatment_ID) %>%
-    dplyr::select(-combined_id) %>%
+    left_join(meta %>% dplyr::select(combined_id) %>% distinct(), by = "combined_id") %>%
+    column_to_rownames("combined_id") %>%
     t()
   
   # Gene Expression
@@ -43,10 +35,8 @@ build_mofa <- function(data,
     filter(gene %in% signif_genes, combined_id %in% combined_ids) %>%
     dplyr::select(combined_id, gene, !!sym(de_metric)) %>%
     pivot_wider(names_from = gene, values_from = !!sym(de_metric)) %>%
-    left_join(meta %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(), by = "combined_id") %>%
-    relocate(!!sym(treatment_ID)) %>%
-    column_to_rownames(treatment_ID) %>%
-    dplyr::select(-combined_id) %>%
+    left_join(meta %>% dplyr::select(combined_id) %>% distinct(), by = "combined_id") %>%
+    column_to_rownames("combined_id") %>%
     t()
 
   
@@ -60,12 +50,10 @@ build_mofa <- function(data,
       group_by(combined_id) %>%
       summarise(across(all_of(metadata_columns), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
       left_join(
-        data@meta.data %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(),
+        data@meta.data %>% dplyr::select(combined_id) %>% distinct(),
         by = "combined_id"
       ) %>%
-      relocate({{treatment_ID}}) %>%
-      dplyr::select(-combined_id) %>%
-      column_to_rownames({{treatment_ID}}) %>%
+      column_to_rownames("combined_id") %>%
       t()
   }
   
@@ -78,8 +66,7 @@ build_mofa <- function(data,
   if ("chem_descriptors" %in% names(tools)) {
     # Chemical descriptors
     desc_mat <- tools$chem_descriptors %>%
-      dplyr::select(-"clean_compound_name") %>%
-      column_to_rownames("Treatment_1") %>%
+      column_to_rownames("Treatment") %>%
       t()
     view_matrices$chem_descriptors <- desc_mat
   }
