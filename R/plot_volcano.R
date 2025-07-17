@@ -19,7 +19,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
 
   if (!requireNamespace("forcats", quietly = TRUE)) {
     stop(
-      "read_metadata(): the following package is required but not installed: forcats",
+      "plot_volcano(): the following package is required but not installed: forcats",
       "\nPlease install via `install.packages()`.")
   }
   

@@ -19,7 +19,7 @@
 compute_single_enrichr <- function(genes = NULL, db = NULL, genesets = NULL, species = NULL) {
   if (!requireNamespace("enrichR", quietly = TRUE)) {
     stop(
-      "compute_single_enrichr: the following package is required but not installed: enrichR",
+      "compute_single_enrichr(): the following package is required but not installed: enrichR",
       "\nPlease install via `install.packages()`.")
   }
 

@@ -37,7 +37,7 @@ plot_multi_de <- function(data = NULL,
   missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
     stop(
-      "plot_multi_de: the following packages are required but not installed: ",
+      "plot_multi_de(): the following packages are required but not installed: ",
       paste(missing, collapse = ", "),
       "\nPlease install via `install.packages()`."
     )
