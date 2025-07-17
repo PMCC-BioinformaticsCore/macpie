@@ -6,12 +6,7 @@
 A knee plot to show total number of total read counts for each gene in a given
 treatment group}
 \usage{
-plot_gene_ranks(
-  data = NULL,
-  group_by = NULL,
-  samples = NULL,
-  scale_y_log = TRUE
-)
+plot_gene_ranks(data = NULL, group_by = NULL, samples = NULL, scale = TRUE)
 }
 \arguments{
 \item{data}{A tidyseurat object merged with metadata. Must contain columns
@@ -21,7 +16,7 @@ plot_gene_ranks(
 
 \item{samples}{Treatment group}
 
-\item{scale_y_log}{Boolean statement for log transformation}
+\item{scale}{Boolean statement for log10 transformation on both axes}
 }
 \value{
 A ggplot object with a knee plot
@@ -34,5 +29,5 @@ treatment group
 \examples{
 data("mini_mac")
 p <- plot_gene_ranks(mini_mac,group_by = "combined_id", 
-samples = "Staurosporine_10", scale_y_log = TRUE)
+samples = "Staurosporine_10", scale = TRUE)
 }
