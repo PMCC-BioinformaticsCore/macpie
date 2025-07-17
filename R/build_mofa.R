@@ -1,101 +1,130 @@
 build_mofa <- function(data, 
                              combined_ids = NULL, 
-                             metadata_col = "Treatment_1",
-                             metric = "metric", 
-                             control_treatment = "DMSO",
-                             pval_thresh = 0.01,
+                             treatment_ID = "Compound_ID",
+                             metadata_columns = NULL,
+                             de_metric = "metric", 
+                             de_pval_thresh = 0.01,
+                             de_padj_col = "p_value_adj",
                              pathway_pval_thresh = 0.05,
-                             padj_col = "p_value_adj",
                              pathway_pval_col = "Adjusted.P.value",
-                             score_col = "Combined.Score") {
+                             pathway_score_col = "Combined.Score") {
   
   meta <- data@meta.data
   tools <- data@tools
   
   # If no combined IDs provided, default to highest concentration or DMSO treatments
   if (is.null(combined_ids)) {
-    combined_ids <- data %>%
-      filter("Concentration_1" == max(as.numeric(as.character(meta$Concentration_1)))) %>%
-      pull(combined_id) %>% unique()
+    stop("Please provide a list of combined_ids, these should correspond to your DE comparisons.")
+  }
+  
+  if(treatment_ID == "combined_id"){
+    cat("Warning: your parameter treatment_ID should not point to a column that contains 
+        concentration information.")
   }
   
   # Pathway Enrichment 
   pathway_mat <- tools$pathway_enrichment %>%
     filter(combined_id %in% combined_ids, !!sym(pathway_pval_col) < pathway_pval_thresh) %>%
     dplyr::select("combined_id", "Term", "Combined.Score") %>%
-    pivot_wider(names_from = "Term", values_from = !!sym(score_col)) %>%
-    left_join(meta %>% dplyr::select(combined_id, !!sym(metadata_col)) %>% distinct(), by = "combined_id") %>%
-    relocate(!!sym(metadata_col)) %>%
-    column_to_rownames(metadata_col) %>%
+    pivot_wider(names_from = "Term", values_from = !!sym(pathway_score_col)) %>%
+    left_join(meta %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(), by = "combined_id") %>%
+    relocate(!!sym(treatment_ID)) %>%
+    column_to_rownames(treatment_ID) %>%
     dplyr::select(-combined_id) %>%
     t()
   
   # Gene Expression
   all_de <- bind_rows(tools$diff_exprs, .id = "comparison")
   signif_genes <- all_de %>%
-    filter(!!sym(padj_col) < pval_thresh) %>%
+    filter(!!sym(de_padj_col) < de_pval_thresh) %>%
     pull(gene) %>% unique()
   
   gene_mat <- all_de %>%
     filter(gene %in% signif_genes, combined_id %in% combined_ids) %>%
-    dplyr::select(combined_id, gene, !!sym(metric)) %>%
-    pivot_wider(names_from = gene, values_from = !!sym(metric)) %>%
-    left_join(meta %>% dplyr::select(combined_id, !!sym(metadata_col)) %>% distinct(), by = "combined_id") %>%
-    relocate(!!sym(metadata_col)) %>%
-    column_to_rownames(metadata_col) %>%
+    dplyr::select(combined_id, gene, !!sym(de_metric)) %>%
+    pivot_wider(names_from = gene, values_from = !!sym(de_metric)) %>%
+    left_join(meta %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(), by = "combined_id") %>%
+    relocate(!!sym(treatment_ID)) %>%
+    column_to_rownames(treatment_ID) %>%
     dplyr::select(-combined_id) %>%
     t()
+
   
-  # Chemical descriptors
-  desc_mat <- tools$chem_descriptors %>%
-    dplyr::select(-"clean_compound_name") %>%
-    column_to_rownames(metadata_col) %>%
-    t()
+  # Metadata-based descriptors
+  has_phenotype <- all(!is.na(metadata_columns)) && length(metadata_columns) > 0
   
-  # Additional descriptors
-  phenotype_mat <- data@meta.data %>%
-    filter(combined_id %in% combined_ids) %>%
-    dplyr::select(combined_id, all_of("additional_features")) %>%
-    group_by(combined_id) %>%
-    summarise(across(all_of("additional_features"), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
-    left_join(
-      data@meta.data %>% dplyr::select("combined_id", "Treatment_1") %>% distinct(),
-      by = "combined_id"
-    ) %>%
-    relocate("Treatment_1") %>%
-    dplyr::select(-combined_id) %>%
-    column_to_rownames("Treatment_1") %>%
-    t()
+  if (has_phenotype) {
+      phenotype_mat <- data@meta.data %>%
+      filter(combined_id %in% combined_ids) %>%
+      dplyr::select(combined_id, all_of(metadata_columns)) %>%
+      group_by(combined_id) %>%
+      summarise(across(all_of(metadata_columns), ~ median(.x, na.rm = TRUE)), .groups = "drop") %>%
+      left_join(
+        data@meta.data %>% dplyr::select(combined_id, !!sym(treatment_ID)) %>% distinct(),
+        by = "combined_id"
+      ) %>%
+      relocate({{treatment_ID}}) %>%
+      dplyr::select(-combined_id) %>%
+      column_to_rownames({{treatment_ID}}) %>%
+      t()
+  }
+  
+  # Collect present matrices
+  view_matrices <- list(
+    genes = gene_mat,
+    pathways = pathway_mat
+  )
+  
+  if ("chem_descriptors" %in% names(tools)) {
+    # Chemical descriptors
+    desc_mat <- tools$chem_descriptors %>%
+      dplyr::select(-"clean_compound_name") %>%
+      column_to_rownames("Treatment_1") %>%
+      t()
+    view_matrices$chem_descriptors <- desc_mat
+  }
+  
+  if (has_phenotype && exists("phenotype_mat") && !is.null(phenotype_mat)) {
+    phenotype_views <- lapply(rownames(phenotype_mat), function(feature) {
+      mat <- phenotype_mat[feature, , drop = FALSE]
+      mat
+    })
+    names(phenotype_views) <- rownames(phenotype_mat)
+    view_matrices <- c(phenotype_views, view_matrices)
+  }
+  
+  #add any additional data from @toolls
+  known_keys <- c("diff_exprs", "pathway_enrichment", "chem_descriptors")
+  additional_views <- tools[setdiff(names(tools), known_keys)]
+  
+  for (nm in names(additional_views)) {
+    tbl <- additional_views[[nm]]
+    if (is.data.frame(tbl) && "Treatment" %in% colnames(tbl)) {
+      df <- tbl %>%
+        column_to_rownames("Treatment") %>%
+        t()
+      view_matrices[[nm]] <- df
+    }
+  }
   
   # Match columns
-  common_cols <- Reduce(intersect, list(
-    colnames(gene_mat),
-    colnames(pathway_mat),
-    colnames(desc_mat),
-    colnames(phenotype_mat)
-  ))
-  
-  phenotype_views <- lapply(rownames(phenotype_mat), function(feature) {
-    mat <- phenotype_mat[feature, common_cols, drop = FALSE]
-    colnames(mat) <- common_cols
-    mat
+  common_cols <- Reduce(intersect, lapply(view_matrices, colnames))
+
+  # Subset all views to common columns
+  views <- lapply(view_matrices, function(mat) {
+    mat[, common_cols, drop = FALSE]
   })
-  names(phenotype_views) <- rownames(phenotype_mat)  # e.g. "nCount_RNA", "CTG", etc.
-  
-  # Combine all views
-  views <- c(
-    phenotype_views,
-    list(
-      genes = gene_mat[, common_cols, drop = FALSE],
-      pathways = pathway_mat[, common_cols, drop = FALSE],
-      chem_descriptors = desc_mat[, common_cols, drop = FALSE]
-    )
-  )
   
   # Ensure all views have matching column names
   views <- lapply(views, function(view) {
     colnames(view) <- common_cols
     return(view)
+  })
+  
+  # Remove features (rows) with all NA or zero across all samples
+  views <- lapply(views, function(view) {
+    is_all_na_or_zero <- function(x) all(is.na(x) | x == 0)
+    view[!apply(view, 1, is_all_na_or_zero), , drop = FALSE]
   })
   
   # Create MOFA object
