@@ -2,9 +2,7 @@
 % Please edit documentation in R/plot_counts.R
 \name{plot_counts}
 \alias{plot_counts}
-\title{Generate a box plot to show gene expression (CPM)
-This is the function to generate a box plot to show CPM levels of DE genes
-among selected treatment samples and control samples.}
+\title{Generate a box plot to show gene expression (CPM)}
 \usage{
 plot_counts(
   data = NULL,
@@ -40,7 +38,6 @@ plot_counts(
 a ggplot2 object
 }
 \description{
-Generate a box plot to show gene expression (CPM)
 This is the function to generate a box plot to show CPM levels of DE genes
 among selected treatment samples and control samples.
 }

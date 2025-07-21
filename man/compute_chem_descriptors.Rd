@@ -4,14 +4,21 @@
 \alias{compute_chem_descriptors}
 \title{Compute chemical descriptors from SMILES}
 \usage{
-compute_chem_descriptors(data, r_squared = 0.6, descriptors = NULL)
+compute_chem_descriptors(
+  data,
+  treatment_ids = NULL,
+  r_squared = 0.6,
+  descriptors = NULL
+)
 }
 \arguments{
 \item{data}{A tidyseurat object with a \code{smiles} column and \code{Treatment_1} column.}
 
+\item{treatment_ids}{A list of unique sample identifiers, commonly combined_ids}
+
 \item{r_squared}{R squared value, default of 0.6}
 
-\item{descriptors}{Specify any descriptors of interest from rcdk}
+\item{descriptors}{Specify a subset of descriptors of interest from rcdk}
 }
 \value{
 The same tidyseurat object with a new entry in \code{tools$chem_descriptors}.
@@ -26,7 +33,7 @@ mock_data <- tibble::tibble(
   Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 )
 result <- compute_smiles(mock_data,compound_column = "Treatment_1" )
-data <- compute_chem_descriptors(result, descriptors =
+data <- compute_chem_descriptors(result, treatment_ids = mock_data$Treatment_1, descriptors =
 "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
 }
 }
