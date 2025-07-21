@@ -6,15 +6,18 @@
 \usage{
 compute_chem_descriptors(
   data,
+  compound_column = NULL,
   treatment_ids = NULL,
   r_squared = 0.6,
   descriptors = NULL
 )
 }
 \arguments{
-\item{data}{A tidyseurat object with a \code{smiles} column and \code{Treatment_1} column.}
+\item{data}{A tidyseurat object with a \code{smiles} column.}
 
-\item{treatment_ids}{A list of unique sample identifiers, commonly combined_ids}
+\item{compound_column}{Column in metadata with compound identifiers, default combined_ids}
+
+\item{treatment_ids}{A list of unique sample identifiers, default combined_ids}
 
 \item{r_squared}{R squared value, default of 0.6}
 
@@ -30,10 +33,12 @@ It stores cleaned, non-redundant descriptors in \code{tools$chem_descriptors}.
 \examples{
 \dontrun{
 mock_data <- tibble::tibble(
-  Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+  Treatment = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 )
-result <- compute_smiles(mock_data,compound_column = "Treatment_1" )
-data <- compute_chem_descriptors(result, treatment_ids = mock_data$Treatment_1, descriptors =
-"org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
+result <- compute_smiles(mock_data, compound_column = "Treatment" )
+data <- compute_chem_descriptors(result, 
+   compound_column = "Treatment", 
+   treatment_ids = mock_data$Treatment, 
+   descriptors = "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
 }
 }
