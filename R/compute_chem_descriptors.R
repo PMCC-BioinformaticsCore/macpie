@@ -3,8 +3,9 @@
 #' This function parses SMILES strings and computes chemical descriptors using rcdk.
 #' It stores cleaned, non-redundant descriptors in `tools$chem_descriptors`.
 #'
-#' @param data A tidyseurat object with a `smiles` column and `Treatment` column.
-#' @param treatment_ids A list of unique sample identifiers, commonly combined_ids
+#' @param data A tidyseurat object with a `smiles` column.
+#' @param compound_column Column in metadata with compound identifiers, default combined_ids
+#' @param treatment_ids A list of unique sample identifiers, default combined_ids
 #' @param r_squared R squared value, default of 0.6
 #' @param descriptors Specify a subset of descriptors of interest from rcdk
 #' @returns The same tidyseurat object with a new entry in `tools$chem_descriptors`.
@@ -18,33 +19,40 @@
 #' mock_data <- tibble::tibble(
 #'   Treatment = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
-#' result <- compute_smiles(mock_data,compound_column = "Treatment" )
-#' data <- compute_chem_descriptors(result, treatment_ids = mock_data$Treatment, descriptors =
-#' "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
+#' result <- compute_smiles(mock_data, compound_column = "Treatment" )
+#' data <- compute_chem_descriptors(result, 
+#'    compound_column = "Treatment", 
+#'    treatment_ids = mock_data$Treatment, 
+#'    descriptors = "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
 #' }
 compute_chem_descriptors <- function(data,
+                                     compound_column = NULL,
                                      treatment_ids = NULL,
                                      r_squared = 0.6,
                                      descriptors = NULL) {
+  
+  if (is.null(compound_column)){
+    compound_column = "combined_id"
+  } 
   if (inherits(data, "tbl_df")) {
     if (!"smiles" %in% colnames(data)) {
       stop("The input must contain a `smiles` column. Run compute_smiles() first.")
     }
-    if (!"Treatment" %in% colnames(data)) {
-      stop("The input tibble must contain a column named 'Treatment'")
+    if (!{{compound_column}} %in% colnames(data)) {
+      stop("The compound column is not in the data headers.")
     }
     if (!"combined_id" %in% colnames(data)) {
-      data$combined_id <- data$Treatment
+      data$combined_id <- data[[{{compound_column}}]]
     }
   } else {
     if (!"smiles" %in% colnames(data@meta.data)) {
       stop("The input must contain a `smiles` column. Run compute_smiles() first.")
     }
-    if (!"Treatment" %in% colnames(data@meta.data)) {
-      stop("The input object must contain a column named 'Treatment'")
+    if (!{{compound_column}} %in% colnames(data@meta.data)) {
+      stop("The compound column is not in the data headers.")
     }
   }
-  if(is.null(treatment_ids)){
+  if (is.null(treatment_ids)){
     treatment_ids <- unique(data$combined_id)
   }
   if (!inherits(treatment_ids, "character")) {
@@ -58,6 +66,9 @@ compute_chem_descriptors <- function(data,
   if (!is.null(descriptors) && !is.character(descriptors)) {
     stop("`descriptors` must be a character vector (or NULL to use the defaults)")
   }
+  
+
+  
   
   # Prepare compound names
   smiles_list <- data %>%
