@@ -3,7 +3,7 @@
 #' This function parses SMILES strings and computes chemical descriptors using rcdk.
 #' It stores cleaned, non-redundant descriptors in `tools$chem_descriptors`.
 #'
-#' @param data A tidyseurat object with a `smiles` column and `Treatment_1` column.
+#' @param data A tidyseurat object with a `smiles` column and `Treatment` column.
 #' @param treatment_ids A list of unique sample identifiers, commonly combined_ids
 #' @param r_squared R squared value, default of 0.6
 #' @param descriptors Specify a subset of descriptors of interest from rcdk
@@ -16,10 +16,10 @@
 #' @examples
 #' \dontrun{
 #' mock_data <- tibble::tibble(
-#'   Treatment_1 = c("Aspirin", "Caffeine", "NonExistentCompound_123")
+#'   Treatment = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
-#' result <- compute_smiles(mock_data,compound_column = "Treatment_1" )
-#' data <- compute_chem_descriptors(result, treatment_ids = mock_data$Treatment_1, descriptors =
+#' result <- compute_smiles(mock_data,compound_column = "Treatment" )
+#' data <- compute_chem_descriptors(result, treatment_ids = mock_data$Treatment, descriptors =
 #' "org.openscience.cdk.qsar.descriptors.molecular.FractionalCSP3Descriptor")
 #' }
 compute_chem_descriptors <- function(data,
@@ -30,18 +30,18 @@ compute_chem_descriptors <- function(data,
     if (!"smiles" %in% colnames(data)) {
       stop("The input must contain a `smiles` column. Run compute_smiles() first.")
     }
-    if (!"Treatment_1" %in% colnames(data)) {
-      stop("The input tibble must contain a column named 'Treatment_1'")
+    if (!"Treatment" %in% colnames(data)) {
+      stop("The input tibble must contain a column named 'Treatment'")
     }
     if (!"combined_id" %in% colnames(data)) {
-      data$combined_id <- data$Treatment_1
+      data$combined_id <- data$Treatment
     }
   } else {
     if (!"smiles" %in% colnames(data@meta.data)) {
       stop("The input must contain a `smiles` column. Run compute_smiles() first.")
     }
-    if (!"Treatment_1" %in% colnames(data@meta.data)) {
-      stop("The input object must contain a column named 'Treatment_1'")
+    if (!"Treatment" %in% colnames(data@meta.data)) {
+      stop("The input object must contain a column named 'Treatment'")
     }
   }
   if(is.null(treatment_ids)){
@@ -116,7 +116,7 @@ compute_chem_descriptors <- function(data,
   # Store in @tools
   if (inherits(data, "tbl_df")) {
     data <- data %>%
-      left_join(., descriptor_df_clean, join_by("Treatment_1"))
+      left_join(., descriptor_df_clean, join_by("Treatment"))
   } else {
     data@tools$chem_descriptors <- descriptor_df_clean
   }
