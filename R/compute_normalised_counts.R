@@ -75,7 +75,8 @@ compute_normalised_counts <- function(data = NULL,
   } else if (length(batch) == 1 && (length(unique(data$combined_id)) > 1)) {
     model_matrix <- model.matrix(~data$combined_id)
     coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
-  } else if (length(batch) %% length(colnames(data)) == 0 && length(unique(data$combined_id)) > 1) {
+  #} else if (length(batch) %% length(colnames(data)) == 0 && length(unique(data$combined_id)) > 1) {
+  } else if (length(batch) %% length(colnames(data)) == 0) {
     model_matrix <- model.matrix(~data$combined_id + batch)
     coldata <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
   } else {
