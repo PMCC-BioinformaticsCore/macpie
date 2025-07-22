@@ -199,7 +199,7 @@ compute_normalised_counts <- function(data = NULL,
     }
     #cat(class(data))
     data_sce <- as.SingleCellExperiment(data)
-    filtered_sce <- subset(data_sce, rowSums(counts(data_sce)) > 10)
+    filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 10)
     num_cores <- 8 # Change this based on your system
     cl <- makeCluster(num_cores)
     doParallel::registerDoParallel(cl)
