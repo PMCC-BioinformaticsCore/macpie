@@ -66,9 +66,16 @@ plot_qc_metrics_heatmap <- function(stats_summary = NULL,
   heatmap_data$Metric <- factor(heatmap_data$Metric, levels = metrics)
   
   # Plot heatmap
-  p <- ggplot(heatmap_data, aes(x = Metric, y = factor(.data[[group_by]], levels = sorting_order), fill = Normalized)) +
-    geom_tile() +
-    scale_fill_gradient(low = "white", high = macpie_colours$discrete[7]) +  # Change color scale if needed
+  p <- ggplot(heatmap_data, 
+                      aes(x = Metric, 
+                          y = factor(.data[[group_by]], levels = sorting_order), 
+                          fill = Normalized,
+                          tooltip = paste0("Value: ", round(Normalized, 2), 
+                                           "\nMetric: ", Metric, 
+                                           "\n", group_by, ": ", .data[[group_by]]),
+                          data_id = interaction(Metric, .data[[group_by]]))) +
+    geom_tile_interactive() +
+    scale_fill_gradient(low = "white", high = macpie_colours$discrete[7]) +
     labs(x = "QC Metric", y = group_by, fill = "Normalized Value") +
     theme_minimal() +
     coord_flip() +
