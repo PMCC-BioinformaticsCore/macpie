@@ -12,7 +12,7 @@ test_that("a list of a data frame and a plot is returned", {
 test_that("compute_qc_metrics handles valid order_by column in metadata", {
   data(mini_mac, package = "macpie")
   expect_no_error(
-    compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "Row")
+    compute_qc_metrics(mini_mac, group_by = "combined_id", order_by = "median")
   )
 })
 
