@@ -1,6 +1,6 @@
 Package: macpie
 Title: Scalable workflow for high-throughput transcriptomic profiling
-Version: 1.1.0
+Version: 0.99.1
 Authors@R: c(person(given = "Nenad", family = "Bartonicek",
          email = "nenad.bartonicek@petermac.org",
          role = c("aut", "cre"),
