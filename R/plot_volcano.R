@@ -65,7 +65,7 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
                                label = gene_labels)) +
       scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
       geom_point() +
-      ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = F) +
+      ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = FALSE) +
       scale_color_manual(values = named_colors) + # Map colors dynamically
       # Boundaries
       geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +
