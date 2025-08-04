@@ -168,16 +168,16 @@ compute_single_dose_response <- function(data,
       scale_x_continuous(
         trans = pseudo_log_trans(base = 10),
         breaks = sort(unique(df$concentration)),
-        labels = function(x) {
-          sapply(x, function(val) {
+        labels <- function(x) {
+          vapply(x, function(val) {
             if (is.na(val)) {
-              NA
+              NA_character_
             } else if (val < 1) {
-              val
+              as.character(val)
             } else {
               as.character(round(val))
             }
-          })
+          }, FUN.VALUE = character(1))
         }
       ) +
       geom_vline(xintercept = ec50, linetype = "dashed", color = macpie_colours$high) +
