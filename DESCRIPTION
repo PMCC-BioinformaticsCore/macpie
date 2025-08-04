@@ -95,6 +95,7 @@ Imports:
     igraph,
     unikn
 VignetteBuilder: knitr
+biocViews: Workflow
 Depends: 
-    R (>= 3.5)
+    R (>= 4.4.0)
 LazyData: false
