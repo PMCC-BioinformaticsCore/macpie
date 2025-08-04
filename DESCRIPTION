@@ -96,7 +96,7 @@ Imports:
     igraph,
     unikn
 VignetteBuilder: knitr
-biocViews: Workflow
+biocViews: Workflow, Transcriptomics
 Depends: 
     R (>= 4.4.0)
 LazyData: false
