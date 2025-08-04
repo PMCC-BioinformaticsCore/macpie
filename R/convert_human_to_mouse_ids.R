@@ -20,13 +20,13 @@ convert_human_to_mouse <- function(gene_list) {
   }
   mouse_human_genes_file <- system.file("extdata", "/mouse_human_genes.csv.gz", package = "macpie")
   if(!file.exists(mouse_human_genes_file)){
-    mouse_human_genes = read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
+    mouse_human_genes <- read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
     write.csv(mouse_human_genes, file=mouse_human_genes_file, row.names=FALSE)
   } else {
     mouse_human_genes<-read.csv(mouse_human_genes_file)
   }
 
-  output = c()
+  output <- c()
   for (gene in gene_list) {
     class_key <- mouse_human_genes %>%
       filter(Symbol == gene & Common.Organism.Name == "human") %>%

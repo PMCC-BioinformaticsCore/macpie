@@ -32,7 +32,7 @@ compute_chem_descriptors <- function(data,
                                      descriptors = NULL) {
   
   if (is.null(compound_column)){
-    compound_column = "combined_id"
+    compound_column <- "combined_id"
   } 
   if (inherits(data, "tbl_df")) {
     if (!"smiles" %in% colnames(data)) {
