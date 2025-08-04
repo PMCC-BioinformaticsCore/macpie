@@ -249,7 +249,7 @@ compute_single_de <- function(data = NULL,
 
   de_ruvr <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
     if (ncol(data) > 100) {
-      print("Warning: EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
+      message("Warning: EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
     }
     combined_id <- data$combined_id
     genes <- row.names(data@assays$RNA$counts)

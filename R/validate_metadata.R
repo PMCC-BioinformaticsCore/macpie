@@ -129,5 +129,5 @@ validate_metadata <- function(metadata) {
     dplyr::summarize(across(all_of(summary_columns), ~ length(unique(.)), .names = "count_{col}")) %>%
     dplyr::ungroup()
 
-  print(as.data.frame(summary_table))
+  return(as.data.frame(summary_table))
 }

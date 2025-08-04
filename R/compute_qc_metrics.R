@@ -77,6 +77,6 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     theme_minimal() +
     labs(x = group_by, y = "UMI counts") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
-  print(p)
+  p
   return(list(stats_summary = stats_summary, plot = p))
 }
