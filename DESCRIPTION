@@ -1,6 +1,6 @@
 Package: macpie
 Title: Scalable workflow for high-throughput transcriptomic profiling
-Description: macpie is an R package for the integrative analysis of transcriptomic screening data, combining gene expression profiles with chemical, phenotypic, and pathway-level annotations. It supports differential expression, multi-omics factor analysis, and machine learning workflows, with a focus on reproducibility and scalability for high-throughput studies.
+Description: macpie is an R package for the integrative analysis of transcriptomic screening data in the context of drug discovery and functional genomics. It enables users to systematically combine gene expression data with chemical descriptors, cell phenotypes, and pathway-level annotations to uncover biologically meaningful patterns and therapeutic insights. The package provides tools for differential expression analysis, multi-omics factor analysis (MOFA), and machine learning approaches such as XGBoost, facilitating both exploratory and predictive modeling. macpie is designed with scalability, modularity, and reproducibility in mind, making it suitable for high-throughput screening studies and systems-level biological investigations.
 Version: 0.99.1
 Authors@R: c(person(given = "Nenad", family = "Bartonicek",
          email = "nenad.bartonicek@petermac.org",
