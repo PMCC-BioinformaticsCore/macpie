@@ -39,8 +39,10 @@ aggregate_by_de <- function(data, metric_col = "metric") {
       stop("Error: Parameter metric_col should be acharacter.")
     }
     required_cols <- c("gene", "combined_id", metric_col)
-    if (!all(sapply(de_list, function(x) all(required_cols %in% colnames(x))))) {
-      stop("Each element of the DE list must contain 'gene', 'combined_id', and the specified metric column.")
+    #if (!all(sapply(de_list, function(x) all(required_cols %in% colnames(x))))) {
+    if (!all(vapply(de_list, function(x) all(required_cols %in% colnames(x)), logical(1)))) {
+      
+    stop("Each element of the DE list must contain 'gene', 'combined_id', and the specified metric column.")
     }
   }
   
