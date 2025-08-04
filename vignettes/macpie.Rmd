@@ -352,7 +352,7 @@ ggplot(mac_screen_profile, aes(target_id, NES)) +
   #geom_point(aes(size = logPadj)) +
   geom_point() +
   facet_wrap(~pathway, scales = "free") +
-  macpie_theme(x_labels_angle = 90, show_x_title = F)
+  macpie_theme(x_labels_angle = 90, show_x_title = FALSE)
 ```
 
 #### 4.3. Estimate of dose-response
