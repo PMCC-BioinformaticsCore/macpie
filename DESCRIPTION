@@ -96,7 +96,8 @@ Imports:
     igraph,
     unikn
 VignetteBuilder: knitr
-biocViews: Workflow, Transcriptomics
+BugReports: https://github.com/PMCC-BioinformaticsCore/macpie/issues
+biocViews: Workflow, GeneExpressionWorkflow
 Depends: 
     R (>= 4.4.0)
 LazyData: false
