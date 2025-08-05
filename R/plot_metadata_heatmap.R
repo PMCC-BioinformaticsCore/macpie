@@ -112,9 +112,9 @@ plot_metadata_heatmap <- function(metadata = NULL,
     stop("No annotation columns found to generate heatmaps. Please check your input data.")
   }
 
-  hide_legends <- sapply(annotation_cols, function(col) {
+  hide_legends <- vapply(annotation_cols, function(col) {
     length(unique(metadata[[col]])) > 10
-  })
+  }, FUN.VALUE = logical(1))
 
   unique_plate_ids <- unique(metadata$Plate_ID)
   for (plate_id in unique_plate_ids) {
