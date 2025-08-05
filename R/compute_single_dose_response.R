@@ -18,15 +18,14 @@ utils::globalVariables(c("combined_id", "column_name", "concentration", "predict
 #' @return A list with drc model, predicted values, and ggplot curve
 #' @examples
 #' \donttest{
-#' rds_file<-system.file("/extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac<-readRDS(rds_file)
+#' data(mini_mac)
 #' res <- compute_single_dose_response(data = mac,
-#' gene = "PTPRA",
+#' gene = "FSHR",
 #' normalisation = "limma_voom",
 #' treatment_value = "Camptothecin")
 #' res$plot
 #' res <- compute_single_dose_response(data = mac,
-#' pathway = "Myc Targets V1",
+#' pathway = "p53 Pathway",
 #' treatment_value = "Camptothecin")
 #' res$plot
 #' }
@@ -168,7 +167,7 @@ compute_single_dose_response <- function(data,
       scale_x_continuous(
         trans = pseudo_log_trans(base = 10),
         breaks = sort(unique(df$concentration)),
-        labels <- function(x) {
+        labels = function(x) {
           vapply(x, function(val) {
             if (is.na(val)) {
               NA_character_

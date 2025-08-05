@@ -19,7 +19,6 @@
 #' @return A data frame of EC50 values per gene and treatment.
 #'
 #' @examples
-#' \dontrun{
 #' data(mini_mac)
 #' res <- compute_multiple_dose_response(
 #'   data = mini_mac,
@@ -29,7 +28,6 @@
 #'   num_cores = 1
 #' )
 #' head(res)
-#' }
 #' @export
 compute_multiple_dose_response <- function(data,
                                            genes = NULL,
