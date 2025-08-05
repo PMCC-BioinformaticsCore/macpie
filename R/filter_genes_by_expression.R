@@ -21,7 +21,7 @@ filter_genes_by_expression <- function(data,
                                        min_samples = 2) {
   # Check if metadata column exists
   if (!group_by %in% colnames(data@meta.data)) {
-    stop(paste("Metadata column", group_by, "not found in Seurat object."))
+    stop("Metadata column ", group_by, " not found in Seurat object.")
   }
   
   # Extract expression matrix
