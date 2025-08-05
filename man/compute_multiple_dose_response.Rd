@@ -38,7 +38,7 @@ This function fits dose-response models for a set of genes across different trea
 using the \code{drc} package. It returns EC50 values per gene per treatment.
 }
 \examples{
-\dontrun{
+\donttest{
 rds_file <- system.file("extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 mac <- readRDS(rds_file)
 res <- compute_multiple_dose_response(

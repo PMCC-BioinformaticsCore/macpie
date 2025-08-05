@@ -30,7 +30,7 @@ This function validates a metadata dataset, cleans specific fields, checks for
 issues, and generates a summary table grouped by \code{Plate_ID}.
 }
 \examples{
-\dontrun{
+\donttest{
 # Example CSV file
 file_path <- system.file("/extdata/PMMSq033_metadata.csv", package = "macpie")
 metadata <- read_metadata(file_path)

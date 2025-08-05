@@ -19,7 +19,7 @@
 #' @return A data frame of EC50 values per gene and treatment.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' rds_file <- system.file("extdata/PMMSq033/PMMSq033.rds", package = "macpie")
 #' mac <- readRDS(rds_file)
 #' res <- compute_multiple_dose_response(
