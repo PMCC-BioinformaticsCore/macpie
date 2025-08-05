@@ -64,7 +64,7 @@ validate_metadata <- function(metadata) {
   validate_columns <- function(metadata) {
 
     # Validate Row
-    if (any(!metadata$Row %in% LETTERS[1:16])) {
+    if (any(!metadata$Row %in% LETTERS[seq_len(16)])) {
       issues[["Row"]] <- "Contains values outside A to P."
     }
 

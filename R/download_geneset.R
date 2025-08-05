@@ -51,7 +51,7 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
         data.frame( # Convert to a tibble per list element for easier manipulation
           pathway_name = x[1],
           description = x[2],
-          gene = x[-(1:2)]
+          gene = x[-seq_len(2)]
         )
       }) %>%
       purrr::list_rbind() %>% #join into a data frame to
