@@ -17,7 +17,7 @@
 #' in selected columns.}
 #'
 #'@examples
-#' \dontrun{
+#' \donttest{
 #' # Example CSV file
 #' file_path <- system.file("/extdata/PMMSq033_metadata.csv", package = "macpie")
 #' metadata <- read_metadata(file_path)

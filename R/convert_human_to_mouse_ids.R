@@ -7,7 +7,7 @@ utils::globalVariables(c("Symbol", "Common.Organism.Name", "DB.Class.Key"))
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' convert_human_to_mouse(c("BRCA1", "TRAF1", "MYBL1"))
 #' }
 

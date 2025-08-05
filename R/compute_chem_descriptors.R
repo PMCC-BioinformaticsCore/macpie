@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' mock_data <- tibble::tibble(
 #'   Treatment = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 #' )
