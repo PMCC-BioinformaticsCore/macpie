@@ -70,18 +70,18 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
   midpoint <- validated$midpoint
   
   # Find stats for the data to arrange plotting
-  suppressWarnings({
-    data <- data %>%
-      mutate(Col = as.character(.data$Column)) %>%
-      mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
-      mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
-      mutate(median_value = median(!!rlang::sym(metric))) %>%
-      mutate(mean_value = mean(!!rlang::sym(metric))) %>%
-      mutate(
-        tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
-        group_id = .data[[annotation]]
-      )
-  })
+
+  data <- data %>%
+    mutate(Col = as.character(.data$Column)) %>%
+    mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
+    mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
+    mutate(median_value = median(!!rlang::sym(metric))) %>%
+    mutate(mean_value = mean(!!rlang::sym(metric))) %>%
+    mutate(
+      tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
+      group_id = .data[[annotation]]
+    )
+
   # Plot the results
   tryCatch({
     if (midpoint == "median"){

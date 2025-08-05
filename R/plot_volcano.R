@@ -59,20 +59,20 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
   named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
 
-  suppressWarnings({
-    p <- ggplot(top_table, aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
-                               group = .data$diff_expressed, col = .data$diff_expressed,
-                               label = gene_labels)) +
-      scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
-      geom_point() +
-      ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = FALSE) +
-      scale_color_manual(values = named_colors) + # Map colors dynamically
-      # Boundaries
-      geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +
-      geom_hline(yintercept = -log10(0.05), col = "#003366", linetype = 'dashed') +
-      # Theme
-      macpie_theme()
-  })
+
+  p <- ggplot(top_table, aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
+                             group = .data$diff_expressed, col = .data$diff_expressed,
+                             label = gene_labels)) +
+    scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
+    geom_point() +
+    ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = FALSE) +
+    scale_color_manual(values = named_colors) + # Map colors dynamically
+    # Boundaries
+    geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +
+    geom_hline(yintercept = -log10(0.05), col = "#003366", linetype = 'dashed') +
+    # Theme
+    macpie_theme()
+
 
   return(p)
 }
