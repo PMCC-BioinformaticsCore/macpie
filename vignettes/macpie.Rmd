@@ -425,6 +425,6 @@ head(rf_ranked, 20)
 #> 0.000000000 0.000000000
 varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features")
 ```
-``{r session-info, echo=FALSE} 
+``{r session-info, echo=TRUE} 
 sessionInfo() 
 ```

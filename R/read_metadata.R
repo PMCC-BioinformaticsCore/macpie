@@ -89,8 +89,8 @@ read_metadata <- function(file_path, header = TRUE, sep = ",", string_as_factors
         arrange("Barcode")
       return(cleaned_data)
     } else {
-      cat("Error: Some required columns were missing. Check your file.\n")
-      cat("Missing columns:\n", paste(setdiff(predefined_columns, matched_columns), collapse = ", "), "\n")
+      message("Error: Some required columns were missing. Check your file.\n")
+      message("Missing columns:\n", paste(setdiff(predefined_columns, matched_columns), collapse = ", "), "\n")
       return(NULL)
     }
   }

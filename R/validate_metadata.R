@@ -110,19 +110,19 @@ validate_metadata <- function(metadata) {
 
   # Print issues
   if (length(issues) > 0) {
-    cat("\nValidation Issues:\n")
+    message("\nValidation Issues:\n")
     for (issue_col in names(issues)) {
-      cat(issue_col, ": ", issues[[issue_col]], "\n", sep = "")
+      message(issue_col, ": ", issues[[issue_col]], "\n", sep = "")
     }
   } else {
-    cat("\nNo validation issues found. Metadata is clean.\n")
+    message("\nNo validation issues found. Metadata is clean.\n")
   }
 
   # 3. Generate a summary table grouped by Plate_ID
   summary_columns <- c("Species", "Cell_type", "Model_type", "Time", "Unit",
                        "Treatment_1", "Concentration_1", "Unit_1", "Sample_type")
 
-  cat("\nGenerating summary table grouped by Plate_ID...\n")
+  message("\nGenerating summary table grouped by Plate_ID...\n")
 
   summary_table <- metadata %>%
     dplyr::group_by(Plate_ID) %>%

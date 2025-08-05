@@ -43,7 +43,7 @@ compute_single_enrichr <- function(genes = NULL, db = NULL, genesets = NULL, spe
   validate_inputs(genes, db, genesets, species)
 
   if (length(db) > 0) {
-    cat("Downloading gene sets from the Enrichr server.\n")
+    message("Downloading gene sets from the Enrichr server.\n")
     genesets <- download_geneset(species, db)
   }
 
