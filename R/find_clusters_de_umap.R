@@ -22,10 +22,10 @@ find_clusters_de_umap <- function(data = NULL, k = 10) {
 
   validate_inputs <- function(df_umap_data, k) {
     if (!inherits(df_umap_data, "data.frame") && length(df_umap_data) > 0) {
-      stop("Error: argument 'data' must contain a data frame of UMAP coordinates in the slot tool.")
+      stop("argument 'data' must contain a data frame of UMAP coordinates in the slot tool.")
     }
     if (!inherits(k, "numeric")) {
-      stop("Error: argument 'k' must contain be numeric.")
+      stop("argument 'k' must contain be numeric.")
     }
   }
 

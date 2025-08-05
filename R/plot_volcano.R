@@ -26,10 +26,10 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   # Helper function to validate input data
   validate_inputs <- function(top_table, x, y, fdr_cutoff, max.overlaps) {
     if (!inherits(as.data.frame(top_table), "data.frame")) {
-      stop("Error: 'top_table' must be convertable to a data frame.")
+      stop("'top_table' must be convertable to a data frame.")
     }
     if (!all(x %in% colnames(top_table) && y %in% colnames(top_table))) {
-      stop("Error: 'top_table' does not contain expected column names, check paramaterrs 'x' and 'y'.")
+      stop("'top_table' does not contain expected column names, check paramaterrs 'x' and 'y'.")
     }
     if (!inherits(fdr_cutoff, "numeric") && fdr_cutoff <= 1) {
       stop("FDR should be numeric and smaller than 1.")

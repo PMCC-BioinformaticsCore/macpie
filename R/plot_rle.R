@@ -58,7 +58,7 @@ plot_rle <- function(data, barcodes = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: 'data' must be a Seurat or TidySeurat object.")
+      stop("'data' must be a Seurat or TidySeurat object.")
     }
     if (is.null(barcodes)) {
       barcodes <- Seurat::Cells(data)
@@ -171,7 +171,7 @@ plot_rle <- function(data, barcodes = NULL,
         ylab("Log expression deviation")
 
     }, error = function(e) {
-      stop("Error in plotting: ", e$message)
+      stop("Problems in plotting ", e$message)
     })
   }
 
@@ -203,10 +203,10 @@ plot_rle <- function(data, barcodes = NULL,
 
   # Ensure alignment
   if (length(barcodes) != ncol(count_matrix)) {
-    stop("Error: Length of 'barcodes' must match the number of columns in 'count_matrix'.")
+    stop("Length of 'barcodes' must match the number of columns in 'count_matrix'.")
   }
   if (length(labels) != ncol(count_matrix)) {
-    stop("Error: Length of 'labels' must match the number of columns in 'count_matrix'.")
+    stop("Length of 'labels' must match the number of columns in 'count_matrix'.")
   }
 
   # Create RLE data frame

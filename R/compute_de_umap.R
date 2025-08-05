@@ -23,7 +23,7 @@ compute_de_umap <- function(data = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(de_list) {
     if (!inherits(de_list, "list") && length(de_list) > 0) {
-      stop("Error: argument 'data' must contain a list of DE comparisons in the slot tool.")
+      stop("argument 'data' must contain a list of DE comparisons in the slot tool.")
     }
   }
 

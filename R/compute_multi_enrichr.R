@@ -30,10 +30,10 @@ compute_multi_enrichr <- function(data,
   # Helper function to validate input data
   validate_inputs <- function(data, genesets, species, direction, p_value_cutoff, n_distinct) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     if (!inherits(genesets, "list")) {
-      stop("Error: argument 'genesets' must be a named list of genes.")
+      stop("argument 'genesets' must be a named list of genes.")
     }
     if (!is.null(species) && (!species %in% c("human", "mouse", "fly", "yeast", "worm", "fish"))) {
       stop("Your values for species should be in: fly, yeast, worm, fish, human, mouse. ")
@@ -42,10 +42,10 @@ compute_multi_enrichr <- function(data,
       stop("Value of the direction paramater should be either up, down or both.")
     }
     if (!inherits(p_value_cutoff, "numeric")) {
-      stop("Error: argument 'p_value_cutoff' must be numeric.")
+      stop("argument 'p_value_cutoff' must be numeric.")
     }
     if (!inherits(n_distinct, "numeric")) {
-      stop("Error: argument 'n_distinct' must be numeric.")
+      stop("argument 'n_distinct' must be numeric.")
     }
     if (is.null(species) || length(species) > 1) {
       stop("Missing species information.")

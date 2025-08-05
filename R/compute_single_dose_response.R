@@ -50,27 +50,27 @@ compute_single_dose_response <- function(data,
   # Helper function to validate input data
   validate_inputs <- function(data, gene, pathway, normalisation, treatment_value, control_value, batch, k) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: 'data' must be a Seurat or TidySeurat object.")
+      stop("'data' must be a Seurat or TidySeurat object.")
     }
     if (!is.null(gene)) {
       if (!gene %in% row.names(data@assays$RNA$counts)) {
-        stop("Error: Your gene is not present in the dataset.")
+        stop("Your gene is not present in the dataset.")
       }
     }
     if (!is.null(pathway)) {
       if (!pathway %in% data@tools$pathway_enrichment$Term) {
-        stop("Error: Your pathway was not present in the list 
+        stop("Your pathway was not present in the list 
              of enriched pathways. Check mac@tools$pathway_enrichment.")
       }
     }
     if (!is.null(gene) && !is.null(pathway)) {
-      stop("Error: Please select only gene OR pathway, not both.")
+      stop("Please select only gene OR pathway, not both.")
     }
     if (!treatment_value %in% data$Treatment_1) {
-      stop("Error: Your treatment_value was not present in data$Treatment_1.")
+      stop("Your treatment_value was not present in data$Treatment_1.")
     }
     if (!control_value %in% data$Treatment_1) {
-      stop("Error: Your control_value was not present in data$Treatment_1.")
+      stop("Your control_value was not present in data$Treatment_1.")
     }
     normalisation <- if (is.null(normalisation)) "limma_voom" else normalisation
     if (!normalisation %in% c("raw", "logNorm",

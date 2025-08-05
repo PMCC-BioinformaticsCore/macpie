@@ -58,7 +58,7 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
       filter(.data$gene != "") %>% #eliminate empty genes per pathway
       distinct(.data$pathway_name, .data$gene)
   }, error = function(e) {
-    stop("Error in connecting to enrichR database, check connection: ", e$message)
+    stop("Problems connecting to enrichR database, check connection ", e$message)
   })
 
   results_list <- split(results_table$gene, results_table$pathway_name)

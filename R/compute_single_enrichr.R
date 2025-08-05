@@ -26,7 +26,7 @@ compute_single_enrichr <- function(genes = NULL, db = NULL, genesets = NULL, spe
   #first validate the inputs
   validate_inputs <- function(genes, db, genesets, species) {
     if (!inherits(genes, "character")) {
-      stop("Error: argument 'genes' must be a character dataset.")
+      stop("argument 'genes' must be a character dataset.")
     }
     if (is.null(db) && is.null(genesets)) {
       stop("Please provide either the name of the enrichr database or your own list of genes.")

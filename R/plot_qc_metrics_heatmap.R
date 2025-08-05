@@ -27,18 +27,18 @@ plot_qc_metrics_heatmap <- function(stats_summary = NULL,
   # Helper function to validate input data
   validate_inputs <- function(stats_summary, group_by, metrics, order_by) {
     if (!inherits(stats_summary, "tbl_df")) {
-      stop("Error: argument 'stats_summary' must be calculated QC metrics by running QC_metrics function.")
+      stop("argument 'stats_summary' must be calculated QC metrics by running QC_metrics function.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     metrics <- if (is.null(metrics)) c("sd_value","z_score","mad_value","IQR") else metrics
     order_by <- if (is.null(order_by)) "sd_value" else order_by
     
     if (!all(metrics %in% colnames(stats_summary))) {
-      stop("Error: One or more specified metrics are not present in stats_summary.")
+      stop("One or more specified metrics are not present in stats_summary.")
     }
     
     if (!(order_by %in% metrics)) {
-      stop("Error: 'order_by' metric must be one of the selected metrics.")
+      stop("'order_by' metric must be one of the selected metrics.")
     }
     
     list(stats_summary = stats_summary, group_by = group_by, metrics = metrics, order_by = order_by)

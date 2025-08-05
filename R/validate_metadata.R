@@ -27,7 +27,7 @@
 #'@export
 validate_metadata <- function(metadata) {
   if (is.null(metadata) || nrow(as.data.frame(metadata)) == 0) {
-    stop("Error: Input metadata is empty or wrong format. Ensure the metadata is correctly provided.")
+    stop("Input metadata is empty or wrong format. Ensure the metadata is correctly provided.")
   }
 
   # Check Well_ID pattern

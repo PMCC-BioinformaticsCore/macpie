@@ -44,10 +44,10 @@ plot_counts <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by, normalisation) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     if (!inherits(genes, "character")) {
-      stop("Error: arguemnt 'genes' must be characters.")
+      stop("arguemnt 'genes' must be characters.")
     }
     if (length(genes) > 20) {
       stop("Try plotting with less genes.")

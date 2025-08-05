@@ -22,7 +22,7 @@ plot_qc_metrics <- function(stats_summary, group_by, metrics) {
   # Helper function to validate input data
   validate_inputs <- function(stats_summary, group_by, metrics) {
     if (!inherits(stats_summary, "list")) {
-      stop("Error: argument 'stats_summary' must be calculated QC metrics by running QC_metrics function.")
+      stop("argument 'stats_summary' must be calculated QC metrics by running QC_metrics function.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
 

@@ -15,7 +15,7 @@ convert_human_to_mouse <- function(gene_list) {
     
   validate_inputs <- function(data, genesets, species, direction, p_value_cutoff, n_distinct) {
     if (!inherits(gene_list, "character")) {
-      stop("Error: argument 'gene_list' must be of type character.")
+      stop("argument 'gene_list' must be of type character.")
     }
   }
   mouse_human_genes_file <- system.file("extdata", "/mouse_human_genes.csv.gz", package = "macpie")
