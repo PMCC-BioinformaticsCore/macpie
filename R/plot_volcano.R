@@ -15,7 +15,11 @@
 #' top_table <- mini_mac@tools$diff_exprs$Staurosporine_10
 #' plot_volcano(top_table = top_table, max.overlaps = 100)
 #'
-plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff = 0.05, max.overlaps = 30) {
+plot_volcano <- function(top_table, 
+                         x = "log2FC", 
+                         y = "p_value_adj", 
+                         fdr_cutoff = 0.05, 
+                         max.overlaps = 30) {
 
   if (!requireNamespace("forcats", quietly = TRUE)) {
     stop(
@@ -58,7 +62,6 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
 
   color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
   named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
-
 
   p <- ggplot(top_table, aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
                              group = .data$diff_expressed, col = .data$diff_expressed,

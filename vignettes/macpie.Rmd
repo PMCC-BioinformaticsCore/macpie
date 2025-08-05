@@ -28,12 +28,7 @@ MAC-seq is a cost-effective, high-throughput transcriptomic platform, developed 
 
 <b>macpie</b> is a toolkit designed for researchers, originally with MAC-seq data in mind, but validated for general High-Throughput Transcriptomics (HTTr) data applications. Its primary aim is to deliver the latest tools for quality control (QC), visualization, and analysis. <b>macpie</b> is a result of a collaborative effort by a workgroup at the PeterMac, with a substantial support of the VCFG amd MGC core facilities.
 
-In this vignette we cover the basic functionality of <b>macpie</b>, from input, quality control to transcriptional and screen-related analyses. For more in-depth workflows, please refer to other vignettes:
-
-- [Quality control](quality_control.html)
-- [Transcriptional analysis](transcriptional_analysis.html)
-- [Compound screening](compound_screening.html)
-- [Cross-platform compatibility](cross_platform_compatibility.html)
+In this vignette we cover the basic functionality of <b>macpie</b>, from input, quality control to transcriptional and screen-related analyses. For more in-depth workflows, please refer to other vignettes at https://pmcc-bioinformaticscore.github.io/macpie/articles/macpie.html.
 
 ### 1. Metadata import and QC
 
@@ -44,11 +39,6 @@ In this vignette we cover the basic functionality of <b>macpie</b>, from input, 
 Metadata has to be in a tabular format and contain a standardised set of columns to define coordinates of a sample on a plate, provide minimum information about the sample, and allow connection with the transcriptomic data through the sample barcodes. 
 
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables, described in more depth in the [QC vignette](articles/quality_control.html). We will first visually inspect all experimental variables, in order to identify potential artefacts.
-
-```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
-devtools::load_all(paste0(dir, "macpie/"))
-```
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 #install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
@@ -93,28 +83,30 @@ plot_metadata_heatmap(metadata)
 **Data access**:  
 
   -  load your raw counts by providing Read10X function with a path to a directory containing matrix.mtx.gz, barcodes.tsv.gz, and features.tsv.gz, commonly "raw_matrix" from CellRanger or StarSolo output
-  -  the full manuscript dataset (>10 MB of `.rds` files) is currently under restricted release and will become publicly available upon publication (at Zenodo). In the meantime, please contact us for early access
+  -  the full manuscript dataset (>10 MB of `.rds` files) is publicly available at https://zenodo.org/records/15778812. 
   -  use data(mini_mac) to load a subsample (308 samples, 500 genes) of the full dataset, as in the commented code below
 
 ```{r load_read_data}
-# 1. Load your own gene counts per sample or 2. data from the publication
-project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
-project_name <- "PMMSq033"
-raw_counts <- Read10X(data.dir = project_rawdata)
+## 1. Load your own gene counts per sample or 2. data from the publication
+#project_rawdata <- "raw_matrix"
+#project_name <- "PMMSq033"
+#raw_counts <- Read10X(data.dir = project_rawdata)
+#
+## Create tidySeurat object
+#mac <- CreateSeuratObject(counts = raw_counts,
+#                          project = project_name,
+#                          min.cells = 1,
+#                          min.features = 1)
 
-# Create tidySeurat object
-mac <- CreateSeuratObject(counts = raw_counts,
-                          project = project_name,
-                          min.cells = 1,
-                          min.features = 1)
+# 3. Alternatively, load a pre-made example:
+data(mini_mac)
+mac <- mini_mac
 
-# 3. Alternatively, load a premade example:
-# data(mini_mac)
-# mac <- mini_mac
-
-# Join gene counts per sample with metadata
-mac <- mac %>%
+# Join gene counts per sample with metadata (if not already included)
+if (nrow(mac[[]])==0) {
+  mac <- mac %>%
   inner_join(metadata, by = c(".cell" = "Barcode"))
+}
 
 # Create unique identifier for your treatments based on metadata
 mac <- mac %>%
@@ -243,7 +235,7 @@ Differential gene expression results for individual comparisons of treatment vs 
 
 ```{r pathway_analysis_single, fig.width = 8, fig.height = 4}
 top_genes <- top_table %>%
-  filter(p_value_adj < 0.01) %>%
+  filter(p_value_adj < 0.05) %>%
   select(gene) %>%
   pull()
 
@@ -325,7 +317,7 @@ mac_agg <- FindClusters(mac_agg, resolution = 1.3)
 cell_coords <- Embeddings(mac_agg, reduction = "umap_de") %>%
   as.data.frame() %>%
   rownames_to_column("combined_id") %>%
-  left_join(mac_agg@meta.data, by = "combined_id")
+  left_join(mac_agg[[]], by = "combined_id")
 
 # Plot with clusters and labels
 ggplot(cell_coords, aes(x = UMAPde_1, y = UMAPde_2, color = seurat_clusters)) +
@@ -342,8 +334,8 @@ ggplot(cell_coords, aes(x = UMAPde_1, y = UMAPde_2, color = seurat_clusters)) +
 Additionally, when performing a screen, sometimes we want to measure similarity to either an existing profile, or to a user-defined gene-set that defines a desired phenotype.
 
 ```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
-mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
-mac_screen_profile <- Tool(mini_mac, slot = "screen_profile") %>%
+mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", n_genes_profile = 50, direction = "down", num_cores = 1)
+mac_screen_profile <- Tool(mac, slot = "screen_profile") %>%
   mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
   mutate(target_id = factor(target_id, levels = unique(target_id))) 
@@ -368,7 +360,7 @@ treatments <- mac %>%
 mac <- compute_multi_de(mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 res <- compute_single_dose_response(data = mac,
-  gene = "SOX12",
+  gene = "DIP2C",
   normalisation = "limma_voom",
   treatment_value = "Staurosporine")
 res$plot
@@ -403,7 +395,7 @@ model_df <- Tool(mini_mac, slot = "pathway_enrichment") %>%
   filter(Concentration_1 == 10) %>%
   select(Treatment_1, Combined.Score) %>%
   unique() %>%
-  left_join(., mac@tools$chem_descriptors, join_by(Treatment_1)) %>%
+  left_join(., Tool(mini_mac, slot = "chem_descriptors"), join_by(Treatment_1)) %>%
   drop_na()
 
 # Train random forest
