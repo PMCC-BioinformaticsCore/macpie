@@ -35,7 +35,6 @@ compute_de_umap <- function(data = NULL) {
     select("gene", "combined_id", "metric") %>%
     pivot_wider(names_from = "combined_id", values_from = "metric")
 
-  set.seed(1)
   df_umap <- umap::umap(t(df_wide[, -1]), method = "naive")
 
   # Get UMAP coordinates

@@ -35,8 +35,6 @@ find_clusters_de_umap <- function(data = NULL, k = 10) {
 
   validate_inputs(df_umap_data, k)
 
-  ## Set seed
-  set.seed(1)
   ## Set number of Nearest-Neighbours (NNs)
   ## Build the k-NN graph
   g <- scran::buildSNNGraph(t(df_umap_data[, 2:3]), k = k)

@@ -26,7 +26,6 @@
 # 
 # # Select well-separated colors using farthest-point sampling
 # unikn_colors_extended <- colorRampPalette(unikn_colors)(n_colors)
-# set.seed(60)
 # distinct_colors <- unikn_colors_extended[sample(1:n_colors)]  # Pick spaced-out colors
 #barplot(rep(1, 10), col = distinct_colors, border = NA,space = 0, axes = FALSE, main = "Extended unikn palette")
 
@@ -39,7 +38,6 @@ macpie_colours <- list(
     n_colors <- 60
     base_cols <- usecol(pal_unikn_pref)
     extended <- colorRampPalette(base_cols)(n_colors)
-    set.seed(60)
     extended[sample(seq_len(n_colors))]
   },
   'discrete_400' = hcl.colors(400, palette = "Zissou1", rev = TRUE),
