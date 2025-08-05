@@ -399,7 +399,7 @@ mac <- compute_chem_descriptors(mac)
 # Join with target variable (e.g. pathway score)
 model_df <- Tool(mini_mac, slot = "pathway_enrichment") %>%
   filter(Term == "Estrogen Response Early") %>%
-  left_join(., mac@meta.data, join_by(combined_id)) %>%
+  left_join(., mac[[]], join_by(combined_id)) %>%
   filter(Concentration_1 == 10) %>%
   select(Treatment_1, Combined.Score) %>%
   unique() %>%
