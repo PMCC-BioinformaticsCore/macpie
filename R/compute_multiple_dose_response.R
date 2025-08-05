@@ -20,14 +20,13 @@
 #'
 #' @examples
 #' \dontrun{
-#' rds_file <- system.file("extdata/PMMSq033/PMMSq033.rds", package = "macpie")
-#' mac <- readRDS(rds_file)
+#' data(mini_mac)
 #' res <- compute_multiple_dose_response(
-#'   data = mac,
-#'   genes = c("PTPRA", "MYC"),
+#'   data = mini_mac,
+#'   genes = c("FSHR", "ITFG2"),
 #'   normalisation = "limma_voom",
-#'   treatment_value = "Camptothecin",
-#'   num_cores = 2
+#'   control_value = "DMSO",
+#'   num_cores = 1
 #' )
 #' head(res)
 #' }
@@ -83,9 +82,10 @@ compute_multiple_dose_response <- function(data,
   
   results <- list()
   for (treatment_value in treatments) {
+    cat(treatment_value)
     meta <- data@meta.data %>%
       mutate(barcode = rownames(.)) %>%
-      filter("Treatment_1" %in% c(treatment_value, control_value))
+      filter(.data$Treatment_1 %in% c(treatment_value, control_value))
     
     if (nrow(meta) < 3) next
     
