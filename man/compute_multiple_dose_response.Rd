@@ -38,7 +38,6 @@ This function fits dose-response models for a set of genes across different trea
 using the \code{drc} package. It returns EC50 values per gene per treatment.
 }
 \examples{
-\dontrun{
 data(mini_mac)
 res <- compute_multiple_dose_response(
   data = mini_mac,
@@ -48,5 +47,4 @@ res <- compute_multiple_dose_response(
   num_cores = 1
 )
 head(res)
-}
 }
