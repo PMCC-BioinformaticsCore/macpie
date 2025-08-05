@@ -290,7 +290,7 @@ The pathway enrichment analysis is done with R package enrichR, and can be summa
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
-enriched_pathways_mat <- mac@tools$pathway_enrichment %>%
+enriched_pathways_mat <- Tool(mini_mac, slot = "pathway_enrichment") %>%
   bind_rows() %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
@@ -343,7 +343,7 @@ Additionally, when performing a screen, sometimes we want to measure similarity 
 
 ```{r compute_multi_screen_profile, fig.width = 8, fig.height = 5}
 mac <- compute_multi_screen_profile(mac, target = "Staurosporine_10", num_cores = 1)
-mac_screen_profile <- mac@tools$screen_profile %>%
+mac_screen_profile <- Tool(mini_mac, slot = "screen_profile") %>%
   mutate(logPadj = c(-log10(padj))) %>%
   arrange(desc(NES)) %>%
   mutate(target_id = factor(target_id, levels = unique(target_id))) 
@@ -397,7 +397,7 @@ mac <- compute_smiles(mac, compound_column = "Compound_ID")
 mac <- compute_chem_descriptors(mac)
 
 # Join with target variable (e.g. pathway score)
-model_df <- mac@tools$pathway_enrichment %>%
+model_df <- Tool(mini_mac, slot = "pathway_enrichment") %>%
   filter(Term == "Estrogen Response Early") %>%
   left_join(., mac@meta.data, join_by(combined_id)) %>%
   filter(Concentration_1 == 10) %>%
