@@ -19,12 +19,12 @@ utils::globalVariables(c("combined_id", "column_name", "concentration", "predict
 #' @examples
 #' \donttest{
 #' data(mini_mac)
-#' res <- compute_single_dose_response(data = mac,
+#' res <- compute_single_dose_response(data = mini_mac,
 #' gene = "FSHR",
 #' normalisation = "limma_voom",
 #' treatment_value = "Camptothecin")
 #' res$plot
-#' res <- compute_single_dose_response(data = mac,
+#' res <- compute_single_dose_response(data = mini_mac,
 #' pathway = "p53 Pathway",
 #' treatment_value = "Camptothecin")
 #' res$plot
