@@ -16,7 +16,7 @@ genes
 For a given gene set of human symbols return mouse symbols
 }
 \examples{
-\dontrun{
+\donttest{
 convert_human_to_mouse(c("BRCA1", "TRAF1", "MYBL1"))
 }
 }

@@ -32,7 +32,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "Sample_type" else group_by
     label <- if (is.null(label)) "combined_id" else label
@@ -87,7 +87,7 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
                                  color = .data$group, 
                                  tooltip = !!rlang::sym(label), 
                                  data_id = !!rlang::sym(label))) +
-      ggrepel::geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = F) + # Add sample labels
+      ggrepel::geom_text_repel(data = top_n_data, aes(label = .data$label), size = 3.5, max.overlaps = max_overlaps, show.legend = FALSE) + # Add sample labels
       scale_color_manual(values = macpie_colours$discrete) +
       labs(title = "MDS plot",
            x = "Dimension 1",
@@ -95,6 +95,6 @@ plot_mds <- function(data = NULL, group_by = NULL, label = NULL, max_overlaps = 
       macpie_theme()
     p
   }, error = function(e) {
-    stop("Error in plotting: ", e$message)
+    stop("Problems in plotting ", e$message)
   })
 }

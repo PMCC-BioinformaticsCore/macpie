@@ -23,7 +23,7 @@ compute_de_umap <- function(data = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(de_list) {
     if (!inherits(de_list, "list") && length(de_list) > 0) {
-      stop("Error: argument 'data' must contain a list of DE comparisons in the slot tool.")
+      stop("argument 'data' must contain a list of DE comparisons in the slot tool.")
     }
   }
 
@@ -35,7 +35,6 @@ compute_de_umap <- function(data = NULL) {
     select("gene", "combined_id", "metric") %>%
     pivot_wider(names_from = "combined_id", values_from = "metric")
 
-  set.seed(1)
   df_umap <- umap::umap(t(df_wide[, -1]), method = "naive")
 
   # Get UMAP coordinates

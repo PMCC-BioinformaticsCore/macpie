@@ -25,32 +25,32 @@ summarise_de <- function(top_table,
                          multi = FALSE, 
                          group_by = "combined_id") {
   if (!is.null(multi) && !multi %in% c(FALSE, TRUE)) {
-    stop("Error: arugment 'multi' must be FALSE for single DE and TRUE for multi DE.")
+    stop("Argument 'multi' must be FALSE for single DE and TRUE for multi DE.")
   }
   validate_inputs_single <- function(top_table,
                                      lfc_threshold,
                                      padj_threshold) {
     if (!inherits(top_table, "data.frame")) {
-      stop("Error: argument 'top_table' must be a data frame.")
+      stop("Argument 'top_table' must be a data frame.")
     }
     if (!inherits(lfc_threshold, "numeric")) {
-      stop("Error: arguemnt 'lfc_threshold' must be numeric.")
+      stop("Argument 'lfc_threshold' must be numeric.")
     }
     if (!inherits(padj_threshold, "numeric")) {
-      stop("Error: arguemnt 'padj_threshod' must be numeric.")
+      stop("Argument 'padj_threshod' must be numeric.")
     }
   }
   validate_inputs_multi <- function(top_table,
                                     lfc_threshold,
                                     padj_threshold) {
     if (!inherits(top_table, "Seurat")) {
-      stop("Error: argument 'top_table' must be a Seurat or TidySeurat object.")
+      stop("Argument 'top_table' must be a Seurat or TidySeurat object.")
     }
     if (!inherits(lfc_threshold, "numeric")) {
-      stop("Error: arguemnt 'lfc_threshold' must be numeric.")
+      stop("Argument 'lfc_threshold' must be numeric.")
     }
     if (!inherits(padj_threshold, "numeric")) {
-      stop("Error: arguemnt 'padj_threshod' must be numeric.")
+      stop("Argument 'padj_threshod' must be numeric.")
     }
   }
   if (multi==FALSE) {

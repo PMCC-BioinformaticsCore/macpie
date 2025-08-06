@@ -51,14 +51,14 @@ download_geneset <- function(species = "human", db = "MSigDB_Hallmark_2020") {
         data.frame( # Convert to a tibble per list element for easier manipulation
           pathway_name = x[1],
           description = x[2],
-          gene = x[-(1:2)]
+          gene = x[-seq_len(2)]
         )
       }) %>%
       purrr::list_rbind() %>% #join into a data frame to
       filter(.data$gene != "") %>% #eliminate empty genes per pathway
       distinct(.data$pathway_name, .data$gene)
   }, error = function(e) {
-    stop("Error in connecting to enrichR database, check connection: ", e$message)
+    stop("Problems connecting to enrichR database, check connection ", e$message)
   })
 
   results_list <- split(results_table$gene, results_table$pathway_name)

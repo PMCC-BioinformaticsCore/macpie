@@ -24,14 +24,14 @@ plot_gene_ranks <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, samples, scale) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     if (is.null(samples)) {
       stop("Missing the vectors of samples.")
     }
     if (!is.logical(scale) || length(scale) != 1) {
-      stop("Error: 'scale' must be a single logical value (TRUE or FALSE).")
+      stop("'scale' must be a single logical value (TRUE or FALSE).")
     }
   }
   validate_inputs(data, group_by, samples, scale)

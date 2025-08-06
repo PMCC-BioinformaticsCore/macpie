@@ -42,13 +42,13 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
   # Helper function to validate input data
   validate_inputs <- function(data, metric, annotation, midpoint) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     metric <- if (is.null(metric)) "nCount_RNA" else metric
     annotation <- if (is.null(annotation)) "Treatment_1" else annotation
     midpoint <- if (is.null(midpoint)) "mean" else midpoint
     if (!midpoint %in% c("mean","median")){
-      stop("Error: argument 'midpoint' must be either mean or median.")
+      stop("argument 'midpoint' must be either mean or median.")
     }
     
     suppressWarnings({column_names <- data %>%
@@ -70,18 +70,18 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
   midpoint <- validated$midpoint
   
   # Find stats for the data to arrange plotting
-  suppressWarnings({
-    data <- data %>%
-      mutate(Col = as.character(.data$Column)) %>%
-      mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
-      mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
-      mutate(median_value = median(!!rlang::sym(metric))) %>%
-      mutate(mean_value = mean(!!rlang::sym(metric))) %>%
-      mutate(
-        tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
-        group_id = .data[[annotation]]
-      )
-  })
+
+  data <- data %>%
+    mutate(Col = as.character(.data$Column)) %>%
+    mutate(Col = factor(.data$Col, levels = gtools::mixedsort(unique(.data$Col)))) %>%
+    mutate(Row = factor(.data$Row, levels = gtools::mixedsort(unique(.data$Row)))) %>%
+    mutate(median_value = median(!!rlang::sym(metric))) %>%
+    mutate(mean_value = mean(!!rlang::sym(metric))) %>%
+    mutate(
+      tooltip_text = paste0("Sample: ", .data[[annotation]], "\nValue: ", .data[[metric]]),
+      group_id = .data[[annotation]]
+    )
+
   # Plot the results
   tryCatch({
     if (midpoint == "median"){
@@ -109,6 +109,6 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
       macpie_theme(show_x_title = FALSE, show_y_title = FALSE, legend_position_ = 'right') +
       guides(fill = guide_colorbar(barwidth = 0.5, barheight = 10))
   }, error = function(e) {
-    stop("Error in plotting: ", e$message)
+    stop("Problems in plotting ", e$message)
   })
 }

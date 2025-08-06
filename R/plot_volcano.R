@@ -15,7 +15,11 @@
 #' top_table <- mini_mac@tools$diff_exprs$Staurosporine_10
 #' plot_volcano(top_table = top_table, max.overlaps = 100)
 #'
-plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff = 0.05, max.overlaps = 30) {
+plot_volcano <- function(top_table, 
+                         x = "log2FC", 
+                         y = "p_value_adj", 
+                         fdr_cutoff = 0.05, 
+                         max.overlaps = 30) {
 
   if (!requireNamespace("forcats", quietly = TRUE)) {
     stop(
@@ -26,10 +30,10 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   # Helper function to validate input data
   validate_inputs <- function(top_table, x, y, fdr_cutoff, max.overlaps) {
     if (!inherits(as.data.frame(top_table), "data.frame")) {
-      stop("Error: 'top_table' must be convertable to a data frame.")
+      stop("'top_table' must be convertable to a data frame.")
     }
     if (!all(x %in% colnames(top_table) && y %in% colnames(top_table))) {
-      stop("Error: 'top_table' does not contain expected column names, check paramaterrs 'x' and 'y'.")
+      stop("'top_table' does not contain expected column names, check paramaterrs 'x' and 'y'.")
     }
     if (!inherits(fdr_cutoff, "numeric") && fdr_cutoff <= 1) {
       stop("FDR should be numeric and smaller than 1.")
@@ -59,20 +63,19 @@ plot_volcano <- function(top_table, x = "log2FC", y = "p_value_adj", fdr_cutoff 
   color_mapping <- unique(top_table[, c("diff_expressed", "colors")])
   named_colors <- setNames(color_mapping$colors, color_mapping$diff_expressed)
 
-  suppressWarnings({
-    p <- ggplot(top_table, aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
-                               group = .data$diff_expressed, col = .data$diff_expressed,
-                               label = gene_labels)) +
-      scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
-      geom_point() +
-      ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = F) +
-      scale_color_manual(values = named_colors) + # Map colors dynamically
-      # Boundaries
-      geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +
-      geom_hline(yintercept = -log10(0.05), col = "#003366", linetype = 'dashed') +
-      # Theme
-      macpie_theme()
-  })
+  p <- ggplot(top_table, aes(x = .data$log2FC, y = -log10(.data$p_value_adj),
+                             group = .data$diff_expressed, col = .data$diff_expressed,
+                             label = gene_labels)) +
+    scale_y_continuous(name = expression(-log[10](p-value[adj]))) +
+    geom_point() +
+    ggrepel::geom_text_repel(min.segment.length = 5, max.overlaps = max.overlaps, show.legend = FALSE) +
+    scale_color_manual(values = named_colors) + # Map colors dynamically
+    # Boundaries
+    geom_vline(xintercept = c(-1, 1), col = "#003366", linetype = 'dashed') +
+    geom_hline(yintercept = -log10(0.05), col = "#003366", linetype = 'dashed') +
+    # Theme
+    macpie_theme()
+
 
   return(p)
 }

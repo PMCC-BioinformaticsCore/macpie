@@ -26,7 +26,7 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, order_by) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
 
@@ -77,6 +77,6 @@ compute_qc_metrics <- function(data = NULL, group_by = NULL, order_by = NULL) {
     theme_minimal() +
     labs(x = group_by, y = "UMI counts") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
-  print(p)
+  p
   return(list(stats_summary = stats_summary, plot = p))
 }

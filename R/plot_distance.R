@@ -26,7 +26,7 @@ plot_distance <- function(data = NULL, group_by = NULL, treatment = NULL) {
   }
   validate_inputs <- function(data, group_by, treatment) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     all_treatments <- data %>% pull(group_by) %>% unique() %>% as.character()

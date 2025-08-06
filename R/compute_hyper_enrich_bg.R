@@ -53,14 +53,14 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
   deg <- unique(deg)
   genesets <- lapply(genesets, unique)
   deg_genesets <- deg[deg %in% unique(unlist(genesets))]
-  n_hits <- sapply(genesets, function(x, y)
-              length(intersect(x, y)), deg_genesets) #q
+  n_hits <- vapply(genesets, function(x, y)
+              length(intersect(x, y)), FUN.VALUE = integer(1), deg_genesets) #q
   n_hits_updatebg <- n_hits != 0 #updating background
   genesets <- genesets[n_hits_updatebg] #updating background
   n_hits <- n_hits[n_hits > 0] #exlude 0 overlapping terms
 
 
-  n_genesets <- sapply(genesets, length)#m
+  n_genesets <- vapply(genesets, length, FUN.VALUE = integer(1))#m
   n_minus <- background - n_genesets#n
   n_deg <- length(deg)#k
 
@@ -87,9 +87,9 @@ compute_hyper_enrich_bg <- function(deg = NULL, #vector of DEGs
     Overlap = paste0(n_hits, "/", n_genesets),
     P.value = pvals,
     Adjusted.P.value = p.adjust(pvals, "BH"),
-    Genes = sapply(genesets, function(x, y) {
+    Genes = vapply(genesets, function(x, y) {
       paste(intersect(x, y), collapse = ";")
-    }, deg_genesets),
+    }, FUN.VALUE = character(1), deg_genesets),
     Combined.Score = combined_scores
   )
 

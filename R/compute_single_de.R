@@ -43,7 +43,7 @@ compute_single_de <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, method, treatment_samples, control_samples) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     method <- if (is.null(method)) "limma_voom" else method
     if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
@@ -249,7 +249,7 @@ compute_single_de <- function(data = NULL,
 
   de_ruvr <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
     if (ncol(data) > 100) {
-      print("Warning: EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
+      message("EdgeR with over 100 samples takes very long time. Consider reducing the number of samples.")
     }
     combined_id <- data$combined_id
     genes <- row.names(data@assays$RNA$counts)

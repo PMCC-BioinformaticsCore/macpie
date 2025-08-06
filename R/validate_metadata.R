@@ -17,7 +17,7 @@
 #' in selected columns.}
 #'
 #'@examples
-#' \dontrun{
+#' \donttest{
 #' # Example CSV file
 #' file_path <- system.file("/extdata/PMMSq033_metadata.csv", package = "macpie")
 #' metadata <- read_metadata(file_path)
@@ -27,7 +27,7 @@
 #'@export
 validate_metadata <- function(metadata) {
   if (is.null(metadata) || nrow(as.data.frame(metadata)) == 0) {
-    stop("Error: Input metadata is empty or wrong format. Ensure the metadata is correctly provided.")
+    stop("Input metadata is empty or wrong format. Ensure the metadata is correctly provided.")
   }
 
   # Check Well_ID pattern
@@ -64,7 +64,7 @@ validate_metadata <- function(metadata) {
   validate_columns <- function(metadata) {
 
     # Validate Row
-    if (any(!metadata$Row %in% LETTERS[1:16])) {
+    if (any(!metadata$Row %in% LETTERS[seq_len(16)])) {
       issues[["Row"]] <- "Contains values outside A to P."
     }
 
@@ -110,24 +110,24 @@ validate_metadata <- function(metadata) {
 
   # Print issues
   if (length(issues) > 0) {
-    cat("\nValidation Issues:\n")
+    message("\nValidation Issues:\n")
     for (issue_col in names(issues)) {
-      cat(issue_col, ": ", issues[[issue_col]], "\n", sep = "")
+      message(issue_col, ": ", issues[[issue_col]], "\n", sep = "")
     }
   } else {
-    cat("\nNo validation issues found. Metadata is clean.\n")
+    message("\nNo validation issues found. Metadata is clean.\n")
   }
 
   # 3. Generate a summary table grouped by Plate_ID
   summary_columns <- c("Species", "Cell_type", "Model_type", "Time", "Unit",
                        "Treatment_1", "Concentration_1", "Unit_1", "Sample_type")
 
-  cat("\nGenerating summary table grouped by Plate_ID...\n")
+  message("\nGenerating summary table grouped by Plate_ID...\n")
 
   summary_table <- metadata %>%
     dplyr::group_by(Plate_ID) %>%
     dplyr::summarize(across(all_of(summary_columns), ~ length(unique(.)), .names = "count_{col}")) %>%
     dplyr::ungroup()
 
-  print(as.data.frame(summary_table))
+  return(as.data.frame(summary_table))
 }

@@ -45,7 +45,7 @@ compute_multi_screen_profile <- function(data = NULL,
   # Helper: validate input
   validate_inputs <- function(de_list, target, geneset, n_genes_profile, direction, num_cores) {
     if (!inherits(de_list, "list")) {
-      stop("Error: argument 'data' must be a list of DE comparisons.")
+      stop("argument 'data' must be a list of DE comparisons.")
     }
     if (is.null(target) && is.null(geneset)) {
       stop("Both the target and geneset parameters are empty.")
@@ -70,7 +70,7 @@ compute_multi_screen_profile <- function(data = NULL,
             (direction == "down" & .data$log2FC < 0)
         ) %>%
         arrange(if (direction == "both") desc(abs(.data$log2FC)) else desc(.data$log2FC)) %>%
-        slice(1:n_genes_profile) %>%
+        slice(seq_len(n_genes_profile)) %>%
         pull(.data$gene)
     ) %>% setNames(target)
   } else {

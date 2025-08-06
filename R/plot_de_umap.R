@@ -27,7 +27,7 @@ plot_de_umap <- function(data = NULL, color_by = NULL, label = NULL, max_overlap
   # Helper function to validate input data
   validate_inputs <- function(data, color_by, label, max_overlaps) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     color_by <- if (is.null(color_by)) "seurat_clusters" else color_by
     label <- if (is.null(label)) "combined_id" else label

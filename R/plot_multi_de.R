@@ -45,12 +45,12 @@ plot_multi_de <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     group_by <- if (is.null(group_by)) "combined_id" else group_by
     if (!is.null(value) && !value %in% c("lcpm", "log2FC", "metric"))
       if (!inherits(p_value_cutoff, "numeric")) {
-        stop("Error: argument 'p_value_cutoff' must be numeric.")
+        stop("argument 'p_value_cutoff' must be numeric.")
       }
 
 
@@ -58,10 +58,10 @@ plot_multi_de <- function(data = NULL,
       stop("Value of the direction paramater should be up, down or both. Default is both.")
     }
     if (!inherits(n_genes, "numeric")) {
-      stop("Error: argument 'n_genes' must be numeric.")
+      stop("argument 'n_genes' must be numeric.")
     }
     if (!is.null(control) && !inherits(control, "character")) {
-      stop("Error: argument 'control' must be control group in same format as combined_id.")
+      stop("argument 'control' must be control group in same format as combined_id.")
     }
     if (!is.null(by) && !by %in% c("fc", "adj_p_val")) {
       stop("Value of the by parameter show be either fc or adj_p_val.")
@@ -70,7 +70,7 @@ plot_multi_de <- function(data = NULL,
       stop("Missing information on DE genes. Run compute_multi_de first.")
     }
     if (!is.null(gene_list) && !inherits(gene_list, "character")) {
-      stop("Error: argument 'gene_list' must be a vector of characters.")
+      stop("argument 'gene_list' must be a vector of characters.")
     }
   }
   validate_inputs(data, group_by, value, p_value_cutoff, direction, n_genes, control, by, gene_list)

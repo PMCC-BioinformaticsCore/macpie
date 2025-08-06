@@ -47,7 +47,7 @@ compute_multi_de <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, treatment_samples, control_samples, method, num_cores) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     if (!"combined_id" %in% colnames(data@meta.data)) {
       data <- data %>%

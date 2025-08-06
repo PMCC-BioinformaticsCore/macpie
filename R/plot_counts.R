@@ -44,10 +44,10 @@ plot_counts <- function(data = NULL,
   # Helper function to validate input data
   validate_inputs <- function(data, genes, group_by, treatment_samples, control_samples, color_by, normalisation) {
     if (!inherits(data, "Seurat")) {
-      stop("Error: argument 'data' must be a Seurat or TidySeurat object.")
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
     if (!inherits(genes, "character")) {
-      stop("Error: arguemnt 'genes' must be characters.")
+      stop("arguemnt 'genes' must be characters.")
     }
     if (length(genes) > 20) {
       stop("Try plotting with less genes.")
@@ -107,7 +107,7 @@ plot_counts <- function(data = NULL,
   p <- ggplot(dt_long, aes(x = Treatment, y = Expression, group = Treatment)) +
     geom_boxplot(aes(fill = Treatment)) + facet_wrap(~Genes, ncol = 3, scales = "free_y") +
     scale_x_discrete(guide = guide_axis(angle = 90)) +
-    scale_fill_manual(values = c(macpie_colours$high, macpie_colours$low, macpie_colours$discrete[1:n_samples])) +
+    scale_fill_manual(values = c(macpie_colours$high, macpie_colours$low, macpie_colours$discrete[seq_len(n_samples)])) +
     labs(y = "Gene Expression") +
     macpie_theme()
   return(p)

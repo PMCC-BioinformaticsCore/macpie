@@ -33,14 +33,16 @@ aggregate_by_de <- function(data, metric_col = "metric") {
   
   validate_inputs <- function(de_list) {
     if (!inherits(de_list, "list") || length(de_list) == 0) {
-      stop("Error: There are no DE comparisons, please run compute_multi_de.")
+      stop("There are no DE comparisons, please run compute_multi_de.")
     }
     if (!inherits(metric_col, "character") || nchar(metric_col) == 0) {
-      stop("Error: Parameter metric_col should be acharacter.")
+      stop("Parameter metric_col should be acharacter.")
     }
     required_cols <- c("gene", "combined_id", metric_col)
-    if (!all(sapply(de_list, function(x) all(required_cols %in% colnames(x))))) {
-      stop("Each element of the DE list must contain 'gene', 'combined_id', and the specified metric column.")
+    #if (!all(sapply(de_list, function(x) all(required_cols %in% colnames(x))))) {
+    if (!all(vapply(de_list, function(x) all(required_cols %in% colnames(x)), logical(1)))) {
+      
+    stop("Each element of the DE list must contain 'gene', 'combined_id', and the specified metric column.")
     }
   }
   

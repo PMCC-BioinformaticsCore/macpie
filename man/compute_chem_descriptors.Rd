@@ -31,7 +31,7 @@ This function parses SMILES strings and computes chemical descriptors using rcdk
 It stores cleaned, non-redundant descriptors in \code{tools$chem_descriptors}.
 }
 \examples{
-\dontrun{
+\donttest{
 mock_data <- tibble::tibble(
   Treatment = c("Aspirin", "Caffeine", "NonExistentCompound_123")
 )

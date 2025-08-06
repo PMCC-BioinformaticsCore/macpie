@@ -7,7 +7,7 @@ utils::globalVariables(c("Symbol", "Common.Organism.Name", "DB.Class.Key"))
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' convert_human_to_mouse(c("BRCA1", "TRAF1", "MYBL1"))
 #' }
 
@@ -15,18 +15,18 @@ convert_human_to_mouse <- function(gene_list) {
     
   validate_inputs <- function(data, genesets, species, direction, p_value_cutoff, n_distinct) {
     if (!inherits(gene_list, "character")) {
-      stop("Error: argument 'gene_list' must be of type character.")
+      stop("argument 'gene_list' must be of type character.")
     }
   }
   mouse_human_genes_file <- system.file("extdata", "/mouse_human_genes.csv.gz", package = "macpie")
   if(!file.exists(mouse_human_genes_file)){
-    mouse_human_genes = read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
-    write.csv(mouse_human_genes,file=mouse_human_genes_file,row.names=F)
+    mouse_human_genes <- read.csv("https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt",sep="\t")
+    write.csv(mouse_human_genes, file=mouse_human_genes_file, row.names=FALSE)
   } else {
     mouse_human_genes<-read.csv(mouse_human_genes_file)
   }
 
-  output = c()
+  output <- c()
   for (gene in gene_list) {
     class_key <- mouse_human_genes %>%
       filter(Symbol == gene & Common.Organism.Name == "human") %>%
