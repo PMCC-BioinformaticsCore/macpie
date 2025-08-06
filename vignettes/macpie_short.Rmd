@@ -20,6 +20,17 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
+library(dplyr)
+library(stringr)        # str_c
+library(ggplot2)        # ggplot, geom_point, etc.
+library(tidyr)          # pivot_wider
+library(tibble)         # column_to_rownames
+library(ggiraph)        # girafe()
+library(pheatmap)       # pheatmap()
+library(enrichR)        # enrichr, plotEnrich
+library(gridExtra)      # grid.arrange
+library(Seurat)  
+library(ggrepel)
 ```
 
 ## Introduction
@@ -370,53 +381,6 @@ res <- compute_single_dose_response(data = mac,
 res$plot
 ```
   
-#### 4.4. Working with chemical descriptors
-
-macpie provides an easy way to find smiles from compounds names, compute chemical descriptors of the compounds and identify those that are most important for the phenotype.
-
-In the example below, the number of rings on the structures is the most important for targeting the estrogen activity.
-
-
-
-
-
-```{r compute_chemical_descriptors, fig.width = 8, fig.height = 5}
-# Add smiles based on a column with generic names of compounds
-#(warning, this process requires internet connection and can take a while)
-mac <- compute_smiles(mac, compound_column = "Compound_ID")
-
-# Calculate descriptors
-mac <- compute_chem_descriptors(mac)
-
-# Join with target variable (e.g. pathway score)
-model_df <- Tool(mini_mac, slot = "pathway_enrichment") %>%
-  filter(Term == "Estrogen Response Early") %>%
-  left_join(., mac[[]], join_by(combined_id)) %>%
-  filter(Concentration_1 == 10) %>%
-  select(Treatment_1, Combined.Score) %>%
-  unique() %>%
-  left_join(., Tool(mini_mac, slot = "chem_descriptors"), join_by(Treatment_1)) %>%
-  drop_na()
-
-# Train random forest
-rf_model <- randomForest(Combined.Score ~ ., data = model_df, importance = TRUE, na.action = na.omit)
-
-# Get importance scores
-rf_importance <- importance(rf_model, type = 1)  # %IncMSE = predictive power
-rf_ranked <- sort(rf_importance[, 1], decreasing = TRUE)
-
-# Top 20 important descriptors
-head(rf_ranked, 20)
-#>      WTPT.2     nRings5     MDEC.11     nRings7     MDEO.22     MDEO.11
-#> 3.361393653 2.150421361 1.214784237 1.001001503 0.783327367 0.709299485
-#>   khs.ssCH2 nSmallRings     MDEN.33     MDEC.14   topoShape      ALogp2
-#> 0.474955644 0.366086694 0.115293479 0.085759728 0.077678537 0.007617685
-#>     nRings4     MDEN.11    khs.dCH2     khs.tCH     khs.dNH    khs.aaNH
-#> 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000
-#>     khs.dsN     khs.aaO
-#> 0.000000000 0.000000000
-varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features")
-```
 ```{r session-info, echo=FALSE} 
 sessionInfo() 
 ```
