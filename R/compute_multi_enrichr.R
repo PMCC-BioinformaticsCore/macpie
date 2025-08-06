@@ -50,6 +50,10 @@ compute_multi_enrichr <- function(data,
     if (is.null(species) || length(species) > 1) {
       stop("Missing species information.")
     }
+    if (is.null(genesets)) {
+      data(genesets)
+      message("Loading default geneset.")
+    }
     if (length(data@tools$diff_exprs) == 0) {
       stop("Missing information on DE genes. Run multi_DE first.")
     }
