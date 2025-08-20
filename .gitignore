@@ -9,4 +9,5 @@
 /Meta/
 /doc/
 *.DS_Store
-inst/doc
+docs/
+pkgdown/
