@@ -54,8 +54,10 @@ RUN R -e "install.packages('unikn')"
 RUN R -e "BiocManager::install('MOFA2')"
 RUN R -e "BiocManager::install('zinbwave')"
 RUN R -e "install.packages(c('pkgdown', 'drc', 'webchem', 'randomForest', 'rcdk'), repos = 'https://cloud.r-project.org')"
-# Latest installation
 Run R -e "BiocManager::install('AUCell')"
+# Latest installation
+Run R -e "BiocManager::install("SingleCellExperiment")"
+Run R -e "BiocManager::install("scuttle")"
 
 # 3. Copy your renv.lock file into the container
 COPY renv.lock /renv.lock
