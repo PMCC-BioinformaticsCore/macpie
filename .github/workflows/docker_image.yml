@@ -5,7 +5,7 @@ on:
     branches:
       - 'main'
     paths:
-      - 'dockers/**'  
+      - 'inst/dockers/**'  
       - '.github/workflows/docker_image.yml'
 
 jobs:
@@ -26,6 +26,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          context: ./dockers
+          context: ./inst/dockers
           tags: xliu81/macpie:v1.0.0
-          file: ./dockers/Dockerfile
+          file: ./inst/dockers/Dockerfile
