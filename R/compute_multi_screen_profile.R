@@ -69,7 +69,13 @@ compute_multi_screen_profile <- function(data = NULL,
             (direction == "up" & .data$log2FC > 0) |
             (direction == "down" & .data$log2FC < 0)
         ) %>%
-        arrange(if (direction == "both") desc(abs(.data$log2FC)) else desc(.data$log2FC)) %>%
+        arrange(
+          dplyr::case_when(
+            direction == "both" ~ -abs(.data$log2FC),
+            direction == "up"   ~ -.data$log2FC,
+            direction == "down" ~  .data$log2FC
+          )
+        ) %>%
         slice(seq_len(n_genes_profile)) %>%
         pull(.data$gene)
     ) %>% setNames(target)
