@@ -22,7 +22,7 @@ For each row in the file, it should at least contains:
 - Experimental treatment
 
 The other file (mouse_human_genes.csv.gz) is the file to provide gene_id conversion
-between human and mouse. 
+between human and mouse from Mouse Genome Informatics(https://www.informatics.jax.org/). 
 
 ---------------------------------------------------------------------
 2. How the files were generated
