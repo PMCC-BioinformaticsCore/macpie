@@ -2,8 +2,8 @@
 # the small example data has 384 wells and 500 genes
 library(devtools)
 library(Matrix)
-
-in_dir <- "inst/extdata/PMMSq033/raw_matrix/"
+#change this input dir that contains your raw sequencing data"
+in_dir <- "PMMSq033/raw_matrix/"
 mat <- readMM(file.path(in_dir, "matrix.mtx.gz"))
 bar <- readLines(gzfile(file.path(in_dir, "barcodes.tsv.gz")))
 feat <- read.delim(gzfile(file.path(in_dir, "features.tsv.gz")),header = FALSE, stringsAsFactors = FALSE)
@@ -26,13 +26,13 @@ dense_small <- as.matrix(mat_small)
 rownames(dense_small) <- make.unique(rownames(dense_small))
 rownames(dense_small) <- gsub("_", "-", rownames(dense_small), fixed = TRUE)
 write.table(dense_small, 
-            file = "inst/extdata/PMMSq033/PMMSq033_small.txt", 
+            file = "PMMSq033/PMMSq033_small.txt", 
             sep = "\t", quote = FALSE, col.names = NA)
 
 
 
 # write three files for small mac
-out_dir <- file.path("inst/extdata/PMMSq033/mini_mac/raw" )        # …/extdata/PMMSq033/mini_mac
+out_dir <- file.path("PMMSq033/mini_mac/raw" )        # …/extdata/PMMSq033/mini_mac
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 writeMM(mat_small,        file.path(out_dir, "matrix.mtx.gz"))          # sparse counts
@@ -68,14 +68,16 @@ devtools::load_all()
 
 # Load metadata
 project_name <- "PMMSq033_mini"
-metadata <- read_metadata("inst/extdata/PMMSq033/PMMSq033_metadata_drugnames.csv")
+#change dir with the one has the metadata file
+metadata <- read_metadata("/PMMSq033/PMMSq033_metadata_drugnames.csv")
 metadata$Time <- as.factor(metadata$Time)
 metadata$Concentration_1 <- as.factor(metadata$Concentration_1)
 colnames(metadata)
 
 # Validate metadata
 validate_metadata(metadata)
-mini_mac_in <-"inst/extdata/PMMSq033/mini_mac/raw/"
+#change dir has the raw sequencing data for the mini data sample
+mini_mac_in <-"PMMSq033/mini_mac/raw/"
 mini_mac_counts <- Read10X(data.dir = mini_mac_in)
 mini_mac <- CreateSeuratObject(counts = mini_mac_counts,
                                project = project_name)
