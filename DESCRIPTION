@@ -71,7 +71,9 @@ Suggests:
     colorspace,
     enrichR,
     readxl,
-    MOFA2
+    MOFA2,
+    randomForest,
+    scuttle
 Config/testthat/edition: 3
 Imports:
     dplyr,
