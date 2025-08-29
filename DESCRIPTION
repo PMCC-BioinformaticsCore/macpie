@@ -71,7 +71,9 @@ Suggests:
     colorspace,
     enrichR,
     readxl,
-    MOFA2
+    MOFA2,
+    randomForest,
+    scuttle
 Config/testthat/edition: 3
 Imports:
     dplyr,
@@ -98,5 +100,5 @@ VignetteBuilder: knitr
 BugReports: https://github.com/PMCC-BioinformaticsCore/macpie/issues
 biocViews: Workflow, GeneExpressionWorkflow
 Depends: 
-    R (>= 4.4.0)
+    R (>= 4.3)
 LazyData: false
