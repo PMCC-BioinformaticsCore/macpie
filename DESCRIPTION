@@ -100,5 +100,5 @@ VignetteBuilder: knitr
 BugReports: https://github.com/PMCC-BioinformaticsCore/macpie/issues
 biocViews: Workflow, GeneExpressionWorkflow
 Depends: 
-    R (>= 4.4.0)
+    R (>= 4.3)
 LazyData: false
