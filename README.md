@@ -39,11 +39,11 @@ exploration:
 - **Full example dataset** is hosted on Zenodo:  
   <https://doi.org/10.5281/zenodo.15778812>
 
-- **Quick-start subset `mini_mac`** is bundled with the package and can
-  be loaded directly in R:
+- **Quick-start subset `demo`** is bundled with the package and can be
+  loaded directly in R:
 
 ``` r
-data("mini_mac", package = "macpie")
+data("demo", package = "macpie")
 ```
 
 ## Requirements
@@ -102,22 +102,9 @@ pak::pkg_install(
 # 4. Verify
 # Should load without error:
 library(macpie)
-
-# Optional dependencies
-# To unlock all macpie features, install the "Suggests" packages:
-pak::pkg_install(c(
-  "testthat", "devtools","leidenbase", "gridExtra", "variancePartition", 
-  "rcdk", "SingleCellExperiment", "doParallel", "BiocParallel",
-  "zinbwave", "EDASeq", "SummarizedExperiment", "mcprogress",
-  "glmGamPoi", "fgsea", "webchem", "data.table", "PoiClaClu",
-  "pheatmap", "purrr", "httr2", "readr", "patchwork",
-  "scran", "Matrix", "umap", "ggrepel", "forcats",
-  "gtools", "colorspace", "enrichR", "readxl", "MOFA2"
-))
-
 ```
 
-Optionally, you can also install the package by
+Optially, you can also install the package by
 
 ``` r
 
@@ -130,28 +117,15 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 
 options(repos = BiocManager::repositories())
 
-# Install CRAN packages (Imports + Suggests) 
-install.packages(c(
-  # Imports
-  "dplyr", "ggplot2", "rlang", "tidyseurat", "stringr", "tibble", "ggiraph",
-  "tidyr", "scales", "drc", "tidyverse", "glue", "igraph", "unikn",
-  # Suggests
-  "leidenbase", "gridExtra", "variancePartition","rcdk", "doParallel", 
-  "mcprogress", "fgsea", "webchem", "data.table","PoiClaClu", "pheatmap", 
-  "purrr", "httr2", "readr", "patchwork", "Matrix", "umap", "ggrepel", 
-  "forcats", "gtools", "colorspace", "enrichR", "readxl"
-))
-
-# Install Bioconductor packages (Imports + Suggests) 
 BiocManager::install(c(
-  # Imports
-  "edgeR", "limma", "Biobase", "Seurat", "DESeq2", "RUVSeq",
-  # Suggests
-  "SingleCellExperiment", "BiocParallel", "zinbwave", "EDASeq",
-  "SummarizedExperiment", "glmGamPoi", "scran"
+  "edgeR", "limma", "Biobase", "DESeq2", "RUVSeq",
+  "EDASeq", "fgsea", "scran", "glmGamPoi",
+  "BiocParallel", "SingleCellExperiment", "zinbwave",
+  "SummarizedExperiment"
 ))
 
-# Install MOFA2 from its GitHub (it’s not on Bioconductor) - this is a Suggests package
+
+# Install MOFA2 from its GitHub (it’s not on Bioconductor)
 devtools::install_github("bioFAM/MOFA2")
 
 # Finally, install macpie itself
@@ -197,20 +171,20 @@ After logging in, you’ll find your local directory mounted under:
 
 ## Quick start
 
-In here we show using the `mini_mac` dataset for a quick start. From
-each vignette on our website, we only include a couple of functions in
-this quick start.
+In here we show using the `demo` dataset for a quick start. From each
+vignette on our website, we only include a couple of functions in this
+quick start.
 
 ``` r
 library(macpie)
 
-# load mini_mac, 
-# mini_mac is a tidySeurat object with matched metadata
-data("mini_mac")
+# load demo, 
+# demo is a tidySeurat object with matched metadata
+data("demo")
 
 # Quality control
 # Filter by counts per sample group
-mini_mac <- filter_genes_by_expression(mini_mac,
+demo <- filter_genes_by_expression(demo,
                                   group_by = "combined_id",
                                   min_counts = 5,
                                   min_samples = 3)
@@ -218,17 +192,17 @@ mini_mac <- filter_genes_by_expression(mini_mac,
 
 
 # MDS plot
-p <- plot_mds(mini_mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
+p <- plot_mds(demo, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 
 # Correction of the batch effect
 # First we will subset the data to look at control, DMSO samples only
-mini_mac_dmso <- mini_mac %>%
+demo_dmso <- demo %>%
   filter(Treatment_1 == "DMSO")
 
 # Run the RLE function
-plot_rle(mini_mac_dmso, label_column = "Row", normalisation = "limma_voom")
+plot_rle(demo_dmso, label_column = "Row", normalisation = "limma_voom")
 
 
 # Transcriptional analysis
@@ -236,7 +210,7 @@ plot_rle(mini_mac_dmso, label_column = "Row", normalisation = "limma_voom")
 # First perform the differential expression analysis
 treatment_samples <- "Staurosporine_10"
 control_samples <- "DMSO_0"
-top_table <- compute_single_de(mini_mac, treatment_samples, control_samples, method = "limma_voom")
+top_table <- compute_single_de(demo, treatment_samples, control_samples, method = "limma_voom")
 
 top_genes <- top_table %>%
   filter(p_value_adj < 0.1) %>%
@@ -248,16 +222,16 @@ plot_volcano(top_table, max.overlaps = 16)
 
 # Multiple comparisons
 # Filter out lower concentrations of compounds and untreated samples
-treatments <- mini_mac %>%
+treatments <- demo %>%
   filter(Concentration_1 == 10) %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-mini_mac <- compute_multi_de(mini_mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+demo <- compute_multi_de(demo, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 
 # plot shared differentially expressed genes
-plot_multi_de(mini_mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+plot_multi_de(demo, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 
 
 ```
@@ -269,19 +243,20 @@ citation("macpie")
 ```
 
 ``` r
-#>To cite the macpie package in publications, please use:
-
+#> To cite the macpie package in publications, please use:
+#>
 #>  Bartonicek N, Liu X, Twomey L, Meier M, Lupat R, Craig S, Yoannidis D, Li J, Semple T,
 #>  Simpson K, Li M, Ramm S (2025). “macpie: a scalable workflow for high-throughput
-#>  transcriptomic profiling.” Manuscript in preparation.
-
-#>A BibTeX entry for LaTeX users is
-
-#>  @Unpublished{,
-#>    title = {macpie: a scalable workflow for high-throughput transcriptomic profiling},
-#>    author = {Nenad Bartonicek and Xin Liu and Laura Twomey and Michelle Meier and Richard Lupat and Stuart Craig and David Yoannidis and #>Jason Li and Tim Semple and Kaylene J Simpson and Mark X Li and Susanne Ramm},
-#>    organization = {Peter MacCallum Cancer Centre},
-#>    year = {2025},
-#>    note = {Manuscript in preparation},
+#>  transcriptomic profiling.” bioRxiv. doi:10.1101/2025.08.06.669002
+#>
+#> A BibTeX entry for LaTeX users is
+#>
+#>  @Article{,
+#>    title   = {macpie: a scalable workflow for high-throughput transcriptomic profiling},
+#>    author  = {Nenad Bartonicek and Xin Liu and Laura Twomey and Michelle Meier and Richard Lupat and Stuart Craig and David Yoannidis and Jason Li and Tim Semple and Kaylene J Simpson and Mark X Li and Susanne Ramm},
+#>    journal = {bioRxiv},
+#>    year    = {2025},
+#>    doi     = {10.1101/2025.08.06.669002},
+#>    url     = {https://www.biorxiv.org/content/10.1101/2025.08.06.669002v1}
 #>  }
 ```
