@@ -11,7 +11,7 @@ treatment group"><meta property="og:image" content="https://github.com/PMCC-Bioi
 
     <a class="navbar-brand me-2" href="../index.html">macpie</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@ treatment group"><meta property="og:image" content="https://github.com/PMCC-Bioi
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Generate a knee plot A knee plot to show total number of total read counts for each gene in a given treatment group</h1>
-      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie.git/blob/HEAD/R/plot_gene_ranks.R"><code>R/plot_gene_ranks.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie/blob/HEAD/R/plot_gene_ranks.R" class="external-link"><code>R/plot_gene_ranks.R</code></a></small>
       <div class="d-none name"><code>plot_gene_ranks.Rd</code></div>
     </div>
 
@@ -50,12 +50,7 @@ treatment group</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_gene_ranks</span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  samples <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  scale_y_log <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_gene_ranks</span><span class="op">(</span>data <span class="op">=</span> <span class="cn">NULL</span>, group_by <span class="op">=</span> <span class="cn">NULL</span>, samples <span class="op">=</span> <span class="cn">NULL</span>, scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,16 +70,20 @@ treatment group</p>
 <dd><p>Treatment group</p></dd>
 
 
-<dt id="arg-scale-y-log">scale_y_log<a class="anchor" aria-label="anchor" href="#arg-scale-y-log"></a></dt>
-<dd><p>Boolean statement for log transformation</p></dd>
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
+<dd><p>Boolean statement for log10 transformation on both axes</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>A ggplot object with a knee plot</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mini_mac"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_gene_ranks</span><span class="op">(</span><span class="va">mini_mac</span>,group_by <span class="op">=</span> <span class="st">"combined_id"</span>, </span></span>
-<span class="r-in"><span>samples <span class="op">=</span> <span class="st">"Staurosporine_10"</span>, scale_y_log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>samples <span class="op">=</span> <span class="st">"Staurosporine_10"</span>, scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

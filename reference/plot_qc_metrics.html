@@ -11,7 +11,7 @@ or read counts per condition/group of interest in a lollipop chart"><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">macpie</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@ or read counts per condition/group of interest in a lollipop chart"><meta proper
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Create a lollipop chart</h1>
-      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie.git/blob/HEAD/R/plot_qc_metrics.R"><code>R/plot_qc_metrics.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie/blob/HEAD/R/plot_qc_metrics.R" class="external-link"><code>R/plot_qc_metrics.R</code></a></small>
       <div class="d-none name"><code>plot_qc_metrics.Rd</code></div>
     </div>
 
@@ -69,13 +69,17 @@ or read counts per condition/group of interest in a lollipop chart</p>
 <dd><p>to specify one of the QC metrics from stats_summary calculated from QC_metrics</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>A ggplot object with a lollipop chart of the specified QC metrics.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"mini_mac"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">qc_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="compute_qc_metrics.html">compute_qc_metrics</a></span><span class="op">(</span><span class="va">mini_mac</span>, group_by <span class="op">=</span> <span class="st">"combined_id"</span>, order_by <span class="op">=</span> <span class="st">"median"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">plot_qc_metrics</span><span class="op">(</span><span class="va">qc_stats</span>, group_by <span class="op">=</span> <span class="st">"combined_id"</span>, metrics <span class="op">=</span> <span class="st">"sd_value"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_qc_metrics-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

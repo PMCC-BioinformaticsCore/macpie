@@ -9,7 +9,7 @@ using the drc package. It returns EC50 values per gene per treatment."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">macpie</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@ using the drc package. It returns EC50 values per gene per treatment."><meta pro
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Model Gene Dose-Response Curves Across Treatments</h1>
-      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie.git/blob/HEAD/R/compute_multiple_dose_response.R"><code>R/compute_multiple_dose_response.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/PMCC-BioinformaticsCore/macpie/blob/HEAD/R/compute_multiple_dose_response.R" class="external-link"><code>R/compute_multiple_dose_response.R</code></a></small>
       <div class="d-none name"><code>compute_multiple_dose_response.Rd</code></div>
     </div>
 
@@ -98,18 +98,47 @@ using the <code>drc</code> package. It returns EC50 values per gene per treatmen
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">rds_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/PMMSq033/PMMSq033.rds"</span>, package <span class="op">=</span> <span class="st">"macpie"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">rds_file</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">compute_multiple_dose_response</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mac</span>,</span></span>
-<span class="r-in"><span>  genes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PTPRA"</span>, <span class="st">"MYC"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  data <span class="op">=</span> <span class="va">mini_mac</span>,</span></span>
+<span class="r-in"><span>  genes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FSHR"</span>, <span class="st">"ITFG2"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  normalisation <span class="op">=</span> <span class="st">"limma_voom"</span>,</span></span>
-<span class="r-in"><span>  treatment_value <span class="op">=</span> <span class="st">"Camptothecin"</span>,</span></span>
-<span class="r-in"><span>  num_cores <span class="op">=</span> <span class="fl">2</span></span></span>
+<span class="r-in"><span>  control_value <span class="op">=</span> <span class="st">"DMSO"</span>,</span></span>
+<span class="r-in"><span>  num_cores <span class="op">=</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> tidyseurat says: Key columns are missing. A data frame is returned for independent data analysis.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> StaurosporineDMSOControl measurements detected for level: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control measurements detected for level: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MediaControl measurements detected for level: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Control measurements detected for level: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> PaclitaxelThapsigarginError in optim(startVec, opfct, hessian = TRUE, method = optMethod, control = list(maxit = maxIt,  : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   non-finite finite-difference value [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Vinblastine_sulfateChlorambucilEtoposideCytarabineError in optim(startVec, opfct, hessian = TRUE, method = optMethod, control = list(maxit = maxIt,  : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   non-finite finite-difference value [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error in optim(startVec, opfct, hessian = TRUE, method = optMethod, control = list(maxit = maxIt,  : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   non-finite finite-difference value [1]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Azd-59915-azacytidineMik665LuminespibCamptothecinAnastrozoleSb590885Fluvastatin_sodiumCeralasertibCapivasertibError in optim(startVec, opfct, hessian = TRUE, method = optMethod, control = list(maxit = maxIt,  : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   non-finite finite-difference value [4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Erlotinib_hydrochlorideNutlin-3aMk-2206_dihydrochlorideRibociclibAdavosertibTrametinibTemsirolimusAbemaciclibPonatinibFludarabine</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Staurosporine DMSO Media Paclitaxel Thapsigargin Vinblastine_sulfate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR         4.4164   NA    NA 5783042.00           NA             0.12721</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2        3.9857   NA    NA     109.89      0.70869             0.36661</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Chlorambucil Etoposide Cytarabine   Azd-5991 5-azacytidine  Mik665</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR        6.6185    4.4211         NA 7.6479e+19      0.069563 46.1340</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2      26.1280   23.8280         NA 9.2609e-01      0.048804  1.4967</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Luminespib Camptothecin Anastrozole Sb590885 Fluvastatin_sodium</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR     0.08212       3.1342      62.325  0.15654             1.6629</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2    4.49240     236.6200     110.150  1.17420            14.4120</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Ceralasertib Capivasertib Erlotinib_hydrochloride Nutlin-3a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR       1.26270    0.0067156                 0.26679   0.33298</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2      0.37764           NA                 0.30657   0.57002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Mk-2206_dihydrochloride Ribociclib Adavosertib Trametinib Temsirolimus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR                  3.02950   0.065756     0.21233   0.017333       9.7503</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2                 0.54178   0.506880     1.03570   1.102000      18.6660</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Abemaciclib Ponatinib Fludarabine</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR      1.89380    3.0276 140255.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2     0.63033    2.7319      1.9245</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
