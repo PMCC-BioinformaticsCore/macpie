@@ -46,7 +46,7 @@ Metadata has to be in a tabular format and contain a standardised set of columns
 To ensure the integrity of metadata for future analyses, we provide the user with a set of tools to verify metadata consistency and visualize the key variables, described in more depth in the [QC vignette](articles/quality_control.html). We will first visually inspect all experimental variables, in order to identify potential artefacts.
 
 ```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+dir <- "/Users/liuxin/macpie_Dev/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
@@ -55,6 +55,8 @@ devtools::load_all(paste0(dir, "macpie/"))
 library(macpie)
 library(enrichR)
 library(randomForest)
+library(pheatmap)
+library(ggrepel)
 
 # Load metadata
 project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
@@ -125,7 +127,7 @@ mac <- mac %>%
 # # Filter by read count per sample group
 mac <- filter_genes_by_expression(mac,
                                   group_by = "combined_id",
-                                  min_counts = 1,
+                                  min_counts = 5,
                                   min_samples = 1)
 ```
 
@@ -396,18 +398,22 @@ mac <- compute_smiles(mac, compound_column = "Compound_ID")
 # Calculate descriptors
 mac <- compute_chem_descriptors(mac)
 
+#change column names for joining
+colnames(mac@tools$chem_descriptors)[1] <- "combined_id"
+
 # Join with target variable (e.g. pathway score)
 model_df <- mac@tools$pathway_enrichment %>%
   filter(Term == "Estrogen Response Early") %>%
   left_join(., mac@meta.data, join_by(combined_id)) %>%
   filter(Concentration_1 == 10) %>%
-  select(Treatment_1, Combined.Score) %>%
+  select(Treatment_1, Combined.Score, combined_id) %>%
   unique() %>%
-  left_join(., mac@tools$chem_descriptors, join_by(Treatment_1)) %>%
+  left_join(., mac@tools$chem_descriptors, join_by(combined_id)) %>%
+  select(-combined_id) %>%
   drop_na()
 
 # Train random forest
-rf_model <- randomForest(Combined.Score ~ ., data = model_df, importance = TRUE, na.action = na.omit)
+rf_model <- randomForest(Combined.Score ~ ., data = model_df, importance = TRUE, na.action = na.omit, ntrees = 500)
 
 # Get importance scores
 rf_importance <- importance(rf_model, type = 1)  # %IncMSE = predictive power
@@ -423,5 +429,5 @@ head(rf_ranked, 20)
 #> 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000
 #>     khs.dsN     khs.aaO
 #> 0.000000000 0.000000000
-varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features")
+varImpPlot(rf_model, n.var = 20, main = "Top 20 Random Forest Features", type = 2)
 ```

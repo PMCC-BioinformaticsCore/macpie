@@ -39,7 +39,7 @@ This vignette demonstrates how to use the **`macpie`** package for analysing dat
 First import data by providing either a directory, or a vector of directories (for multiple plates) to the Read10X function, as described in the previous vignettes, such as [Quality control](quality_control.html). 
 
 ```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+dir <- "/Users/liuxin/macpie_Dev/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
@@ -51,6 +51,7 @@ suppressPackageStartupMessages(
 )
 library(randomForest)
 library(AUCell)
+library(pheatmap)
 # Define project variables
 #project_name <- "PMMSq033"
 #project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
@@ -279,15 +280,18 @@ In the example below, the Wiener path number, representing the overall branching
 ## Calculate descriptors
 mac <- compute_chem_descriptors(mac)
 
+#change column names for joining
+colnames(mac@tools$chem_descriptors)[1] <- "combined_id"
+
 # Join with target variable (e.g. pathway score)
 model_df <- mac@tools$pathway_enrichment %>%
   filter(Term == "Estrogen Response Early") %>%
   left_join(., mac@meta.data, join_by(combined_id)) %>%
   filter(Concentration_1 == 10) %>%
-  select(Treatment_1, Combined.Score) %>%
+  select(Treatment_1, Combined.Score, combined_id) %>%
   unique() %>%
-  left_join(., mac@tools$chem_descriptors, join_by(Treatment_1)) %>%
-  select(-Treatment_1, -clean_compound_name) %>%
+  left_join(., mac@tools$chem_descriptors, join_by(combined_id)) %>%
+  select(-combined_id) %>%
   drop_na()
 
 # Train random forest

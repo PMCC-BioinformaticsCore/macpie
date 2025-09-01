@@ -37,7 +37,7 @@ If the samples are spread across multiple plates, users can submit a vector of d
 
 
 ```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+dir <- "/Users/liuxin/macpie_Dev/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
@@ -51,6 +51,7 @@ library(macpie)
 suppressPackageStartupMessages(
   library(enrichR)
 )
+library(pheatmap)
 
 # Define project variables
 project_name <- "PMMSq033"

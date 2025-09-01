@@ -58,7 +58,7 @@ knitr::opts_chunk$set(
 
 
 ```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/Documents/MACseq/macpie/2025/"
+dir <- "/Users/liuxin/macpie_Dev/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
