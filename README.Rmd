@@ -51,10 +51,10 @@ We provide both **full** and **subset** datasets for testing and exploration:
 - **Full example dataset** is hosted on Zenodo:  
   [https://doi.org/10.5281/zenodo.15778812](https://doi.org/10.5281/zenodo.15778812)
 
-- **Quick-start subset `demo`** is bundled with the package and can be loaded directly in R:
+- **Quick-start subset `mini_mac`** is bundled with the package and can be loaded directly in R:
 
 ```r
-data("demo", package = "macpie")
+data("mini_mac", package = "macpie")
 ```
 
 ## Requirements
@@ -186,19 +186,19 @@ After logging in, you'll find your local directory mounted under:
 
 ## Quick start
 
-In here we show using the `demo` dataset for a quick start. From each vignette on our website, we only include a couple of functions in this quick start. 
+In here we show using the `mini_mac` dataset for a quick start. From each vignette on our website, we only include a couple of functions in this quick start. 
 
 
 ``` r
 library(macpie)
 
-# load demo, 
-# demo is a tidySeurat object with matched metadata
-data("demo")
+# load mini_mac, 
+# mini_mac is a tidySeurat object with matched metadata
+data("mini_mac")
 
 # Quality control
 # Filter by counts per sample group
-demo <- filter_genes_by_expression(demo,
+mini_mac <- filter_genes_by_expression(mini_mac,
                                   group_by = "combined_id",
                                   min_counts = 5,
                                   min_samples = 3)
@@ -206,17 +206,17 @@ demo <- filter_genes_by_expression(demo,
 
 
 # MDS plot
-p <- plot_mds(demo, group_by = "Sample_type", label = "combined_id", n_labels = 30)
+p <- plot_mds(mini_mac, group_by = "Sample_type", label = "combined_id", n_labels = 30)
 girafe(ggobj = p, fonts = list(sans = "sans"))
 
 
 # Correction of the batch effect
 # First we will subset the data to look at control, DMSO samples only
-demo_dmso <- demo %>%
+mini_mac_dmso <- mini_mac %>%
   filter(Treatment_1 == "DMSO")
 
 # Run the RLE function
-plot_rle(demo_dmso, label_column = "Row", normalisation = "limma_voom")
+plot_rle(mini_mac_dmso, label_column = "Row", normalisation = "limma_voom")
 
 
 # Transcriptional analysis
@@ -224,7 +224,7 @@ plot_rle(demo_dmso, label_column = "Row", normalisation = "limma_voom")
 # First perform the differential expression analysis
 treatment_samples <- "Staurosporine_10"
 control_samples <- "DMSO_0"
-top_table <- compute_single_de(demo, treatment_samples, control_samples, method = "limma_voom")
+top_table <- compute_single_de(mini_mac, treatment_samples, control_samples, method = "limma_voom")
 
 top_genes <- top_table %>%
   filter(p_value_adj < 0.1) %>%
@@ -236,16 +236,16 @@ plot_volcano(top_table, max.overlaps = 16)
 
 # Multiple comparisons
 # Filter out lower concentrations of compounds and untreated samples
-treatments <- demo %>%
+treatments <- mini_mac %>%
   filter(Concentration_1 == 10) %>%
   select(combined_id) %>%
   filter(!grepl("DMSO", combined_id)) %>%
   pull() %>%
   unique()
-demo <- compute_multi_de(demo, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
+mini_mac <- compute_multi_de(mini_mac, treatments, control_samples = "DMSO_0", method = "limma_voom", num_cores = 1)
 
 # plot shared differentially expressed genes
-plot_multi_de(demo, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
+plot_multi_de(mini_mac, group_by = "combined_id", value = "log2FC", p_value_cutoff = 0.01, direction="up", n_genes = 5, control = "DMSO_0", by="fc")
 
 
 
