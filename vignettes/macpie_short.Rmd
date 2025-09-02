@@ -117,7 +117,7 @@ plot_metadata_heatmap(metadata)
 
   -  load your raw counts by providing Read10X function with a path to a directory containing matrix.mtx.gz, barcodes.tsv.gz, and features.tsv.gz, commonly "raw_matrix" from CellRanger or StarSolo output
   -  the full manuscript dataset (>10 MB of `.rds` files) is publicly available at https://zenodo.org/records/15778812. 
-  -  use data(mini_ mac) to load a subsample (308 samples, 200 genes) of the full dataset, as in the commented code below
+  -  use data(mini_mac) to load a subsample (308 samples, 200 genes) of the full dataset, as in the commented code below
 
 ```{r load_read_data}
 ## 1. Load your own gene counts per sample or 2. data from the publication
@@ -132,8 +132,8 @@ plot_metadata_heatmap(metadata)
 #                          min.features = 1)
 
 # 3. Alternatively, load a pre-made example:
-data(mini_ mac)
-mac <- mini_ mac
+data(mini_mac)
+mac <- mini_mac
 
 # Join gene counts per sample with metadata (if not already included)
 if (nrow(mac[[]])==0) {
@@ -315,7 +315,7 @@ The pathway enrichment analysis is done with R package enrichR, and can be summa
 enrichr_genesets <- download_geneset("human", "MSigDB_Hallmark_2020")
 mac <- compute_multi_enrichr(mac, genesets = enrichr_genesets)
 
-enriched_pathways_mat <- Tool(mini_ mac, slot = "pathway_enrichment") %>%
+enriched_pathways_mat <- Tool(mini_mac, slot = "pathway_enrichment") %>%
   bind_rows() %>%
   select(combined_id, Term, Combined.Score) %>%
   pivot_wider(names_from = combined_id, values_from = Combined.Score) %>%
