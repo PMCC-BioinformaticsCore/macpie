@@ -1,5 +1,6 @@
 test_that("Results are a non-empty dataframe in seurat slot tools", {
-  data("mini_mac")
-  mini_mac <- compute_de_umap(mini_mac)
-  expect_true(length(mini_mac) > 0 && nrow(mini_mac@reductions[["umap_de"]]) > 0)
+  # Load test dataset from tests/testthat/testdata
+  testdata <- get_testdata()
+  testdata <- compute_de_umap(testdata)
+  expect_true(length(testdata) > 0 && nrow(testdata@reductions[["umap_de"]]) > 0)
 })

@@ -1,7 +1,8 @@
 test_that("ggplot is produced", {
-  data("mini_mac")
-  rows<-mini_mac[["Row"]] %>%
+  # Load test dataset from tests/testthat/testdata
+  testdata <- get_testdata()
+  rows<-testdata[["Row"]] %>%
     pull()
-  p<-plot_rle(data = mini_mac, labels = rows, log = TRUE)
+  p<-plot_rle(data = testdata, labels = rows, log = TRUE)
   expect_equal(class(p),c("gg","ggplot"))
 })

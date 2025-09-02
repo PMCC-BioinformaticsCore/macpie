@@ -1,5 +1,6 @@
 test_that("Produces non-empty dataframe", {
-  data("mini_mac")
-  df <- compute_normalised_counts(mini_mac)
+  # Load test dataset from tests/testthat/testdata
+  testdata <- get_testdata()
+  df <- compute_normalised_counts(testdata)
   expect_true(nrow(df) > 0)
 })
