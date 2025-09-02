@@ -1,6 +1,7 @@
 test_that("Results are a non-empty dataframe in seurat slot tools", {
-  data("mini_mac")
+  # Load test dataset from tests/testthat/testdata
+  testdata <- get_testdata()
   data("genesets")
-  mini_mac <- compute_multi_enrichr(mini_mac, genesets = genesets)
-  expect_true(length(mini_mac) > 0 && length(mini_mac@tools[["pathway_enrichment"]]) > 0)
+  testdata <- compute_multi_enrichr(testdata, genesets = genesets)
+  expect_true(length(testdata) > 0 && length(testdata@tools[["pathway_enrichment"]]) > 0)
 })
