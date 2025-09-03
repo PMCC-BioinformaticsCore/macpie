@@ -41,12 +41,7 @@ plot_plate_layout <- function(data = NULL, metric = NULL, annotation = NULL, mid
   
   # Helper function to validate input data
   validate_inputs <- function(data, metric, annotation, midpoint) {
-    ok_class <- inherits(data, "Seurat") ||
-      inherits(data, "tidyseurat") ||
-      inherits(data, "data.frame")
-    if (!ok_class) {
-      stop("argument 'data' must be a Seurat, tidyseurat, or data.frame/tibble.")
-    }
+    validate_macpie_input(data)
     metric <- if (is.null(metric)) "nCount_RNA" else metric
     annotation <- if (is.null(annotation)) "Treatment_1" else annotation
     midpoint <- if (is.null(midpoint)) "mean" else midpoint
