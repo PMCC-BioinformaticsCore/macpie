@@ -1,0 +1,79 @@
+---
+title: "macpie: Working with Bioconductor classes"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{macpie_bioc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+
+## Overview
+
+This vignette demonstrates how to use **macpie** with **Bioconductor-native containers**:
+- Convert a **Seurat** object (the package’s demo data `mini_mac`) to **SingleCellExperiment** (SCE) and **SummarizedExperiment** (SE)
+- Perform **Bioconductor-native normalization** (`scuttle::logNormCounts`)
+- Call `macpie` functions either:
+  - directly on SCE/SE (if you provide methods), or
+  - via a **tidy metadata data frame** derived from `colData()` for functions with tidy interfaces (e.g., plate layout/QC utilities)
+
+
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(macpie)
+  library(Seurat)
+  library(SingleCellExperiment)
+  library(SummarizedExperiment)
+  library(Matrix)
+  library(scuttle)   # Bioconductor-native normalization
+  library(dplyr)
+  library(tibble)
+})
+```
+
+
+Load demo dataset (`mini_mac`)
+
+```{r}
+data("mini_mac")  # Seurat object
+class(mini_mac)
+```
+
+## Working with SingleCellExperiment
+
+```{r}
+# Convert counts/metadata/embeddings when available
+sce <- as.SingleCellExperiment(mini_mac)
+
+# Bioconductor-native normalization (adds 'logcounts' assay)
+sce <- scuttle::logNormCounts(sce)
+
+sce
+
+```
+
+```{r}
+
+
+```
+
