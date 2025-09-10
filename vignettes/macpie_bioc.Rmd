@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 ## Overview
 
 This vignette demonstrates how to use **macpie** with **Bioconductor-native containers**:
-- Convert a **Seurat** object (the package’s demo data `mini_mac`) to **SingleCellExperiment** (SCE) and **SummarizedExperiment** (SE)
+- Read raw data into a **SingleCellExperiment** (SCE) class or **SummarizedExperiment** (SE) class
 - Perform **Bioconductor-native normalization** (`scuttle::logNormCounts`)
 - Call `macpie` functions either:
   - directly on SCE/SE (if you provide methods), or
@@ -48,32 +48,65 @@ suppressPackageStartupMessages({
   library(scuttle)   # Bioconductor-native normalization
   library(dplyr)
   library(tibble)
+  library(DropletUtils)
 })
 ```
 
 
-Load demo dataset (`mini_mac`)
 
-```{r}
-data("mini_mac")  # Seurat object
-class(mini_mac)
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
 ```
 
-## Working with SingleCellExperiment
+```{r metadata_plot, fig.width = 8, fig.height = 6}
+# Load metadata
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata(project_metadata)
+plot_metadata_heatmap(metadata)
+```
+
+
+
+Load raw data into a SingleCellExperiment (SCE) object
+
 
 ```{r}
-# Convert counts/metadata/embeddings when available
-sce <- as.SingleCellExperiment(mini_mac)
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
+sce <- read10xCounts(project_rawdata, col.names = TRUE,
+                     row.names = "symbol")  # use gene symbols
+# add metadata
+sce <- SingleCellExperiment(assays = list(counts = counts(sce)),
+                            colData = metadata)
 
-# Bioconductor-native normalization (adds 'logcounts' assay)
+# normalize (adds 'logcounts' assay)
 sce <- scuttle::logNormCounts(sce)
 
-sce
-
 ```
+
 
 ```{r}
-
+# convert to seurat object
+mac <- as.Seurat(sce, 
+                 counts = "counts",
+                 data = "logcounts",
+                 assay = "RNA")
 
 ```
+```{r}
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id)) %>%
+  mutate(combined_id = make.names(combined_id))
+
+# # Filter by read count per sample group
+mac <- filter_genes_by_expression(mac,
+                                  group_by = "combined_id",
+                                  min_counts = 5,
+                                  min_samples = 1)
+```
+
+
 

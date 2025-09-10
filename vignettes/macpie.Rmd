@@ -50,6 +50,9 @@ dir <- "/Users/liuxin/macpie_Dev/"
 devtools::load_all(paste0(dir, "macpie/"))
 ```
 
+
+
+
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 #install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
 library(macpie)
