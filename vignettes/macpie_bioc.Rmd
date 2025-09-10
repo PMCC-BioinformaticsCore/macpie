@@ -1,0 +1,112 @@
+---
+title: "macpie: Working with Bioconductor classes"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{macpie_bioc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+
+## Overview
+
+This vignette demonstrates how to use **macpie** with **Bioconductor-native containers**:
+- Read raw data into a **SingleCellExperiment** (SCE) class or **SummarizedExperiment** (SE) class
+- Perform **Bioconductor-native normalization** (`scuttle::logNormCounts`)
+- Call `macpie` functions either:
+  - directly on SCE/SE (if you provide methods), or
+  - via a **tidy metadata data frame** derived from `colData()` for functions with tidy interfaces (e.g., plate layout/QC utilities)
+
+
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(macpie)
+  library(Seurat)
+  library(SingleCellExperiment)
+  library(SummarizedExperiment)
+  library(Matrix)
+  library(scuttle)   # Bioconductor-native normalization
+  library(dplyr)
+  library(tibble)
+  library(DropletUtils)
+})
+```
+
+
+
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+```{r metadata_plot, fig.width = 8, fig.height = 6}
+# Load metadata
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+
+# Load metadata
+metadata <- read_metadata(project_metadata)
+plot_metadata_heatmap(metadata)
+```
+
+
+
+Load raw data into a SingleCellExperiment (SCE) object
+
+
+```{r}
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
+sce <- read10xCounts(project_rawdata, col.names = TRUE,
+                     row.names = "symbol")  # use gene symbols
+# add metadata
+sce <- SingleCellExperiment(assays = list(counts = counts(sce)),
+                            colData = metadata)
+
+# normalize (adds 'logcounts' assay)
+sce <- scuttle::logNormCounts(sce)
+
+```
+
+
+```{r}
+# convert to seurat object
+mac <- as.Seurat(sce, 
+                 counts = "counts",
+                 data = "logcounts",
+                 assay = "RNA")
+
+```
+```{r}
+mac <- mac %>%
+  mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id)) %>%
+  mutate(combined_id = make.names(combined_id))
+
+# # Filter by read count per sample group
+mac <- filter_genes_by_expression(mac,
+                                  group_by = "combined_id",
+                                  min_counts = 5,
+                                  min_samples = 1)
+```
+
+
+
