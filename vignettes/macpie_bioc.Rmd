@@ -28,10 +28,13 @@ knitr::opts_chunk$set(
 This vignette demonstrates how to use **macpie** with **Bioconductor-native containers**:
 - Read raw data into a **SingleCellExperiment** (SCE) class or **SummarizedExperiment** (SE) class
 - Perform **Bioconductor-native normalization** (`scuttle::logNormCounts`)
-- Call `macpie` functions either:
-  - directly on SCE/SE (if you provide methods), or
-  - via a **tidy metadata data frame** derived from `colData()` for functions with tidy interfaces (e.g., plate layout/QC utilities)
+- Convert SCE to **Seurat** object via `sce_to_seurat()`
+- Run minimal `macpie` functions in this vignette:
+  - `VlnPlot()`
+  - `filter_genes_by_expression()`
+  - `plot_plate_layout()`
 
+- Full workflow with **macpie** functions is shown in the main [macpie vignette](https://liuxin-lab.github.io/macpie/articles/macpie.html).
 
 ```{r set_wd, include=FALSE}
 dir <- "/Users/liuxin/macpie_Dev/"
@@ -53,11 +56,7 @@ suppressPackageStartupMessages({
 ```
 
 
-
-```{r set_wd, include=FALSE}
-dir <- "/Users/liuxin/macpie_Dev/"
-devtools::load_all(paste0(dir, "macpie/"))
-```
+### 1. Metadata import 
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 # Load metadata
@@ -68,9 +67,12 @@ metadata <- read_metadata(project_metadata)
 plot_metadata_heatmap(metadata)
 ```
 
+### 2. Sequencing data import 
 
 
-Load raw data into a SingleCellExperiment (SCE) object
+#### 2.1 Create a SingleCellExperiment object
+
+First, we load raw data into a SingleCellExperiment (SCE) object, then we add metadata and normalize the data using `scuttle::logNormCounts()`. 
 
 
 ```{r}
@@ -78,8 +80,10 @@ project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
 sce <- read10xCounts(project_rawdata, col.names = TRUE,
                      row.names = "symbol")  # use gene symbols
 # add metadata
-sce <- SingleCellExperiment(assays = list(counts = counts(sce)),
-                            colData = metadata)
+sce <- SingleCellExperiment(assays = list(counts = counts(sce)))
+# with match barcodes
+colData(sce) <- DataFrame(metadata[match(colnames(sce), metadata$Barcode), ])
+
 
 # normalize (adds 'logcounts' assay)
 sce <- scuttle::logNormCounts(sce)
@@ -87,26 +91,94 @@ sce <- scuttle::logNormCounts(sce)
 ```
 
 
+#### 2.2 Convert SCE to Seurat object
+
+By default, `sce_to_seurat()` uses the "counts" assay as the raw counts and "logcounts" assay as the normalized data. You can change these parameters if your SCE object has different assay names. The function also requires the name of the column in the `colData` that contains the cell IDs (barcodes). We also address issues with gene names (e.g., underscores) to ensure compatibility with Seurat.
+
 ```{r}
-# convert to seurat object
-mac <- as.Seurat(sce, 
-                 counts = "counts",
-                 data = "logcounts",
-                 assay = "RNA")
+
+to_seurat <- sce_to_seurat(sce, 
+                          counts = "counts",
+                          log_counts = "logcounts",
+                          assay = "RNA",
+                          cell_id_col = "Barcode",
+                          project_name = "PMMSq033")
+to_seurat 
+```
+
+#### 2.3 Sanity check 
+
+This is to check that the conversion was successful and that the data in the Seurat object matches the original SCE object. We should have the same number of wells, and the well barcodes should match. Additionally, the gene names in the Seurat object should match those in the SCE object.
+
+```{r}
+stopifnot(ncol(to_seurat) == ncol(sce))
+stopifnot(all(colnames(to_seurat) == sce$Barcode))
+stopifnot(all(rownames(to_seurat@assays$RNA$counts) == rownames(to_seurat@assays$RNA$data)))
 
 ```
+
+
+### 3. Basic quality control and filtering
+
+Now, we can use some basic `macpie` functions for quality control and filtering.
+
 ```{r}
-mac <- mac %>%
+
+to_seurat <- to_seurat %>%
   mutate(combined_id = str_c(Treatment_1, Concentration_1, sep = "_")) %>%
   mutate(combined_id = gsub(" ", "", .data$combined_id)) %>%
   mutate(combined_id = make.names(combined_id))
 
-# # Filter by read count per sample group
-mac <- filter_genes_by_expression(mac,
+
+# Filter by read count per sample group
+to_seurat <- filter_genes_by_expression(to_seurat,
                                   group_by = "combined_id",
                                   min_counts = 5,
                                   min_samples = 1)
 ```
 
+
+#### 3.1 Visualize QC metrics
+
+We should expect to see same violin plots as using Seurat object in the main vigette.
+
+```{r}
+to_seurat[["percent.mt"]] <- PercentageFeatureSet(to_seurat, pattern = "^mt-|^MT-")
+to_seurat[["percent.ribo"]] <- PercentageFeatureSet(to_seurat, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+
+# Example of a function from Seurat quality control 
+VlnPlot(to_seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), 
+        ncol = 4, group.by = "Sample_type") & 
+  scale_fill_manual(values = macpie_colours$discrete) 
+```
+
+#### 3.2 Subset data for a specific project and visualize plate layout
+
+Here we subset the data to include only cells from the "Current" project and visualize the plate layout using `plot_plate_layout()`. The interactive plot allows us to hover over wells to see detailed information. 
+
+This plot should be identical to the one generated using a Seurat object in the main vignette.
+
+
+```{r subset_seurat, fig.width = 8, fig.height = 3}
+unique(to_seurat$Project)
+to_seurat <- to_seurat %>%
+  filter(Project == "Current")
+
+# Interactive QC plot plate layout (all metadata columns can be used):
+p <- plot_plate_layout(to_seurat, "nCount_RNA", "combined_id")
+girafe(ggobj = p, 
+  fonts = list(sans = "sans"),
+  options = list(
+    opts_hover(css = "stroke:black; stroke-width:0.8px;")  # <- slight darkening
+  ))
+```
+
+### 4. Summary
+
+In this vignette, we demonstrated how to work with Bioconductor-native classes using **macpie**. We covered the following steps:  
+1. Importing metadata and visualizing it.
+2. Creating a SingleCellExperiment object from raw data, adding metadata, and normalizing the data.
+3. Converting the SingleCellExperiment object to a Seurat object using `sce_to_seurat()`.
+4. Performing basic quality control and filtering using `macpie` functions, including visualizing QC metrics and plotting the plate layout.
 
 
