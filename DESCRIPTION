@@ -50,7 +50,6 @@ Suggests:
     BiocParallel,
     zinbwave,
     EDASeq,
-    SummarizedExperiment,
     mcprogress,
     glmGamPoi,
     fgsea,    
@@ -73,7 +72,10 @@ Suggests:
     readxl,
     MOFA2,
     randomForest,
-    scuttle
+    scuttle,
+    methods,
+    SeuratObject,
+    SummarizedExperiment
 Config/testthat/edition: 3
 Imports:
     dplyr,

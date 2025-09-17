@@ -16,6 +16,8 @@
 #'  that contains the cell IDs.
 #'  @param project_name The name of the project to assign to the Seurat object. Default is "project_name".
 #'  @return A Seurat object.
+#'  @importFrom SummarizedExperiment assay assayNames colData
+#'  @importFrom Seurat CreateSeuratObject CreateAssayObject GetAssayData
 #'  @export
 #'  
 #'  @examples
@@ -49,8 +51,6 @@ sanitize_features <- function(m) {
   m
 }
 
-
-
 sce_to_seurat <- function(sce, 
                           counts = "counts",
                           log_counts = "logcounts",
@@ -81,7 +81,7 @@ sce_to_seurat <- function(sce,
   
   # make sure cts - count matrix is a dgCMatrix
   if (!inherits(cts, "dgCMatrix")) {
-    cts <- as(cts, "dgCMatrix")
+    cts <- methods::as(cts, "dgCMatrix")
   }
   # create Seurat object
   seurat_obj <- CreateSeuratObject(counts = cts,
