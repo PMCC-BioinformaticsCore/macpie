@@ -1,6 +1,11 @@
 #'  Create a function to convert singlecellexperiment object to a Seurat object
 #'  
-#'  This function takes a SingleCellExperiment object as input and converts it to a Seurat object.
+#'  
+#'  Convert an SCE to a Seurat object, copying a counts assay and (optionally)
+#'  a log-normalized assay. Feature names are sanitized to match Seurat
+#'  conventions (underscores → dashes; uniqueness enforced). Columns of
+#'  `colData(sce)` become Seurat `meta.data`. The column `cell_id_col` is used
+#'  for Seurat cell names.
 #'  @param sce A SingleCellExperiment object.
 #'  @param counts The name of the assay in the SingleCellExperiment object that contains the raw counts. 
 #'  Default is "counts".
@@ -12,40 +17,38 @@
 #'  @param project_name The name of the project to assign to the Seurat object. Default is "project_name".
 #'  @return A Seurat object.
 #'  @export
-#'  @examples
 #'  
-#'  # Example: 10 genes, 20 barcodes
+#'  @examples
 #' sim_counts <- matrix(rpois(10 * 20, lambda = 10), ncol = 20, nrow = 10)
 #' colnames(sim_counts) <- paste0("Barcode", 1:20)
 #' rownames(sim_counts) <- paste0("gene", 1:10)
-#' # Create metadata
+#'
 #'  metadata <- data.frame(
 #'    Barcode = colnames(sim_counts),
 #'    Condition = rep(c("A", "B"), each = 10)
 #'  )
-#' # Create a SingleCellExperiment object
 #'  sce <- SingleCellExperiment::SingleCellExperiment(
 #'    assays = list(counts = sim_counts),
 #'    colData = metadata
 #'  )
 #'  sce <- scuttle::logNormCounts(sce)
-#' # Convert to Seurat object
 #'  sim_seurat <- sce_to_seurat(sce,
 #'                              project_name = "SimulatedData")
-#'  
-#'  # Check the Seurat object
 #'  print(sim_seurat)
 #'  stopifnot(inherits(sim_seurat,"Seurat"))
 #'  
-#'  
 
+#' @keywords internal
+#' @noRd
 sanitize_features <- function(m) {
+  if (is.null(m)) return(NULL)
   fn <- rownames(m)
-  fn <- gsub("_", "-", fn)        # mimic Seurat’s underscore rule
-  fn <- make.unique(fn)           # mimic Seurat’s uniqueness enforcement
+  fn <- gsub("_", "-", fn)    # mimic Seurat underscore rule
+  fn <- make.unique(fn)       # ensure uniqueness
   rownames(m) <- fn
   m
 }
+
 
 
 sce_to_seurat <- function(sce, 
