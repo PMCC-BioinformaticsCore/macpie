@@ -109,7 +109,7 @@ test_that("sce_to_seurat works", {
     
     # Numeric equality with the sanitized logcounts
     ref_mat <- as.matrix(logc_sanitized[rownames(dat_mat), colnames(dat_mat), drop = FALSE])
-    expect_equal(dat_mat, ref_mat, tolerance = 1e-8, check.attributes = FALSE)
+    expect_equal(dat_mat, ref_mat, tolerance = 1e-8, igore_attr = FALSE)
   }
 })
 

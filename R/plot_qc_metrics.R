@@ -44,7 +44,7 @@ plot_qc_metrics <- function(stats_summary, group_by, metrics) {
 
   p <- ggplot(var_stats, aes(x = reorder(.data[[group_by]], .data[[metrics]]), y = .data[[metrics]])) +
     geom_segment(aes(xend = .data[[group_by]], y = 0, yend = .data[[metrics]]),
-                 color = "grey", size = 1) +
+                 color = "grey", linewidth = 1) +
     geom_point(color = macpie_colours$discrete[[1]], size = 2) +
     coord_flip() +
     labs(x = group_by, y = metrics,
