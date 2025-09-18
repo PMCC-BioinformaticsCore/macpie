@@ -4,11 +4,13 @@ pkgdown_sha: ~
 articles:
   cross_platform_compatibility: cross_platform_compatibility.html
   high_throughput_screens: high_throughput_screens.html
+  integration_across_modalities: integration_across_modalities.html
+  macpie_bioc: macpie_bioc.html
   macpie_short: macpie_short.html
   macpie: macpie.html
   quality_control: quality_control.html
   transcriptional_analyses: transcriptional_analyses.html
-last_built: 2025-09-02T06:18Z
+last_built: 2025-09-18T04:40Z
 urls:
   reference: https://github.com/PMCC-BioinformaticsCore/macpie.git/reference
   article: https://github.com/PMCC-BioinformaticsCore/macpie.git/articles

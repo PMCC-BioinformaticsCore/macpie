@@ -46,6 +46,8 @@
     <li><a class="dropdown-item" href="articles/transcriptional_analyses.html">Transcriptional analyses</a></li>
     <li><a class="dropdown-item" href="articles/high_throughput_screens.html">Compound screening</a></li>
     <li><a class="dropdown-item" href="articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
+    <li><a class="dropdown-item" href="articles/integration_across_modalities.html">Integration across modalities</a></li>
+    <li><a class="dropdown-item" href="articles/macpie_bioc.html">Working with Biocondutor classes</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
@@ -224,12 +226,12 @@
 <span></span>
 <span><span class="co"># MDS plot</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/plot_mds.html">plot_mds</a></span><span class="op">(</span><span class="va">mini_mac</span>, group_by <span class="op">=</span> <span class="st">"Sample_type"</span>, label <span class="op">=</span> <span class="st">"combined_id"</span>, n_labels <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://davidgohel.github.io/ggiraph/reference/girafe.html" class="external-link">girafe</a></span><span class="op">(</span>ggobj <span class="op">=</span> <span class="va">p</span>, fonts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sans <span class="op">=</span> <span class="st">"sans"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">girafe</span><span class="op">(</span>ggobj <span class="op">=</span> <span class="va">p</span>, fonts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sans <span class="op">=</span> <span class="st">"sans"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span></span>
 <span><span class="co"># Correction of the batch effect</span></span>
 <span><span class="co"># First we will subset the data to look at control, DMSO samples only</span></span>
-<span><span class="va">mini_mac_dmso</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="va">mini_mac_dmso</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Treatment_1</span> <span class="op">==</span> <span class="st">"DMSO"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run the RLE function</span></span>
@@ -243,9 +245,9 @@
 <span><span class="va">control_samples</span> <span class="op">&lt;-</span> <span class="st">"DMSO_0"</span></span>
 <span><span class="va">top_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute_single_de.html">compute_single_de</a></span><span class="op">(</span><span class="va">mini_mac</span>, <span class="va">treatment_samples</span>, <span class="va">control_samples</span>, method <span class="op">=</span> <span class="st">"limma_voom"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">top_table</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">p_value_adj</span> <span class="op">&lt;</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">select</span><span class="op">(</span><span class="va">gene</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="va">top_genes</span> <span class="op">&lt;-</span> <span class="va">top_table</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">p_value_adj</span> <span class="op">&lt;</span> <span class="fl">0.1</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">gene</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">pull</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># A volcano plot with very small number of genes, as it's a subset of the full dataset </span></span>
@@ -253,11 +255,11 @@
 <span></span>
 <span><span class="co"># Multiple comparisons</span></span>
 <span><span class="co"># Filter out lower concentrations of compounds and untreated samples</span></span>
-<span><span class="va">treatments</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Concentration_1</span> <span class="op">==</span> <span class="fl">10</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">select</span><span class="op">(</span><span class="va">combined_id</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"DMSO"</span>, <span class="va">combined_id</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">pull</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="va">treatments</span> <span class="op">&lt;-</span> <span class="va">mini_mac</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Concentration_1</span> <span class="op">==</span> <span class="fl">10</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">combined_id</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"DMSO"</span>, <span class="va">combined_id</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">pull</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">mini_mac</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute_multi_de.html">compute_multi_de</a></span><span class="op">(</span><span class="va">mini_mac</span>, <span class="va">treatments</span>, control_samples <span class="op">=</span> <span class="st">"DMSO_0"</span>, method <span class="op">=</span> <span class="st">"limma_voom"</span>, num_cores <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
