@@ -3,7 +3,7 @@
 
 # macpie
 
-<img src="docs/logo.png" width="100" align="right" class="pkgdown-hide"/>
+<img src="man/figures/logo.png" width="140" align="right" />
 
 <!-- badges: start -->
 
