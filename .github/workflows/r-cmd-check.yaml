@@ -41,9 +41,15 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+<<<<<<< HEAD
           extra-packages: | 
 	    	any::rcmdcheck
 	    	any::ggplot2 (<=3.5.2)	
+=======
+          extra-packages: |
+            any::rcmdcheck
+            any::ggplot2 (<= 3.5.2)
+>>>>>>> f3aed36 (fix indentation in r-cmd-check.ymal)
 
       - uses: r-lib/actions/check-r-package@v2
         with:
