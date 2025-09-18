@@ -25,7 +25,9 @@ filter_genes_by_expression <- function(data,
   }
   
   # Extract expression matrix
-  expr_mat <- GetAssayData(data, slot = "counts", assay = "RNA")
+  # Compatible with Seurat v4 and v5
+  # expr_mat <- GetAssayData(data, slot = "counts", assay = "RNA")
+  expr_mat <- .get_assay_data(data, what = "counts", assay = "RNA")
   
   # Get metadata and filter for nCount_RNA
   meta <- data@meta.data %>%

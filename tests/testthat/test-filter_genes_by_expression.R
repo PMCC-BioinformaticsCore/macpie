@@ -8,3 +8,4 @@ test_that("multiplication works", {
   expect_true(nrow(filtered_testdata) < nrow(testdata))
   expect_s4_class(filtered_testdata, "Seurat")
 })
+

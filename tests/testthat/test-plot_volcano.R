@@ -5,5 +5,5 @@ test_that("ggplot is produced", {
   control_samples<-"DMSO_0"
   top_table <- compute_single_de(testdata, treatment_samples, control_samples, method = "limma_voom")
   p <- plot_volcano(top_table)
-  expect_equal(class(p),c("gg","ggplot"))
+  expect_true(inherits(p, "ggplot"))
 })

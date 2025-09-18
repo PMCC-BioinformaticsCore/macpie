@@ -65,7 +65,7 @@ plot_multi_screen_profile <- function(data,
                                color = !!rlang::sym(color_by),
                                tooltip = target,
                                data_id = target)) +
-    geom_point(aes_string(size = size_by)) +
+    geom_point(aes(size = .data[[size_by]])) +
     labs(
       x = "Target profile",
       y = metric,
