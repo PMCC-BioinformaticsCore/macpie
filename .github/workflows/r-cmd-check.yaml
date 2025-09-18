@@ -43,7 +43,8 @@ jobs:
         with:
           extra-packages: |
             any::rcmdcheck
-            any::ggplot2 (<= 3.5.2)
+            any::ggplot2@3.5.2
+          needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
