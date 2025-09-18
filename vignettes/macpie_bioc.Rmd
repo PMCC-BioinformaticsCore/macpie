@@ -26,15 +26,22 @@ knitr::opts_chunk$set(
 ## Overview
 
 This vignette demonstrates how to use **macpie** with **Bioconductor-native containers**:
+
 - Read raw data into a **SingleCellExperiment** (SCE) class or **SummarizedExperiment** (SE) class
+
 - Perform **Bioconductor-native normalization** (`scuttle::logNormCounts`)
+
 - Convert SCE to **Seurat** object via `sce_to_seurat()`
+
 - Run minimal `macpie` functions in this vignette:
+
   - `VlnPlot()`
+  
   - `filter_genes_by_expression()`
+  
   - `plot_plate_layout()`
 
-- Full workflow with **macpie** functions is shown in the main [macpie vignette](https://liuxin-lab.github.io/macpie/articles/macpie.html).
+- Full workflow with **macpie** functions is shown in the main [macpie vignette](https://pmcc-bioinformaticscore.github.io/macpie/articles/macpie.html).
 
 ```{r set_wd, include=FALSE}
 dir <- "/Users/liuxin/macpie_Dev/"
@@ -57,6 +64,8 @@ suppressPackageStartupMessages({
 
 
 ### 1. Metadata import 
+
+Metadata is imported using `read_metadata()`, and visualized using `plot_metadata_heatmap()` like in the main vignette.
 
 ```{r metadata_plot, fig.width = 8, fig.height = 6}
 # Load metadata
@@ -176,9 +185,13 @@ girafe(ggobj = p,
 ### 4. Summary
 
 In this vignette, we demonstrated how to work with Bioconductor-native classes using **macpie**. We covered the following steps:  
+
 1. Importing metadata and visualizing it.
+
 2. Creating a SingleCellExperiment object from raw data, adding metadata, and normalizing the data.
+
 3. Converting the SingleCellExperiment object to a Seurat object using `sce_to_seurat()`.
+
 4. Performing basic quality control and filtering using `macpie` functions, including visualizing QC metrics and plotting the plate layout.
 
 
