@@ -27,6 +27,10 @@ navbar:
           href: articles/high_throughput_screens.html
         - text: "Cross-platform compatibility"
           href: articles/cross_platform_compatibility.html
+        - text: "Integration across modalities"
+          href: articles/integration_across_modalities.html
+        - text: "Working with Biocondutor classes"
+          href: articles/macpie_bioc.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:
