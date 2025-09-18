@@ -3,7 +3,7 @@
 
 # macpie
 
-<img src="man/figures/logo.png" width="140" align="right" />
+<img src="man/figures/logo.png" width="100" align="right" />
 
 <!-- badges: start -->
 
