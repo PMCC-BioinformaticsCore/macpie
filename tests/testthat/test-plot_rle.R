@@ -4,5 +4,5 @@ test_that("ggplot is produced", {
   rows<-testdata[["Row"]] %>%
     pull()
   p<-plot_rle(data = testdata, labels = rows, log = TRUE)
-  expect_equal(class(p),c("gg","ggplot"))
+  expect_true(inherits(p, "ggplot"))
 })
