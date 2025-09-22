@@ -29,7 +29,7 @@ navbar:
           href: articles/cross_platform_compatibility.html
         - text: "Integration across modalities"
           href: articles/integration_across_modalities.html
-        - text: "Working with Biocondutor classes"
+        - text: "Working with Bioconductor classes"
           href: articles/macpie_bioc.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
