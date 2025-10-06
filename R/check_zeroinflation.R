@@ -13,30 +13,43 @@
 
 
 check_zeroinflation <- function(data = NULL,
-                                treatment_samples = NULL,
-                                control_samples = NULL,
+                                group_by = NULL,
+                                samples = NULL,
                                 batch = 1
                                 ){
   
-  validate_inputs <- function(data, treatment_samples, control_samples) {
+  validate_inputs <- function(data, samples) {
     if (!inherits(data, "Seurat")) {
       stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
-    if (is.null(treatment_samples) || is.null(control_samples)) {
-      stop("Missing the vectors of treatment and control samples.")
+    group_by <- if (is.null(group_by)) "combined_id" else group_by} 
+    
+    #decide grouping mode
+    meta_groups <- as.character(data@meta.data[[group_by]])
+    matched_groups <- !is.null(samples) && any(grepl(samples, meta_groups))
+    if (matched_groups){
+      
     }
-    if (!"combined_id" %in% colnames(data@meta.data)) {
-      data <- data %>%
-        mutate(combined_id = apply(select(starts_with("Treatment_") | starts_with("Concentration_")),
-                                   1, paste, collapse = "_")) %>%
-        mutate(combined_id = gsub(" ", "", .data$combined_id))
-    }
-    if (length(treatment_samples) == 1 && length(control_samples) == 1) {
-      treatment_samples_list <- grepl(treatment_samples, data$combined_id)
-      control_samples_list <- grepl(control_samples, data$combined_id)
-      if (any(sum(treatment_samples_list) == 0, sum(control_samples_list) == 0)) {
-        stop("Your treatment and control samples are not in your combined_id column.")
+    
+    
+    if (is.null(samples)) {
+      stop("Samples are not specified, whole set of samples will be included.")
+    } else {
+      if (length(samples)>=1){
+        sample_list <- grepl(samples, data$combined_id)
+        if (sum(sample_list) == 0) {
+          stop("Your samples are not in your combined_id column.")
+        }
       }
+    }
+    # Helper: Prepare data and pheno_data
+    prepare_data <- function(data, samples, batch) {
+      data <- data[, grepl(samples, data$combined_id)]
+      if (length(unique(data$combined_id)) < 2) {
+        stop("Insufficient factors for differential expression analysis.")
+      }
+      pheno_data <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
+      return(list(data = data, pheno_data = pheno_data))
     }
   }
   
