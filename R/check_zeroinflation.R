@@ -7,7 +7,7 @@
 #' 1) estimates gene-wise tagwise dispersions with edgeR (using all selected groups),
 #' 2) builds NB-expected zero probabilities from TMMwsp-scaled means, and
 #' 3) returns per-gene ZI (observed zeros minus NB-expected zeros) and
-#'    per-group summaries (e.g., % genes with ZI > 0.05).
+#'    per-group summaries (e.g., % genes with ZI > 0.05). ZI-cutoffs are user-defined. 
 #'
 #' This is intended as a **fast screening diagnostic** to decide whether
 #' standard NB GLM methods (edgeR/DESeq2) are adequate or whether a
@@ -28,6 +28,7 @@
 #'   `NULL` or if none match, all groups in `group_by` are used.
 #' @param batch Optional batch indicator; if length 1, an intercept-free design
 #'   is used with group dummies.
+#' @param cutoffs Numeric vector of user-supply ZI thresholds for summary statistics
 #'
 #' @returns A list with:
 #' * `gene_metrics_by_group`: long data frame (group × gene) with `p0_obs`,
@@ -51,9 +52,10 @@
 check_zeroinflation <- function(data = NULL,
                                      group_by = NULL,
                                      samples = NULL,
-                                     batch = 1
+                                     batch = 1,
+                                     cutoffs = c(0.1, 0.20)
 ){
-  validate_inputs <- function(data, group_by, samples) {
+  validate_inputs <- function(data, group_by, samples, cutoffs) {
     if (!inherits(data, "Seurat")) {
       stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -71,17 +73,13 @@ check_zeroinflation <- function(data = NULL,
     if (length(samples) == 1) {
       stop("Two treatment groups are needed to calculate dispersion using edgeR.")
     } 
-    return(list(data = data, group_by = group_by, samples = samples))
+    # check cutoffs
+    if (any(cutoffs <= 0) || any(cutoffs >= 1)) {
+      stop("cutoffs must be between 0 and 1.")
+    }
+    return(list(data = data, group_by = group_by, samples = samples, cutoffs = cutoffs))
   }
   
-  
-  
-  validated <- validate_inputs(data, group_by, samples)
-  data <- validated$data
-  group_by <- validated$group_by
-  samples <- validated$samples
-  
-  # samples must be specified
   mac_data <- subset(data, subset = combined_id %in% samples)
   count_matrix <- GetAssayData(mac_data, assay = "RNA", layer = "counts")
   count_matrix <- Matrix::Matrix(count_matrix, sparse = TRUE)
@@ -144,7 +142,7 @@ check_zeroinflation <- function(data = NULL,
       p0_nb_g[poi_idx] <- exp(-mu_bar_g[poi_idx])
     }
     
-    # ZI within group g
+    # 4) ZI within group g
     zi_g <- p0_obs_g - p0_nb_g
     
     data.frame(
@@ -163,26 +161,32 @@ check_zeroinflation <- function(data = NULL,
   
   gene_metrics_by_group <- do.call(rbind, per_group_gene_metrics)
   
+  #if there are more than one cutoffs, calculate pct_ZI_gt_ for each cutoff
   # Per-group summaries (one row per group)
   summary_by_group <- do.call(rbind, lapply(split(gene_metrics_by_group, gene_metrics_by_group$group), function(df){
-    list(
+    
+    list_a <- list(
       group            = unique(df$group),
       n_genes          = nrow(df),
       n_wells          = sum(combined_id == unique(df$group)),
       median_p0_obs    = median(df$p0_obs),
       median_p0_nb     = median(df$p0_nb),
       median_ZI        = median(df$ZI),
-      pct_ZI_gt_0.05   = mean(df$ZI > 0.05),
-      pct_ZI_gt_0.10   = mean(df$ZI > 0.1),
       observed_zeros_num       = sum(df$obs_zeros_num),
       expected_zeros_num  = sum(df$expected_zeros_num) 
     )
-  })) |>
-    as.data.frame()
-  
-  # Return gene-level metrics and sample group-level summaries
+    
+    list_b <- lapply(cutoffs, function(cutoff){
+      pct_name <- paste0("pct_ZI_gt_", cutoff)
+      pct_value <- mean(df$ZI > cutoff)
+      setNames(list(pct_value), pct_name)
+    })
+    
+    as.data.frame(c(list_a, list_b))
+  })) 
+  # Return just the selected groups' indices instead of plate-level
   list(
-    gene_metrics_by_group = gene_metrics_by_group %>% head(10),     
+    gene_metrics_by_group = gene_metrics_by_group %>% head(10),     # long format: group × gene
     summary_by_group      = summary_by_group
   )
   
