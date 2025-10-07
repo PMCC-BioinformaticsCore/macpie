@@ -1,60 +1,89 @@
-#' @tite Check zero-inflated counts 
+#' Quick group-aware zero-inflation check (NB baseline via edgeR)
 #'
-#' This offers a fast, method-agonistic way to check whether the data is zero-inflated 
-#' relative to a Negative Binomial distribution. 
-#' 
-#' It computes observed zero fraction and NB-expected zero fraction per gene,
-#' then reports a ZI index = p0_obs - p0_NB. Uses edgeR for dispersion.
-#' 
-#' Other methods to check zero-inflation include: GLM-fitted (glmGamPoi) when
-#' your data has strong effects (plate/row/column/treatment) and you want 
-#' the most accurate estimation.
-#' 
+#' @description
+#' Computes a **group-aware Zero-Inflation (ZI) index** for each gene using a
+#' negative-binomial (NB) baseline fitted with **edgeR**. For each group
+#' (e.g., drug condition), the function:
+#' 1) estimates gene-wise tagwise dispersions with edgeR (using all selected groups),
+#' 2) builds NB-expected zero probabilities from TMMwsp-scaled means, and
+#' 3) returns per-gene ZI (observed zeros minus NB-expected zeros) and
+#'    per-group summaries (e.g., % genes with ZI > 0.05).
+#'
+#' This is intended as a **fast screening diagnostic** to decide whether
+#' standard NB GLM methods (edgeR/DESeq2) are adequate or whether a
+#' zero-aware workflow (e.g., ZINB-WaVE) might be warranted.
+#'
+#' @important
+#' This helper **relies on edgeR** to estimate dispersion. The current
+#' implementation requires **≥2 groups** in the design so that edgeR can
+#' stabilize gene-wise dispersions across groups. If you only have a single
+#' group and still want a design-aware baseline for expected zeros, fit a
+#' Gamma–Poisson/NB GLM yourself (e.g., with **glmGamPoi**) and compute the
+#' expected zero probabilities from its fitted means and overdispersion.
+#'
+#' @param data Seurat object.
+#' @param group_by Character, column in `data@meta.data` that defines groups
+#'   (default: `"combined_id"`).
+#' @param samples Character vector of group labels/patterns to include. If
+#'   `NULL` or if none match, all groups in `group_by` are used.
+#' @param batch Optional batch indicator; if length 1, an intercept-free design
+#'   is used with group dummies.
+#'
+#' @returns A list with:
+#' * `gene_metrics_by_group`: long data frame (group × gene) with `p0_obs`,
+#'   `p0_nb`, `ZI`, and counts.
+#' * `summary_by_group`: one row per group with medians and % ZI thresholds,
+#'   plus observed/expected zero **counts** for the group.
+#'
+#' @note
+#' - This is a **screening** tool; it is not a replacement for fitting a full
+#'   GLM with your actual design. If strong covariates exist, a GLM baseline
+#'   (e.g., `glmGamPoi::glm_gp`) will yield more faithful expected-zero rates.
+#' - For single-group experiments, consider either adding a reference group or
+#'   switching to a GLM-based baseline that does not require multiple groups.
+#'
+#' @examples
+#' # check_zeroinflation(mini_mac, group_by = "combined_id",
+#' #                           samples = c("DrugA_10", "DMSO_0"))
+
 
 
 check_zeroinflation <- function(data = NULL,
-                                group_by = NULL,
-                                samples = NULL,
-                                batch = 1
-                                ){
-  
-  validate_inputs <- function(data, samples) {
+                                     group_by = NULL,
+                                     samples = NULL,
+                                     batch = 1
+){
+  validate_inputs <- function(data, group_by, samples) {
     if (!inherits(data, "Seurat")) {
       stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
-    group_by <- if (is.null(group_by)) "combined_id" else group_by} 
+    group_by <- if (is.null(group_by)) "combined_id" else group_by
     
-    #decide grouping mode
+    # check samples in combined_id column
     meta_groups <- as.character(data@meta.data[[group_by]])
     matched_groups <- !is.null(samples) && any(grepl(samples, meta_groups))
-    if (matched_groups){
-      
-    }
-    
-    
-    if (is.null(samples)) {
-      stop("Samples are not specified, whole set of samples will be included.")
-    } else {
-      if (length(samples)>=1){
-        sample_list <- grepl(samples, data$combined_id)
-        if (sum(sample_list) == 0) {
-          stop("Your samples are not in your combined_id column.")
-        }
-      }
-    }
-    # Helper: Prepare data and pheno_data
-    prepare_data <- function(data, samples, batch) {
-      data <- data[, grepl(samples, data$combined_id)]
-      if (length(unique(data$combined_id)) < 2) {
-        stop("Insufficient factors for differential expression analysis.")
-      }
-      pheno_data <- data.frame(batch = as.factor(batch), condition = as.factor(data$combined_id))
-      return(list(data = data, pheno_data = pheno_data))
-    }
+    if (!matched_groups){
+      # all samples included
+      samples <- unique(data@meta.data[[group_by]])
+      cat("All samples will be included in the combined_id column.")
+    } 
+    # need at least two groups for edgeR dispersion estimation
+    if (length(samples) == 1) {
+      stop("Two treatment groups are needed to calculate dispersion using edgeR.")
+    } 
+    return(list(data = data, group_by = group_by, samples = samples))
   }
   
   
-  count_matrix <- GetAssayData(data, assay = "RNA", layer = "counts")
+  
+  validated <- validate_inputs(data, group_by, samples)
+  data <- validated$data
+  group_by <- validated$group_by
+  samples <- validated$samples
+  
+  # samples must be specified
+  mac_data <- subset(data, subset = combined_id %in% samples)
+  count_matrix <- GetAssayData(mac_data, assay = "RNA", layer = "counts")
   count_matrix <- Matrix::Matrix(count_matrix, sparse = TRUE)
   obs_zero <- Matrix::rowMeans(count_matrix == 0)
   
@@ -64,85 +93,97 @@ check_zeroinflation <- function(data = NULL,
   dge <- edgeR::calcNormFactors(dge, method = "TMMwsp")
   
   #design matrix
-  combined_id <- data$combined_id
-  #model matrix with the batch parameter
+  combined_id <- mac_data$combined_id
+  #make up batch parameter
   model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
     model.matrix(~0 + combined_id + batch)
   # tagwise dispersion
   dge <- edgeR::estimateDisp(dge, design = model_matrix)  
   phi <- dge$tagwise.dispersion  # NB variance: mu + phi * mu^2  (phi >= 0)
-  
-  
-  # ---- 4) Build per-sample NB mean mu_gj using TMM-scaled library sizes
+  # Build per-sample NB mean mu_gj using TMMwsp-scaled library sizes
   # Effective library sizes
   eff_lib <- dge$samples$lib.size * dge$samples$norm.factors
-  # Per-gene proportion q_g = total counts for gene / total eff_lib across samples
-  total_eff_lib <- sum(eff_lib)
-  total_counts_per_gene <- Matrix::rowSums(count_matrix)
-  q_g <- as.numeric(total_counts_per_gene) / total_eff_lib
-  # expected mean cont for each gene in each sample
-  mu <- q_g %o% eff_lib      # (genes x samples) without materializing too big objects in typical 384-well
   
+  per_group_gene_metrics <- lapply(samples, function(g){
+    
+    idx <- which(combined_id == g)
+    n_wells <- length(idx)
+    # sub count matrix for group g
+    count_matrix_g <- count_matrix[, idx, drop=FALSE]
+    # Observed zeros within group g
+    p0_obs_g <- Matrix::rowMeans(count_matrix_g==0)
+    
+    # count zeros per gene within group g
+    # sum later for summary
+    obs_zero_num_g <- Matrix::rowSums(count_matrix_g==0)
+    
+    # Group-specific q_{g,g} using only wells in group g
+    eff_lib_g <- eff_lib[idx]
+    total_eff_lib_g <- sum(eff_lib_g)
+    total_counts_per_gene_g <- Matrix::rowSums(count_matrix_g)
+    q_g_g <- as.numeric(total_counts_per_gene_g) / total_eff_lib_g
+    
+    # NB-expected zeros within group g (average over wells in g)
+    eps <- 1e-12
+    phi_safe <- pmax(phi, eps)
+    inv_phi <- 1 / phi_safe
+    
+    # Fast loop over wells in g, no GxJ materialization
+    p0_nb_sum_g <- numeric(nrow(count_matrix))
+    for (j in seq_along(idx)) {
+      Lj <- eff_lib_g[j]
+      mu_gj <- q_g_g * Lj
+      p0_nb_sum_g <- p0_nb_sum_g + (1 + phi_safe * mu_gj)^(-inv_phi)
+    }
+    p0_nb_g <- p0_nb_sum_g / length(idx)
+    
+    # Poisson fallback where phi ~ 0
+    poi_idx <- which(phi < 1e-8)
+    if (length(poi_idx)) {
+      mu_bar_g <- q_g_g * mean(eff_lib_g)
+      p0_nb_g[poi_idx] <- exp(-mu_bar_g[poi_idx])
+    }
+    
+    # ZI within group g
+    zi_g <- p0_obs_g - p0_nb_g
+    
+    data.frame(
+      group = g,
+      gene  = rownames(count_matrix),
+      mean_count_group = total_counts_per_gene_g / length(idx),
+      dispersion = phi,
+      p0_obs = p0_obs_g,
+      obs_zeros_num = obs_zero_num_g,
+      p0_nb  = p0_nb_g,
+      expected_zeros_num = p0_nb_g*n_wells,
+      ZI     = zi_g,
+      stringsAsFactors = FALSE
+    )
+  })
   
-  # ---- 5) NB-expected zero per gene, averaged across samples
-  # p0_NB_gj = (1 + phi_g * mu_gj)^(-1/phi_g); then average over j
-  # guard against phi==0 (Poisson limit): use exp(-mu) when phi ~ 0
-  eps <- 1e-12
-  phi_safe <- pmax(phi, eps)
-  # vectorized: compute per gene using rowMeans on transformed mu
-  inv_phi <- 1 / phi_safe
-  # (1 + phi * mu)^(-1/phi)  -> do per gene with broadcasting
-  # Use sweep for efficiency
-  one_plus <- sweep(mu, 1, phi_safe, `*`)
-  one_plus <- 1 + one_plus
-  p0_nb_mat <- sweep(one_plus, 1, inv_phi, `^`)  # (1 + phi*mu)^(-1/phi)
-  p0_nb <- rowMeans(1 / p0_nb_mat)               # since above computed (1+phi*mu)^(+1/phi); invert
-  # NOTE: If memory is a concern, chunk over columns; okay for 384 wells.
+  gene_metrics_by_group <- do.call(rbind, per_group_gene_metrics)
   
-  # Poisson fallback where phi was ~0 (replace those rows with exp(-rowMeans(mu)))
-  poi_idx <- which(phi < 1e-8)
-  if (length(poi_idx)) {
-    mu_bar <- rowMeans(mu[poi_idx, , drop = FALSE])
-    p0_nb[poi_idx] <- exp(-mu_bar)
-  }
+  # Per-group summaries (one row per group)
+  summary_by_group <- do.call(rbind, lapply(split(gene_metrics_by_group, gene_metrics_by_group$group), function(df){
+    list(
+      group            = unique(df$group),
+      n_genes          = nrow(df),
+      n_wells          = sum(combined_id == unique(df$group)),
+      median_p0_obs    = median(df$p0_obs),
+      median_p0_nb     = median(df$p0_nb),
+      median_ZI        = median(df$ZI),
+      pct_ZI_gt_0.05   = mean(df$ZI > 0.05),
+      pct_ZI_gt_0.10   = mean(df$ZI > 0.1),
+      observed_zeros_num       = sum(df$obs_zeros_num),
+      expected_zeros_num  = sum(df$expected_zeros_num) 
+    )
+  })) |>
+    as.data.frame()
   
-  # ---- 6) ZI index per gene
-  zi <- obs_zero - p0_nb
-  
-  # ---- 7) Summaries
-  libsize <- Matrix::colSums(count_matrix)
-  summary <- list(
-    n_genes          = nrow(count_matrix),
-    n_samples        = ncol(count_matrix),
-    median_libsize   = stats::median(libsize),
-    median_p0_obs    = stats::median(obs_zero),
-    median_p0_nb     = stats::median(p0_nb),
-    median_ZI        = stats::median(zi),
-    pct_ZI_gt_0.05   = mean(zi > 0.05),
-    pct_ZI_gt_0.10   = mean(zi > 0.10),
-    mean_observed_zeros       = mean(obs_zero*ncol(count_matrix)),
-    mean_expected_zeros       = mean(p0_nb*ncol(count_matrix))
-  )
-  
-  thresholds_used <- list(
-    zi_margin_small = 0.05,
-    zi_margin_mod   = 0.10
-  )
-  
-  gene_metrics <- data.frame(
-    gene = rownames(count_matrix),
-    mean_count = total_counts_per_gene / ncol(count_matrix),
-    dispersion = phi,
-    p0_obs = p0_obs,
-    p0_nb  = p0_nb,
-    ZI     = zi,
-    stringsAsFactors = FALSE
-  )
-  
+  # Return gene-level metrics and sample group-level summaries
   list(
-    gene_metrics   = gene_metrics,
-    summary        = summary,
-    thresholds_used = thresholds_used
+    gene_metrics_by_group = gene_metrics_by_group %>% head(10),     
+    summary_by_group      = summary_by_group
   )
   
 }
