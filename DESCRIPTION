@@ -75,7 +75,8 @@ Suggests:
     scuttle,
     methods,
     SeuratObject,
-    SummarizedExperiment
+    SummarizedExperiment,
+    seqgendiff
 Config/testthat/edition: 3
 Imports:
     dplyr,
