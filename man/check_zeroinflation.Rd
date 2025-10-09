@@ -54,7 +54,7 @@ This function \strong{relies on edgeR} to estimate dispersion. The current
 implementation requires \strong{≥2 groups} in the design so that edgeR can
 stabilize gene-wise dispersions across groups. If you only have a single
 group and still want a design-aware baseline for expected zeros, fit a
-Gamma–Poisson/NB GLM (e.g., with \strong{glmGamPoi}) and compute the
+Gamma–Poisson/NB GLM and compute the
 expected zero probabilities from its fitted means and over-dispersion.
 }
 \note{

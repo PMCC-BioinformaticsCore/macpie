@@ -17,7 +17,7 @@
 #' implementation requires **≥2 groups** in the design so that edgeR can
 #' stabilize gene-wise dispersions across groups. If you only have a single
 #' group and still want a design-aware baseline for expected zeros, fit a
-#' Gamma–Poisson/NB GLM (e.g., with **glmGamPoi**) and compute the
+#' Gamma–Poisson/NB GLM and compute the
 #' expected zero probabilities from its fitted means and over-dispersion.
 #'
 #' @param data Seurat object.
@@ -172,7 +172,7 @@ check_zeroinflation <- function(data = NULL,
   })) 
   # Return just the selected groups' indices instead of plate-level
   list(
-    gene_metrics_by_group = gene_metrics_by_group %>% head(10),     # long format: group × gene
+    gene_metrics_by_group = gene_metrics_by_group,     # long format: group × gene
     summary_by_group      = summary_by_group
   )
   
