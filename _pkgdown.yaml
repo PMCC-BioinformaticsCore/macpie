@@ -31,6 +31,8 @@ navbar:
           href: articles/integration_across_modalities.html
         - text: "Working with Bioconductor classes"
           href: articles/macpie_bioc.html
+        - text: "Chck zero-inflation"
+          href: articles/check_zero_inflation.html
     - text: "Reference"
       href: reference/index.html  # Links to your function reference docs.
   right:
