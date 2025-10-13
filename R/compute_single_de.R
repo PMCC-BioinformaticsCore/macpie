@@ -157,7 +157,8 @@ compute_single_de <- function(data = NULL,
     combined_id <- data$combined_id
     dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts,
                                   colData = pheno_data,
-                                  design = ~ condition)
+                                  # design = ~ condition)
+                                  design = if (length(batch) == 1) ~ condition else ~ condition + batch)
     dds <- DESeq(dds)
     res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
     top_table <- as.data.frame(res) %>%
