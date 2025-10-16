@@ -7,7 +7,7 @@ utils::globalVariables(c("model_matrix"))
 #'   "Well_ID", "Row", "Column"
 #' @param treatment_samples Value in the column "combined_id" representing replicates of treatment samples in the data
 #' @param control_samples Value in the column "combined_id"  representing replicates of control samples in the data
-#' @param method One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
+#' @param method One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
@@ -48,7 +48,7 @@ compute_single_de <- function(data = NULL,
     method <- if (is.null(method)) "limma_voom" else method
     if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom")) {
+                       "limma_voom", "limma_trend")) {
       stop("Your normalization method is not available.")
     }
     if (is.null(treatment_samples) || is.null(control_samples)) {
@@ -96,6 +96,31 @@ compute_single_de <- function(data = NULL,
     contrasts <- do.call(makeContrasts, myargs)
     tmp <- contrasts.fit(fit, contrasts)
     tmp <- eBayes(tmp, robust = TRUE)
+    top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
+      select("logFC", "t", "P.Value", "adj.P.Val") %>%
+      rename("log2FC" = "logFC", "metric" = "t", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
+      rownames_to_column("gene")
+    return(as.data.frame(top_table))
+  }
+  
+  de_limma_trend <- function(data, pheno_data, treatment_samples, control_samples) {
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+    dge <- DGEList(counts = data@assays$RNA$counts,
+                   samples = pheno_data$condition,
+                   group = pheno_data$condition)
+    dge <- estimateDisp(dge, model_matrix)
+    dge <- calcNormFactors(dge, method = "TMMwsp")
+    logCPM <- cpm(dge, log=TRUE, prior.count=3)
+    fit <- lmFit(logCPM, model_matrix)
+    myargs <- list(paste0("combined_id",
+                          treatment_samples, "-",
+                          paste0("combined_id", control_samples)),
+                   levels = model_matrix)
+    contrasts <- do.call(makeContrasts, myargs)
+    tmp <- contrasts.fit(fit, contrasts)
+    tmp <- eBayes(tmp, trend = TRUE)
     top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
       select("logFC", "t", "P.Value", "adj.P.Val") %>%
       rename("log2FC" = "logFC", "metric" = "t", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
@@ -343,6 +368,7 @@ compute_single_de <- function(data = NULL,
   de_data <- switch(
     method,
     limma_voom = de_limma_voom(data, pheno_data, treatment_samples, control_samples),
+    limma_trend = de_limma_trend(data, pheno_data, treatment_samples, control_samples),
     edgeR = de_edger(data, pheno_data, treatment_samples, control_samples),
     DESeq2 = de_deseq2(data, pheno_data, treatment_samples, control_samples),
     Seurat_wilcox = de_seurat(data, pheno_data, treatment_samples, control_samples),
