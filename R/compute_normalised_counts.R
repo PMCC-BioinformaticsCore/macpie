@@ -5,7 +5,7 @@
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
 #' @param method One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
@@ -139,6 +139,17 @@ compute_normalised_counts <- function(data = NULL,
     dge$E
   }
 
+  normalize_limma_trend <- function(data, batch) {
+    dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
+    dge <- calcNormFactors(dge, methods = "TMMwsp")
+    design <- model_matrix
+    logCPM <- cpm(dge, log=TRUE, prior.count=3)
+    fit <- lmFit(logCPM, design)
+    fit <- eBayes(fit, trend=TRUE)
+    dge <- fit
+    logCPM
+  }
+  
   normalize_ruvg <- function(data, batch, spikes, k) {
     counts <- data@assays$RNA$counts
     if (length(spikes) == 0) {
@@ -202,7 +213,7 @@ compute_normalised_counts <- function(data = NULL,
     }
     data_sce <- as.SingleCellExperiment(data)
     filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 10)
-    num_cores <- 8 # Change this based on your system
+    num_cores <- 4 # Change this based on your system
     cl <- makeCluster(num_cores)
     doParallel::registerDoParallel(cl)
     p <- BiocParallel::DoparParam()
@@ -235,6 +246,7 @@ compute_normalised_counts <- function(data = NULL,
     DESeq2 = normalize_deseq2(data, batch),
     edgeR = normalize_edger(data, batch),
     limma_voom = normalize_limma_voom(data, batch),
+    limma_trend = normalize_limma_trend(data, batch),
     RUVg = normalize_ruvg(data, batch, spikes, k),
     RUVs = normalize_ruvs(data, batch, k),
     RUVr = normalize_ruvr(data, batch, k),
