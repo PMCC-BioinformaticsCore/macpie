@@ -18,7 +18,9 @@
 #' @import RUVSeq
 #' @importFrom Biobase pData
 #' @importFrom stats model.matrix residuals
+#' @importFrom limma lmFit
 #' @importFrom parallel makeCluster stopCluster
+#' @importFrom SummarizedExperiment assay
 #'
 #' @returns Data frame of normalised counts
 #' @export

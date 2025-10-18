@@ -12,7 +12,8 @@ plot_rle(
   log = TRUE,
   batch = NULL,
   normalisation = NULL,
-  spikes = NULL
+  spikes = NULL,
+  num_cores = NULL
 )
 }
 \arguments{
@@ -34,9 +35,11 @@ Defaults to \code{TRUE}.}
 number of samples.}
 
 \item{normalisation}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to raw.}
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb". If empty, defaults to raw.}
 
 \item{spikes}{List of genes to use as spike controls in RUVg}
+
+\item{num_cores}{Number of cores for edgeR and zinb calculations}
 }
 \value{
 A ggplot object representing the RLE plot.

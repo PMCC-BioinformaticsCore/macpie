@@ -22,7 +22,7 @@ compute_single_de(
 
 \item{control_samples}{Value in the column "combined_id"  representing replicates of control samples in the data}
 
-\item{method}{One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
+\item{method}{One of "Seurat_wilcox", "DESeq2", "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend"}
 
 \item{batch}{Either empty, a single value, or a vector corresponding to the
 number of samples}
