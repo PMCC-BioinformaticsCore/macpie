@@ -10,7 +10,8 @@ compute_normalised_counts(
   batch = NULL,
   k = NULL,
   spikes = NULL,
-  max_counts = NULL
+  max_counts = NULL,
+  num_cores = NULL
 )
 }
 \arguments{
@@ -18,16 +19,18 @@ compute_normalised_counts(
 "Well_ID", "Row", "Column"}
 
 \item{method}{One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"}
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb"}
 
 \item{batch}{Either empty, a single value, or a vector corresponding to the
 number of samples}
 
-\item{k}{Parameter k for RUVSeq methods, check RUVSeq tutorial}
+\item{k}{Parameter k for RUVSeq and zinb methods}
 
 \item{spikes}{List of genes to use as spike controls}
 
 \item{max_counts}{Maximum count for a gene across all samples}
+
+\item{num_cores}{Number of cores}
 }
 \value{
 Data frame of normalised counts

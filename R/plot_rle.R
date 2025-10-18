@@ -15,8 +15,10 @@
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples.
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to raw.
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb". If empty, defaults to raw.
 #' @param spikes List of genes to use as spike controls in RUVg
+#' @param num_cores Number of cores for edgeR and zinb calculations
+
 #'
 #' @details
 #' The function performs the following steps:
@@ -43,7 +45,8 @@ plot_rle <- function(data, barcodes = NULL,
                      log = TRUE,
                      batch = NULL, 
                      normalisation = NULL,
-                     spikes = NULL) {
+                     spikes = NULL,
+                     num_cores = NULL) {
   
   req_pkgs <- c("colorspace", "grDevices")
   missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
@@ -56,7 +59,8 @@ plot_rle <- function(data, barcodes = NULL,
   }
 
   # Helper function to validate input data
-  validate_inputs <- function(data, barcodes, label_column, labels, log, batch, normalisation) {
+  validate_inputs <- function(data, barcodes, label_column, labels, log, batch, 
+                              normalisation, num_cores) {
     if (!inherits(data, "Seurat")) {
       stop("'data' must be a Seurat or TidySeurat object.")
     }
@@ -78,13 +82,15 @@ plot_rle <- function(data, barcodes = NULL,
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
     normalisation <- if (is.null(normalisation)) "raw" else normalisation
-
+    num_cores <- if (is.null(num_cores)) 1 else num_cores
+    
     list(barcodes = as.factor(barcodes),
          labels = as.factor(labels),
          log = ifelse(inherits(log, "function"), TRUE, log),
          batch = batch,
          normalisation = normalisation,
-         spikes = spikes)
+         spikes = spikes,
+         num_cores = num_cores)
   }
 
   # Helper function to fetch and log-transform count matrix
@@ -176,28 +182,30 @@ plot_rle <- function(data, barcodes = NULL,
   }
 
   # Validate inputs
-  validated <- validate_inputs(data, barcodes, label_column, labels, log, batch, normalisation)
+  validated <- validate_inputs(data, barcodes, label_column, labels, log, batch, normalisation, num_cores)
   barcodes <- validated$barcodes
   labels <- validated$labels
   log <- validated$log
   batch <- validated$batch
   normalisation <- validated$normalisation
+  num_cores <- validated$num_cores
 
   # Fetch and transform count matrix
   count_matrix <- switch(
     normalisation,
     raw = fetch_count_matrix(data, log),
-    logNorm = compute_normalised_counts(data, method = "logNorm", batch = batch),
-    cpm = compute_normalised_counts(data, method = "cpm", batch = batch),
-    clr = compute_normalised_counts(data, method = "clr", batch = batch),
-    SCT = compute_normalised_counts(data, method = "SCT", batch = batch),
-    DESeq2 = compute_normalised_counts(data, method = "DESeq2", batch = batch),
-    edgeR = compute_normalised_counts(data, method = "edgeR", batch = batch),
-    limma_voom = compute_normalised_counts(data, method = "limma_voom", batch = batch),
-    RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes),
-    RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch),
-    RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch),
-    zinb = compute_normalised_counts(data, method = "zinb", batch = batch),
+    logNorm = compute_normalised_counts(data, method = "logNorm", batch = batch, num_cores = num_cores),
+    cpm = compute_normalised_counts(data, method = "cpm", batch = batch, num_cores = num_cores),
+    clr = compute_normalised_counts(data, method = "clr", batch = batch, num_cores = num_cores),
+    SCT = compute_normalised_counts(data, method = "SCT", batch = batch, num_cores = num_cores),
+    DESeq2 = compute_normalised_counts(data, method = "DESeq2", batch = batch, num_cores = num_cores),
+    edgeR = compute_normalised_counts(data, method = "edgeR", batch = batch, num_cores = num_cores),
+    limma_voom = compute_normalised_counts(data, method = "limma_voom", batch = batch, num_cores = num_cores),
+    limma_trend = compute_normalised_counts(data, method = "limma_trend", batch = batch, num_cores = num_cores),
+    RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes, num_cores = num_cores),
+    RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch, num_cores = num_cores),
+    RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch, num_cores = num_cores),
+    zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
     stop("Unsupported normalization method.")
   )
 
@@ -213,5 +221,7 @@ plot_rle <- function(data, barcodes = NULL,
   rledf <- compute_rle_df(count_matrix, labels)
 
   # Create and return plot
-  create_rle_plot(rledf, normalisation)
+  out <- create_rle_plot(rledf, normalisation)
+  out$SE <- compute_cv(count_matrix)
+  return(out)
 }
