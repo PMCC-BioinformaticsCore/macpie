@@ -5,12 +5,13 @@
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
 #' @param method One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb"
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
-#' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
+#' @param k Parameter k for RUVSeq and zinb methods
 #' @param spikes List of genes to use as spike controls
 #' @param max_counts Maximum count for a gene across all samples
+#' @param num_cores Number of cores
 #' @importFrom limma voom
 #' @importFrom Seurat as.SingleCellExperiment
 #' @import DESeq2
@@ -30,7 +31,8 @@ compute_normalised_counts <- function(data = NULL,
                                     batch = NULL,
                                     k = NULL,
                                     spikes = NULL,
-                                    max_counts = NULL) {
+                                    max_counts = NULL,
+                                    num_cores = NULL) {
   req_pkgs <- c("SingleCellExperiment", "EDASeq", "BiocParallel", "doParallel","zinbwave")
   missing <- req_pkgs[!vapply(req_pkgs, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
@@ -41,7 +43,7 @@ compute_normalised_counts <- function(data = NULL,
     )
   }
   # Helper function to validate input data
-  validate_inputs <- function(data, method, batch, k, max_counts) {
+  validate_inputs <- function(data, method, batch, k, max_counts, num_cores) {
     if (!inherits(data, "Seurat")) {
       stop("argument 'data' must be a Seurat or TidySeurat object.")
     }
@@ -50,13 +52,14 @@ compute_normalised_counts <- function(data = NULL,
                        "cpm", "clr", "SCT",
                        "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom", "zinb")) {
+                       "limma_voom", "limma_trend", "zinb")) {
       stop("Your normalization method is not available.")
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
     k <- if (is.null(k)) 2 else k
     max_counts <- if (is.null(max_counts)) 100 else as.numeric(max_counts)
-    list(data = data, batch = batch, k = k, method = method)
+    num_cores <- if (is.null(num_cores)) 1 else num_cores
+    list(data = data, batch = batch, k = k, method = method, num_cores=num_cores)
   }
 
   #create an unique identifier based on combined annotation
@@ -124,10 +127,13 @@ compute_normalised_counts <- function(data = NULL,
     if (ncol(data) > 100) {
       message("EdgeR with over 100 samples takes a long time. Consider reducing the number of samples or genes.")
     }
+    cl <- makeCluster(num_cores)
+    doParallel::registerDoParallel(cl)
+    p <- BiocParallel::DoparParam()
     dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
     dge <- calcNormFactors(dge, methods = "TMM")
     design <- model_matrix
-    dge <- estimateDisp(dge, design)
+    dge <- estimateDisp(dge, design, BPPARAM = p)
     cpm(dge, log = FALSE)
   }
 
@@ -153,10 +159,27 @@ compute_normalised_counts <- function(data = NULL,
   normalize_ruvg <- function(data, batch, spikes, k) {
     counts <- data@assays$RNA$counts
     if (length(spikes) == 0) {
-      stop("List of control genes not provided for RUVg.")
+      warning("List of control genes not provided for RUVg, using default human housekeeping genes.")
+      spikes <- c(
+        "ACTB",
+        "GAPDH",
+        "RPLP0",
+        "B2M",
+        "HPRT1",
+        "PGK1",
+        "TBP",
+        "UBC",
+        "YWHAZ",
+        "PPIA",
+        "RPL19",
+        "EEF1A1",
+        "RPS18",
+        "TFRC"
+      )
     }
     if (!all(spikes %in% row.names(data@assays$RNA$counts))) {
-      stop("Some or all of your control genes are not present in the dataset.")
+      warning("Some or all of your control genes are not present in the dataset.")
+      spikes <- intersect(spikes, rownames(counts(set)))
     }
     #k defines number of sources of variation, two have been chosen for row and column
     set <- EDASeq::newSeqExpressionSet(counts = as.matrix(counts),
@@ -175,7 +198,17 @@ compute_normalised_counts <- function(data = NULL,
                                phenoData = data.frame(condition = coldata$condition,
                                                       row.names = colnames(counts)))
     differences <- model_matrix
-    set <- RUVs(set, cIdx = genes, k = k, scIdx = differences)
+    differences <- lapply(seq_len(ncol(model_matrix)), function(j) {
+      which(model_matrix[, j] == 1)
+    })
+    max_len <- max(lengths(differences))
+    scIdx <- matrix(NA, nrow = max_len, ncol = length(differences))
+    for (i in seq_along(differences)) {
+      scIdx[seq_along(differences[[i]]), i] <- differences[[i]]
+    }
+    scIdx<-t(scIdx)
+    colnames(scIdx) <- colnames(model_matrix)
+    set <- RUVs(set, cIdx = genes, k = k, scIdx = scIdx)
 
     EDASeq::normCounts(set)
   }
@@ -204,37 +237,50 @@ compute_normalised_counts <- function(data = NULL,
 
   normalize_zinb <- function(data, batch) {
 
-    message("zinb mode takes a couple of minutes. Please allow extra time.")
-    message("Default uses genes with max_counts > 100 reads across all treatments.")
-    message("reducing the parameter max_counts may increase the compute time and memory required.")
-
+    message("Please allow extra time for zinb mode.")
     if (ncol(data) > 50) {
       message("zinb with over 50 samples takes a long time. Consider reducing the number of samples or genes.")
     }
     data_sce <- as.SingleCellExperiment(data)
-    filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 10)
-    num_cores <- 4 # Change this based on your system
+    filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 0)
     cl <- makeCluster(num_cores)
     doParallel::registerDoParallel(cl)
     p <- BiocParallel::DoparParam()
-    system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = 2,
-                                 epsilon=1000,
+    system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = k,
+                                 epsilon=12000,
                                  BPPARAM = p,
-                                 normalizedValues=TRUE,
-                                 residuals = TRUE))
-    normalised_values <- zinb@assays@data$normalizedValues
+                                 observationalWeights = TRUE))
+    counts <- assay(zinb, "counts")
+    weights <- assay(zinb, "weights")
+    
+    # approximate denoised counts (downweighting dropouts)
+    #dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
+    #dge <- calcNormFactors(dge, methods = "TMM")
+    #design <- model_matrix
+    #dge <- estimateDisp(dge, design, BPPARAM = p)
+    #dge$weights <- assay(zinb, "weights")
+    #fit <- glmQLFit(dge, design, BPPARAM = p)
+    #norm_counts <- fitted(fit)
+    
+    dge <- DGEList(counts = counts(filtered_sce), samples = coldata$condition, group = coldata$condition)
+    dge <- calcNormFactors(dge, methods = "TMMwsp")
+    design <- model_matrix
+    dge <- voom(dge, design, weights = weights)
+    normalised_values <- dge$E
+    
+    #normalised_values <- zinb@assays@data$normalizedValues
     stopCluster(cl)
     doParallel::registerDoParallel()
     return(normalised_values)
   }
 
   # Main function logic
-  validated <- validate_inputs(data, method, batch, k, max_counts)
+  validated <- validate_inputs(data, method, batch, k, max_counts, num_cores)
   data <- validated$data
   batch <- validated$batch
   k <- validated$k
   method <- validated$method
-
+  num_cores <- validated$num_cores
   # Select the appropriate normalization method
   norm_data <- switch(
     method,
