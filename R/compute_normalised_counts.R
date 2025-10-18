@@ -252,8 +252,8 @@ compute_normalised_counts <- function(data = NULL,
                                  epsilon=12000,
                                  BPPARAM = p,
                                  observationalWeights = TRUE))
-    counts <- assay(zinb, "counts")
-    weights <- assay(zinb, "weights")
+    counts <- zinb@assays@data$counts
+    weights <- zinb@assays@data$weights 
     
     # approximate denoised counts (downweighting dropouts)
     #dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
