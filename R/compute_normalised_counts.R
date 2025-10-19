@@ -5,7 +5,8 @@
 #' @param data A tidyseurat object merged with metadata. Must contain columns
 #'   "Well_ID", "Row", "Column"
 #' @param method One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb"
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", 
+#'   "limma_voom_zinb", "edgeR_zinb"
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples
 #' @param k Parameter k for RUVSeq and zinb methods
@@ -53,7 +54,8 @@ compute_normalised_counts <- function(data = NULL,
                        "cpm", "clr", "SCT",
                        "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom", "limma_trend", "zinb")) {
+                       "limma_voom", "limma_trend", "limma_voom_zinb",
+                       "edgeR_zinb")) {
       stop("Your normalization method is not available.")
     }
     batch <- if (is.null(batch)) "1" else as.character(batch)
@@ -180,7 +182,7 @@ compute_normalised_counts <- function(data = NULL,
     }
     if (!all(spikes %in% row.names(data@assays$RNA$counts))) {
       warning("Some or all of your control genes are not present in the dataset.")
-      spikes <- intersect(spikes, rownames(counts(set)))
+      spikes <- intersect(spikes, rownames(counts))
     }
     #k defines number of sources of variation, two have been chosen for row and column
     set <- EDASeq::newSeqExpressionSet(counts = as.matrix(counts),
@@ -236,7 +238,7 @@ compute_normalised_counts <- function(data = NULL,
     EDASeq::normCounts(set)
   }
 
-  normalize_zinb <- function(data, batch) {
+  normalize_limmavoom_zinb <- function(data, batch) {
 
     message("Please allow extra time for zinb mode.")
     if (ncol(data) > 50) {
@@ -247,34 +249,54 @@ compute_normalised_counts <- function(data = NULL,
     cl <- makeCluster(num_cores)
     doParallel::registerDoParallel(cl)
     p <- BiocParallel::DoparParam()
-    system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = k,
+    suppressWarnings(zinb <- zinbwave::zinbwave(filtered_sce, K = k,
                                  epsilon=12000,
                                  BPPARAM = p,
-                                 observationalWeights = TRUE))
+                                 observationalWeights = TRUE, verbose = F))
     counts <- zinb@assays@data$counts
     weights <- zinb@assays@data$weights 
-    
-    # approximate denoised counts (downweighting dropouts)
-    #dge <- DGEList(counts = data@assays$RNA$counts, samples = coldata$condition, group = coldata$condition)
-    #dge <- calcNormFactors(dge, methods = "TMM")
-    #design <- model_matrix
-    #dge <- estimateDisp(dge, design, BPPARAM = p)
-    #dge$weights <- assay(zinb, "weights")
-    #fit <- glmQLFit(dge, design, BPPARAM = p)
-    #norm_counts <- fitted(fit)
-    
+
     dge <- DGEList(counts = counts(filtered_sce), samples = coldata$condition, group = coldata$condition)
     dge <- calcNormFactors(dge, methods = "TMMwsp")
     design <- model_matrix
     dge <- voom(dge, design, weights = weights)
     normalised_values <- dge$E
-    
-    #normalised_values <- zinb@assays@data$normalizedValues
     stopCluster(cl)
     doParallel::registerDoParallel()
     return(normalised_values)
   }
 
+  normalize_edger_zinb <- function(data, batch) {
+    
+    message("Please allow extra time for zinb mode.")
+    if (ncol(data) > 50) {
+      message("zinb with over 50 samples takes a long time. Consider reducing the number of samples or genes.")
+    }
+    data_sce <- as.SingleCellExperiment(data)
+    filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 0)
+    cl <- makeCluster(num_cores)
+    doParallel::registerDoParallel(cl)
+    p <- BiocParallel::DoparParam()
+    suppressMessages(zinb <- zinbwave::zinbwave(filtered_sce, K = k,
+                                                epsilon=12000,
+                                                BPPARAM = p,
+                                                observationalWeights = TRUE))
+    counts <- zinb@assays@data$counts
+    weights <- zinb@assays@data$weights 
+    
+    # approximate denoised counts (downweighting dropouts)
+    dge <- DGEList(counts = counts, samples = coldata$condition, group = coldata$condition)
+    dge <- calcNormFactors(dge, methods = "TMM")
+    design <- model_matrix
+    dge <- estimateDisp(dge, design, BPPARAM = p)
+    dge$weights <- weights
+    fit <- glmQLFit(dge, design, BPPARAM = p)
+    normalised_values <- fitted(fit)
+    stopCluster(cl)
+    doParallel::registerDoParallel()
+    return(normalised_values)
+  }
+  
   # Main function logic
   validated <- validate_inputs(data, method, batch, k, max_counts, num_cores)
   data <- validated$data
@@ -297,7 +319,8 @@ compute_normalised_counts <- function(data = NULL,
     RUVg = normalize_ruvg(data, batch, spikes, k),
     RUVs = normalize_ruvs(data, batch, k),
     RUVr = normalize_ruvr(data, batch, k),
-    zinb = normalize_zinb(data, batch),
+    limma_voom_zinb = normalize_limmavoom_zinb(data, batch),
+    edgeR_zinb = normalize_edger_zinb(data, batch),
     stop("Unsupported normalization method.")
   )
   return(norm_data)

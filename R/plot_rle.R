@@ -15,7 +15,8 @@
 #' @param batch Either empty, a single value, or a vector corresponding to the
 #'   number of samples.
 #' @param normalisation One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb". If empty, defaults to raw.
+#'   "edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "limma_voom_zinb",
+#'   "edgeR_zinb". If empty, defaults to raw.
 #' @param spikes List of genes to use as spike controls in RUVg
 #' @param num_cores Number of cores for edgeR and zinb calculations
 
@@ -205,8 +206,8 @@ plot_rle <- function(data, barcodes = NULL,
     RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes, num_cores = num_cores),
     RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch, num_cores = num_cores),
     RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch, num_cores = num_cores),
-    limma_voom_zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
-    edgeR_zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
+    limma_voom_zinb = compute_normalised_counts(data, method = "limma_voom_zinb", batch = batch, num_cores = num_cores),
+    edgeR_zinb = compute_normalised_counts(data, method = "edgeR_zinb", batch = batch, num_cores = num_cores),
     stop("Unsupported normalization method.")
   )
 
