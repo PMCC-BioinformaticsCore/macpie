@@ -96,24 +96,24 @@ compute_normalised_counts <- function(data = NULL,
 
   normalize_lognorm <- function(data) {
     lognorm <- NormalizeData(data, normalization.method = "LogNormalize", scale.factor = 10000)
-    lognorm@assays$RNA$data
+    return(lognorm@assays$RNA$data)
   }
 
   normalize_cpm <- function(data) {
     cpm <- NormalizeData(data, normalization.method = "RC", scale.factor = 1e6)
-    cpm@assays$RNA$data
+    return(cpm@assays$RNA$data)
   }
 
   normalize_clr <- function(data) {
     clr <- NormalizeData(data, normalization.method = "CLR", margin = 2)
-    clr@assays$RNA$data
+    return(clr@assays$RNA$data)
   }
 
   normalize_sct <- function(data, batch) {
     sct <- SCTransform(data, do.scale = TRUE,
                        return.only.var.genes = FALSE,
                        vars.to.regress = if (length(batch) == 1) NULL else batch, verbose = FALSE)
-    sct@assays$SCT$data
+    return(sct@assays$SCT$data)
   }
 
   normalize_deseq2 <- function(data, batch) {
@@ -121,7 +121,7 @@ compute_normalised_counts <- function(data = NULL,
     design <- model_matrix
     dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts, colData = coldata, design = design)
     dds <- estimateSizeFactors(dds)
-    counts(dds, normalized = TRUE)
+    return(counts(dds, normalized = TRUE))
   }
 
   normalize_edger <- function(data, batch) {
@@ -135,7 +135,7 @@ compute_normalised_counts <- function(data = NULL,
     dge <- calcNormFactors(dge, methods = "TMM")
     design <- model_matrix
     dge <- estimateDisp(dge, design, BPPARAM = p)
-    cpm(dge, log = FALSE)
+    return(cpm(dge, log = FALSE))
   }
 
   normalize_limma_voom <- function(data, batch) {
@@ -143,7 +143,7 @@ compute_normalised_counts <- function(data = NULL,
     dge <- calcNormFactors(dge, methods = "TMMwsp")
     design <- model_matrix
     dge <- voom(dge, design)
-    dge$E
+    return(dge$E)
   }
 
   normalize_limma_trend <- function(data, batch) {
@@ -154,7 +154,7 @@ compute_normalised_counts <- function(data = NULL,
     fit <- lmFit(logCPM, design)
     fit <- eBayes(fit, trend=TRUE)
     dge <- fit
-    logCPM
+    return(logCPM)
   }
   
   normalize_ruvg <- function(data, batch, spikes, k) {

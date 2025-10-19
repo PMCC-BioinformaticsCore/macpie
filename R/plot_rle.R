@@ -205,7 +205,8 @@ plot_rle <- function(data, barcodes = NULL,
     RUVg = compute_normalised_counts(data, method = "RUVg", batch = batch, spikes = spikes, num_cores = num_cores),
     RUVs = compute_normalised_counts(data, method = "RUVs", batch = batch, num_cores = num_cores),
     RUVr = compute_normalised_counts(data, method = "RUVr", batch = batch, num_cores = num_cores),
-    zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
+    limma_voom_zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
+    edgeR_zinb = compute_normalised_counts(data, method = "zinb", batch = batch, num_cores = num_cores),
     stop("Unsupported normalization method.")
   )
 
