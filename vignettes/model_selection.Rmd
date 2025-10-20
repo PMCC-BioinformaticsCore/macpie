@@ -1,0 +1,177 @@
+---
+title: "Model selection "
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{check_zero_inflation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+  
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+```{r setup}
+#install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
+library(macpie)
+
+# Define project variables
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+# Load metadata
+metadata <- read_metadata(project_metadata)
+
+```
+
+```{r load_data}
+# Import raw data
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
+project_name <- "PMMSq033"
+raw_counts <- Read10X(data.dir = project_rawdata)
+# Create tidySeurat object
+mac <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+# Join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+# Add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Compound_ID, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+mac <- mac %>%
+  filter(Project == "Current")
+
+```
+
+Filter genes with very low counts across all samples. This step is important because genes with extremely low expression can lead to unreliable estimates of dispersion and expected zero probabilities, which can skew the zero-inflation assessment.
+
+```{r}
+# Filter by read count per sample group
+mac <- filter_genes_by_expression(mac, 
+                                  group_by = "combined_id", 
+                                  min_counts = 10, 
+                                  min_samples = 2)
+```
+
+
+## Subsample genes for faster computation
+
+This is to randomly select a subset of 1000 genes for a quick check. For a more comprehensive analysis, consider using a larger subset.
+
+```{r}
+# Subsample genes for faster computation
+sub_mac <- subsample_genes(mac, ngene = 1000, gselect = "random", seed = 1)
+sub_mac %>% nrow()
+```
+
+
+
+
+## DMSO vs Camptothecin
+
+We can now run the zero-inflation check on the subsampled data.
+
+First, we will compare two treatment groups: "DMSO_0" and "CAMPTOTHECIN_10".
+
+
+### Check for zero-inflation  
+
+  
+```{r}
+zi_results <- check_zeroinflation(sub_mac, 
+                                  group_by = "combined_id",
+                                  samples = c("DMSO_0","CAMPTOTHECIN_10"),
+                                  batch = 1,
+                                  cutoffs = c(0.1, 0.20))
+zi_results$summary_by_group
+```
+
+From the summary table, we can see the summary statistics for each group, including the number and percentage of genes that are zero-inflated at the specified cutoffs.
+
+Each of the columns in the summary table are defined as follows:
+
+  - group: The treatment group
+  
+  - n_genes: Total number of genes analyzed in the group
+  
+  - n_wells:  Total number of wells/samples in the group
+  
+  - median_p0_obs: Median observed zero proportion across genes in the group
+  
+  - median_p0_nb: Median expected zero proportion under the NB model across genes in the group
+  
+  - median_ZI: Median zero-inflation index (ZI = p0_nb - p0_obs for each gene) across genes in the group
+  
+  - observed_zeros_num: Number of data points with observed zeros (it shouldn't be more than n_genes*n_wells for each group)
+  
+  - expected_zeros_num: Number of data points with expected zeros under the NB model (same here, it shouldn't be more than n_genes*n_wells for each group)
+  
+  - pct_ZI_gt_0.1: Percentage of genes with ZI greater than 0.1
+  
+  - pct_ZI_gt_0.2: Percentage of genes with ZI greater than 0.2
+  
+
+
+
+### RLE plots for visualisation
+
+RLE (Relative Log Expression) plots can be used here to visualize the distribution of gene expression levels across samples within each treatment/control group. It helps to identify any systematic biases or differences in expression distributions that may indicate RUV method s are needed for normalization. 
+  
+```{r}
+de_groups <- subset(sub_mac, subset = combined_id %in% c("DMSO_0", "CAMPTOTHECIN_10")) 
+plot_rle(de_groups, label_column = "combined_id")
+plot_rle(de_groups, label_column = "combined_id", normalisation = "limma_voom")
+plot_rle(de_groups, label_column = "combined_id", normalisation = "DESeq2")
+```  
+
+  
+  
+  
+  
+### DMSO vs Staruosporine 
+  
+Next, we will compare two treatment groups: "DMSO_0" and "Staurosporine_10". As staurosporine is a potent inducer of apoptosis, we might expect to see more zero-inflation in this group compared to DMSO.
+
+
+```{r}
+# Check for zero-inflation
+zi_results <- check_zeroinflation(sub_mac, 
+                                  group_by = "combined_id",
+                                  samples = c("DMSO_0","Staurosporine_10"),
+                                  batch = 1,
+                                  cutoffs = c(0.1, 0.20))
+```
+
+```{r}
+zi_results$summary_by_group
+```
+
+
+```{r}
+#select DMSO and Staurosporine groups
+de_groups <- subset(sub_mac, subset = combined_id %in% c("DMSO_0", "Staurosporine_10")) 
+plot_rle(de_groups, label_column = "combined_id")
+plot_rle(de_groups, label_column = "combined_id", normalisation = "limma_voom")
+plot_rle(de_groups, label_column = "combined_id", normalisation = "DESeq2")
+# plot_rle(de_groups, label_column = "combined_id", normalisation = "zinb")
+```

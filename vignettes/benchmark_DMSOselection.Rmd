@@ -1,0 +1,422 @@
+---
+title: "Benchmark: DMSO control selection"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{benchmarking DMSO control selection}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+---
+
+```{r set_wd, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+
+```
+
+
+```{r setup}
+
+suppressMessages(library(macpie))
+suppressMessages(library(tibble))
+suppressMessages(library(stringr))
+suppressMessages(library(pheatmap))
+suppressMessages(library(ggiraph))
+suppressMessages(library(tidyseurat))
+suppressMessages(library(purrr))
+suppressMessages(library(ggplot2))
+
+```
+
+```{r}
+options(scipen=999, digits=3)
+```
+
+
+
+## DRUGseq DMSO control selection
+
+
+First we load the file of good DMSO control wells identified by the DRUGseq authors in their github repo. 
+
+Here, we show the good DMSO wells for batch 24, which contains the three plates we are interested in (VH02012942, VH02012944, VH02012956).
+
+```{r}
+good_DMSO_DRUGseq <- read.csv(paste0(dir, "DRUGseqData/robust_RC_ReferenceControl_DMSO_wells.txt"), sep="")
+good_DMSO_DRUGseq %>% filter(batch_id==24) %>% select(batch_id, plate_barcode, well_id)
+```
+
+As from their results of good DMSO controls, these are the good DMSO wells for batch 24:
+
+ VH02012942: I23, M23
+ 
+ VH02012944: D23, H23 
+ 
+ VH02012956: I23, J23 
+
+
+***
+<br>
+
+
+
+## macpie DMSO control selection
+
+
+Now we will use a function `select_top_replicates_tmmcpm` to identify good DMSO controls from batch 24. 
+
+This function: 
+
+  - applies CPM filtering, 
+  
+  - performs TMMwsp normalisation and computes log-CPM, 
+  
+  - ranks wells by their mean Fisher-z–transformed sample–sample correlation to all other wells (Pearson or Spearman)
+  
+  - selects the top n wells (user-defined) as good controls.
+
+```{r}
+select_top_replicates_tmmcpm <- function(
+  data,
+  combined_id,                 # e.g. "CB_43_EP73_0"
+  orig_ident,                  # e.g. "VH02012942"
+  cpm_filter    = 1,           # CPM threshold for gene filtering
+  min_samps     = 16,          # number of samples a gene must be expressed in
+  corr_method   = c("spearman","pearson"),
+  top_n         = 5,
+  make_plots    = TRUE
+){
+  
+  corr_method <- match.arg(corr_method)
+
+  # Subset to the plate/condition of interest
+  subgroup <- subset(data, subset = combined_id == !!combined_id & orig.ident == !!orig_ident)
+
+  # Counts and human-friendly column names
+  counts_d <- GetAssayData(subgroup, assay = "RNA", layer = "counts")
+  well_colnames <- paste0(subgroup$orig.ident, "_", subgroup$Well_ID)
+  names(well_colnames) <- rownames(subgroup@meta.data)
+  colnames(counts_d) <- well_colnames[colnames(counts_d)]
+
+  # edgeR container + gene filtering
+  y <- edgeR::DGEList(counts_d, group = subgroup$orig.ident)
+  keep <- rowSums(edgeR::cpm(y) > cpm_filter) >= min_samps
+  y <- y[keep, , keep.lib.sizes = FALSE]
+
+  # TMMwsp → log2-CPM
+  y <- edgeR::calcNormFactors(y, method = "TMMwsp")
+  log_cpm_tmm <- edgeR::cpm(y, log = TRUE, normalized.lib.sizes = TRUE)
+
+  #  Long data for boxplot
+  df_long <- as.data.frame(log_cpm_tmm) |>
+    tibble::rownames_to_column(var = "gene") |>
+    tidyr::pivot_longer(-gene, names_to = "sample", values_to = "log_cpm")
+
+  if (make_plots) {
+    # Boxplot
+    print(
+      ggplot2::ggplot(df_long, ggplot2::aes(x = sample, y = log_cpm)) +
+        ggplot2::geom_boxplot(outlier.size = 0.5) +
+        ggplot2::labs(x = "Sample", y = "log2 CPM",
+                      title = "Boxplot of log2-CPM (TMMwsp)") +
+        ggplot2::theme_classic() +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+    )
+  }
+
+  # Correlation matrices
+  cors_pear  <- stats::cor(log_cpm_tmm, method = "pearson")
+  cors_spear <- stats::cor(log_cpm_tmm, method = "spearman")
+
+  if (make_plots) {
+    pheatmap::pheatmap(cors_pear,  main = "Sample–sample correlation (Pearson, log2-CPM)")
+    pheatmap::pheatmap(cors_spear, main = "Sample–sample correlation (Spearman, log2-CPM)")
+  }
+
+  # Ranking by mean Fisher-z correlation to all *other* samples
+  R <- stats::cor(log_cpm_tmm, method = corr_method, use = "pairwise.complete.obs")
+  diag(R) <- NA_real_
+
+  # clip, Fisher z, average, back-transform
+  Z <- atanh(pmin(pmax(R, -0.999999), 0.999999))
+  score_z <- rowMeans(Z, na.rm = TRUE)
+  score_r <- tanh(score_z)
+
+  # top-N names and scores
+  ord  <- order(score_r, decreasing = TRUE, na.last = NA)
+  srt <- score_r[ord]
+  cutoff <- srt[top_n]              # N-th best score
+  keep   <- srt >= cutoff    # keep all tied at the cutoff
+  topN <- srt[keep]
+
+  # return everything useful
+  list(
+    subset_obj   = subgroup,
+    dge          = y,
+    log_cpm_tmm  = log_cpm_tmm,
+    boxplot_df   = df_long,
+    cor_pearson  = cors_pear,
+    cor_spearman = cors_spear,
+    ranking_method = corr_method,
+    scores_mean_to_others = sort(score_r, decreasing = TRUE),
+    topN = topN
+  )
+}
+
+
+```
+
+```{r filter_genes_batch24}
+# mac_filtered <- filter_genes_by_expression(as_mac,
+#                 group_by = "combined_id", min_counts = 10,
+#                 min_samples = min_sample_num)
+
+# saveRDS(mac_filtered,
+# file = paste0(dir, "DRUGseqData/macpie_filtered_batch24.Rds"))
+
+
+mac_filtered <- readRDS(paste0(dir, "/DRUGseqData/macpie_filtered_batch24.Rds"))
+```
+
+
+
+```{r violin_plots_batch24, fig.width=10, fig.height=6}
+mac_filtered[["percent.mt"]] <- PercentageFeatureSet(mac_filtered, pattern = "^mt-|^MT-")
+mac_filtered[["percent.ribo"]] <- PercentageFeatureSet(mac_filtered, pattern = "^Rp[slp][[:digit:]]|^Rpsa|^RP[SLP][[:digit:]]|^RPSA")
+```
+
+
+```{r}
+mac_filtered$combined_id <- str_replace_all(mac_filtered$combined_id, "-","_")
+```
+
+
+### RLE plot
+
+RLE plot to quickly visualise raw counts of DMSO wells in batch 24 plates
+
+```{r rle_plot_DMSO_batch24, fig.width=10, fig.height=6}
+# mac_filtered_cp <- mac_filtered %>% filter(combined_id %in% c("CB_43_EP73_0","FF_86_NH56_10"))
+mac_filtered_cp <- mac_filtered %>% filter(combined_id %in% c("CB_43_EP73_0"))
+plot_rle(subset(mac_filtered_cp, subset=orig.ident=="VH02012942"), label_column = "Well_ID", normalisation = "raw")
+plot_rle(subset(mac_filtered_cp, subset=orig.ident=="VH02012944"), label_column = "Well_ID", normalisation = "raw")
+plot_rle(subset(mac_filtered_cp, subset=orig.ident=="VH02012956"), label_column = "Well_ID", normalisation = "raw")
+
+```
+
+
+From the RLE plots above, we can see that there are some level of variation among DMSO wells in each plate. It's important to select the best DMSO wells as controls for downstream analysis.
+
+### Select good DMSO controls using macpie
+
+Now we will apply the `select_top_replicates_tmmcpm` function to each of the three plates in batch 24 to identify good DMSO controls.
+
+This function generates three plots:
+ 
+ - Boxplot of log2-CPM (TMMwsp)
+ 
+ - Sample–sample correlation (Pearson, log2-CPM)
+ 
+ - Sample–sample correlation (Spearman, log2-CPM)
+ 
+ These plots help to visualize the distribution of gene expression and the correlation between samples, aiding in the assessment of DMSO control quality.
+
+
+#### Plate VH02012942
+
+```{r}
+dmso_VH02012942 <- select_top_replicates_tmmcpm(
+  mac_filtered,
+  combined_id = "CB_43_EP73_0",
+  orig_ident  = "VH02012942",
+  cpm_filter  = 1,
+  min_samps   = 8,
+  corr_method = "spearman",
+  top_n       = 5,
+  make_plots  = TRUE
+)
+```
+
+Apart from the boxplot and correlation heatmaps, the function also returns a ranking of wells by their mean correlation to all other wells.
+
+```{r}
+dmso_VH02012942$scores_mean_to_others
+```
+
+Finally, it returns the top N wells as good DMSO controls.
+
+```{r}
+dmso_VH02012942$topN
+```
+
+Now we can see for plate VH02012942, the 2 of top 5 DMSO wells selected by macpie are I23 and J23, which are exactly the same as the good DMSO wells identified by the DRUGseq authors.
+
+
+Let's repeat the same process for the other two plates in batch 24.
+
+#### Plate VH02012944
+
+
+```{r}
+dmso_VH02012944 <- select_top_replicates_tmmcpm(
+  mac_filtered,
+  combined_id = "CB_43_EP73_0",
+  orig_ident  = "VH02012944",
+  cpm_filter  = 1,
+  min_samps   = 8,
+  corr_method = "spearman",
+  top_n       = 5,
+  make_plots  = TRUE
+)
+```
+
+```{r}
+dmso_VH02012944$scores_mean_to_others
+```
+```{r}
+dmso_VH02012944$topN
+```
+
+For plate VH02012944, the DRUGseq selected D23 and H23 DMSO wells are not in our top 5. However, H23 is ranked 6th by macpie, which is very close to the top 5. 
+
+
+#### Plate VH02012956
+
+
+```{r}
+dmso_VH02012956 <- select_top_replicates_tmmcpm(
+  mac_filtered,
+  combined_id = "CB_43_EP73_0",
+  orig_ident  = "VH02012956",
+  cpm_filter  = 1,
+  min_samps   = 8,
+  corr_method = "spearman",
+  top_n       = 5,
+  make_plots  = TRUE
+)
+```
+
+```{r}
+dmso_VH02012956$scores_mean_to_others
+``` 
+
+```{r}
+dmso_VH02012956$topN
+```
+
+For plate VH02012956, the DRUGseq selected I23 and J23 DMSO wells are exactly the same as our top DMSO wells selected by macpie. 
+
+
+
+```{r}
+library(peakRAM)
+library(ps)
+```
+
+### Runtime and Memory
+
+Now we will measure the runtime and memory usage of the `select_top_replicates_tmmcpm` function using the `peakRAM` package.
+
+
+```{r}
+res <- peakRAM({
+  dmso_VH02012942 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012942",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+  dmso_VH02012944 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012944",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+  
+  dmso_VH02012956 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012956",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+  }
+)
+
+res
+```
+
+
+```{r}
+if (!requireNamespace("ps", quietly = TRUE)) install.packages("ps")
+get_rss_mb <- function() ps::ps_memory_info(ps::ps_handle())[1] / 1024^2
+
+rss_before <- get_rss_mb()
+tm <- system.time({
+  dmso_VH02012942 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012942",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+  dmso_VH02012944 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012944",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+  
+  dmso_VH02012956 <- select_top_replicates_tmmcpm(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = "VH02012956",
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+})
+rss_after  <- get_rss_mb()
+cat(sprintf("Elapsed: %.1fs | RSS before→after: %.0f→%.0f MiB (Δ %.0f MiB)\n",
+            tm["elapsed"], rss_before, rss_after, rss_after - rss_before))
+
+```
+
+
+### Summary
+
+In summary, for the three plates in batch 24, macpie successfully identified 4 out of 6 good DMSO wells that were also selected by the DRUGseq authors. Only for plate VH02012944, one of the DRUGseq selected DMSO wells (D23) was not in our top 5, but the other well (H23) was ranked 6th by macpie, which is very close to the top 5. This demonstrates that macpie is effective in selecting high-quality DMSO controls for downstream analysis without running permutation tests, making it a computationally efficient choice.
+
+This function runs for each plate, it does not take into account any batches or plates. If it's a cross-plates design, it is recommended to either compute within-plate or remove plate effects (e.g. using ComBat, limma removeBatchEffect functions) first. 
+
+The select_top_replicates_tmmcpm function runs in approximately 1.38 seconds for three plates, with a peak memory usage of around 313 Mib. This demonstrates that the function is efficient and can be used effectively for selecting DMSO controls in a reasonable timeframe without excessive memory consumption.
+
+
+
+
