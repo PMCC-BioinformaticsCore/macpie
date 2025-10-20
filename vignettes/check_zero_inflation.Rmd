@@ -173,7 +173,7 @@ Each of the columns in the summary table are defined as follows:
   
   - median_p0_nb: Median expected zero proportion under the NB model across genes in the group
   
-  - median_ZI: Median zero-inflation index (ZI = p0_nb - p0_obs for each gene) across genes in the group
+  - median_ZI: Median zero-inflation index (ZI = p0_obs - p0_nb for each gene) across genes in the group
   
   - observed_zeros_num: Number of data points with observed zeros (it shouldn't be more than n_genes*n_wells for each group)
   
@@ -186,11 +186,67 @@ Each of the columns in the summary table are defined as follows:
 ***  
 <br> 
 
+
+<!-- ### Visualize the raw count distributions for both groups -->
+
+<!-- Showing the raw count distributions for both groups can help us identify the differences in gene expression patterns and the presence of zero-inflation. -->
+
+<!-- ```{r} -->
+<!-- dmso_mac <- subset(sub_mac, combined_id == "DMSO_0") -->
+<!-- camp_mac <- subset(sub_mac, combined_id == "CAMPTOTHECIN_10") -->
+<!-- dmso_mat <- compute_normalised_counts(dmso_mac, method = "raw") -->
+<!-- camp_mat <- compute_normalised_counts(camp_mac, method = "raw") -->
+<!-- dmso_counts <- as.vector(dmso_mat) -->
+<!-- camp_counts <- as.vector(camp_mat) -->
+
+<!-- #combine into a data frame for plotting -->
+<!-- counts_df <- data.frame( -->
+<!--   counts = c(dmso_counts, camp_counts), -->
+<!--    group  = c(rep("DMSO_0", length(dmso_counts)), -->
+<!--              rep("CAMPTOTHECIN_10", length(camp_counts))) -->
+<!-- ) -->
+
+<!-- #plot histogram of counts -->
+
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_histogram(position = "identity", bins = 20, alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+<!-- ggplot(counts_df, aes(x = log1p(counts), fill = group)) + -->
+<!--   geom_histogram(aes(y = after_stat(density)),    # normalize area=1 -->
+<!--                  bins = 6, position = "identity", alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution (density-scaled) on only 1000 genes", -->
+<!--        x = "log1p(raw counts)", y = "Density", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+
+
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_density(alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_density( adjust = 2, alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+
+
+
+
+<!-- ``` -->
+
 #### See below for interpretation of the results
 
 For DMSO vs camptothecin, we can see that both DMSO and camptothecin groups have negative median ZI values, indicating that there is no significant zero-inflation in either group. Percentage of genes with ZI greater than 0.1 or 0.2 are 13.5% and 6.6% for camptothecin. As camptothecin acts as a DNA topoisomerase inhibitor and induces DNA damage, it can lead to cell cycle arrest and apoptosis, which may reduce the overall transcriptional activity in the cells. This reduction in transcriptional activity can result in genes being expressed at lower levels or not at all. On the other hand, DMSO is a common solvent used in biological experiments and is not expected to induce significant changes in gene expression. Therefore, it is reasonable to observe a lower level of zero-inflation in the DMSO group compared to the camptothecin group. Same as ZI results for DMSO, the percentage of genes with ZI greater than 0.1 or 0.2 are both 0%.
 
-Besides, the observed zeros are also lower than the expected zeros, further supporting the absence of zero-inflation. Overall, these results suggest that the data does not exhibit significant zero-inflation, and a standard negative binomial model may be appropriate for downstream analyses. Zero-inflated models (ZINB) may not be necessary for this dataset.
+Besides, the observed zeros are also lower than the expected zeros, further supporting the absence of zero-inflation. Overall, these results suggest that the data does not exhibit significant zero-inflation, and a standard negative binomial model may be appropriate for downstream analyses. Zero-inflated models (ZINB) may not be necessary for this data set.
 
 
 
@@ -236,8 +292,120 @@ zi_results$gene_metrics_by_group %>% filter(group=="Staurosporine_10") %>% head(
 ```{r}
 zi_results$summary_by_group
 ```
+
+<!-- ### Visualize the raw count distributions for both groups -->
+
+<!-- Showing the raw count distributions for both groups can help us identify the differences in gene expression patterns and the presence of zero-inflation. -->
+
+<!-- ```{r} -->
+<!-- dmso_mac <- subset(sub_mac, combined_id == "DMSO_0") -->
+<!-- stauro_mac <- subset(sub_mac, combined_id == "Staurosporine_10") -->
+<!-- dmso_mat <- compute_normalised_counts(dmso_mac, method = "raw") -->
+<!-- stauro_mat <- compute_normalised_counts(stauro_mac, method = "raw") -->
+<!-- dmso_counts <- as.vector(dmso_mat) -->
+<!-- stauro_counts <- as.vector(stauro_mat) -->
+
+<!-- #combine into a data frame for plotting -->
+<!-- counts_df <- data.frame( -->
+<!--   counts = c(dmso_counts, stauro_counts), -->
+<!--    group  = c(rep("DMSO_0", length(dmso_counts)), -->
+<!--              rep("Staurosporine_10", length(stauro_counts))) -->
+<!-- ) -->
+
+<!-- #plot histogram of counts -->
+
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_histogram(position = "identity", bins = 20, alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+<!-- ggplot(counts_df, aes(x = log1p(counts), fill = group)) + -->
+<!--   geom_histogram(aes(y = after_stat(density)),    # normalize area=1 -->
+<!--                  bins = 6, position = "identity", alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution (density-scaled) on only 1000 genes", -->
+<!--        x = "log1p(raw counts)", y = "Density", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_density( alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+<!-- ggplot(counts_df, aes(x = counts, fill = group)) + -->
+<!--   geom_density( adjust = 2, alpha = 0.4) + -->
+<!--   labs(title = "Raw count distribution on only 1000 genes", -->
+<!--        x = "Raw counts", y = "Frequency", fill = "Group") + -->
+<!--   theme_minimal() -->
+
+
+<!-- ``` -->
+
+
 #### See below for interpretation of the results
 
 For DMSO vs staurosporine, we can see that only staurosporine has 14% of median ZI value, the observed zeros number (713) is much higher than the expected zeros number (~355), indicating that there is some level of zero-inflation in the staurosporine group. As staurosporine is a cell death control, which it is expected to see zero-inflated data in this group. In this case, it may be appropriate to consider using a zero-inflated negative binomial (ZINB) model for downstream analyses to account for the excess zeros in the data.
 
 
+
+
+
+### All treatment groups
+
+Finally, we will check for zero-inflation across all treatment groups in the data.
+
+```{r}
+# Check for zero-inflation
+all_conditions <- unique(sub_mac$combined_id)
+zi_results <- check_zeroinflation(sub_mac, 
+                                  group_by = "combined_id",
+                                  samples = all_conditions,
+                                  batch = 1,
+                                  cutoffs = c(0.1, 0.2))
+```
+
+#### View gene-wise metrics for each group
+
+```{r}
+zi_results$gene_metrics_by_group %>% filter(group=="Luminespib_10") %>% head()
+
+```
+
+
+```{r}
+zi_results$summary_by_group %>% head(10)
+```
+
+```{r}
+high_doses_zi_results <- zi_results$summary_by_group %>% filter(grepl("_10$", group))
+#concatenate with DMSO
+high_doses_zi_results <- rbind(high_doses_zi_results,
+                                zi_results$summary_by_group %>% filter(group=="DMSO_0"))
+
+
+long_zi_results <- high_doses_zi_results %>% select(group, median_p0_obs, median_p0_nb, median_ZI) %>%
+  pivot_longer(cols = c(median_p0_obs, median_p0_nb, median_ZI), 
+               names_to = "metric", 
+               values_to = "value")
+
+library(ggplot2)
+ggplot(long_zi_results, aes(x = group, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Zero-Inflation Metrics by Treatment Groups (10uM) and DMSO",
+       x = "Groups",
+       y = "zero-inflation proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = macpie_colours$discrete[1:3])
+```
+
+#### See below for interpretation of the results
+
+  - median_p0_obs: Median observed zero proportion across genes in the group
+  
+  - median_p0_nb: Median expected zero proportion under the NB model across genes in the group
+  
+  - median_ZI: Median zero-inflation index (ZI = p0_obs - p0_nb for each gene) across genes in the group
+
+From the plot, we can see that most treatment groups have small or even negative median ZI values, indicating that there is no significant zero-inflation in these groups. Only Staurosporine_10 shows positive median ZI values, suggesting some level of zero-inflation in the group. As described above, staurosporine is a potent inducer of apoptosis, which can lead to increased cell death and reduced gene expression, resulting in more zero counts in the data. Therefore, it is reasonable to observe excessive zeros in the staurosporine group. For other treatment groups, the small or even negative median ZI values suggest that a standard negative binomial model may be appropriate for downstream analyses. Zero-inflated models (ZINB) may not be necessary for these groups.
