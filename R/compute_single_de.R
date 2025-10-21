@@ -179,7 +179,7 @@ compute_single_de <- function(data = NULL,
                              latent.vars = "batch",
                              test.use = "wilcox") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
-      rename("log2FC" = "avg_log2FC", "p_val" = "p_val", "p_value_adj" = "p_val_adj") %>%
+      rename("log2FC" = "avg_log2FC", "p_val" = "p_value", "p_value_adj" = "p_val_adj") %>%
       mutate(metric = 1) %>%
       rownames_to_column("gene")
 
@@ -191,7 +191,7 @@ compute_single_de <- function(data = NULL,
     model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
       model.matrix(~0 + combined_id + batch)
     if (length(spikes) == 0) {
-      warning("List of control genes not provided for RUVg, using default.")
+      warning("List of control genes not provided for RUVg, using default human housekeeping genes.")
       spikes <- c(
         "ACTB",
         "GAPDH",
