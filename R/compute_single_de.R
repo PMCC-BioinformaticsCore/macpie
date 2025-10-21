@@ -12,6 +12,7 @@ utils::globalVariables(c("model_matrix"))
 #'   number of samples
 #' @param k Parameter k for RUVSeq methods, check RUVSeq tutorial
 #' @param spikes List of genes to use as spike controls
+#' @param num_cores Number of cores for parallel processing
 #' @importFrom limma makeContrasts eBayes contrasts.fit topTable
 #' @importFrom tibble rownames_to_column
 #' @import DESeq2
@@ -34,7 +35,8 @@ compute_single_de <- function(data = NULL,
                                         method = NULL,
                                         batch = 1,
                                         k = 2,
-                                        spikes = NULL) {
+                                        spikes = NULL,
+                                        num_cores = 1) {
   if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
     stop(
       "compute_single_de(): the following package is required but not installed: SummarizedExperiment",
@@ -48,7 +50,7 @@ compute_single_de <- function(data = NULL,
     method <- if (is.null(method)) "limma_voom" else method
     if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom", "limma_trend")) {
+                       "limma_voom", "limma_trend","edgeR_zinb", "limma_zinb")) {
       stop("Your normalization method is not available.")
     }
     if (is.null(treatment_samples) || is.null(control_samples)) {
@@ -317,20 +319,25 @@ compute_single_de <- function(data = NULL,
     return(as.data.frame(top_table))
   }
 
-  de_zinb <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
+  de_edgeR_zinb <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
 
     data_sce<-as.SingleCellExperiment(data)
-    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 50, ]
-    num_cores <- 8 # Change this based on your system
+    filtered_sce <- data_sce[rowSums(counts(data_sce)) > 0, ]
     cl <- makeCluster(num_cores)
     doParallel::registerDoParallel(cl)
     p <- BiocParallel::DoparParam()
     system.time(zinb <- zinbwave::zinbwave(filtered_sce, K = 2,
-                     epsilon=1000,
+                     epsilon=12000,
                      BPPARAM = p,
                      observationalWeights = TRUE))
 
     weights <- SummarizedExperiment::assay(zinb, "weights")
+    
+    #perform_edgeR
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+    
     dge <- DGEList(SummarizedExperiment::assay(zinb))
     dge <- calcNormFactors(dge, method = "TMMwsp")
 
@@ -376,7 +383,8 @@ compute_single_de <- function(data = NULL,
     RUVg = de_ruvg(data, pheno_data, treatment_samples, control_samples, batch, spikes, k),
     RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, batch, k),
     RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, batch, k),
-    zinb = de_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
+    edgeR_zinb = de_edgeR_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
+    limma_zinb = limma_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
     stop("Unsupported DE method.")
   )
   return(de_data)
