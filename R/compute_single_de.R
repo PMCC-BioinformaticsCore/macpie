@@ -179,7 +179,7 @@ compute_single_de <- function(data = NULL,
                              latent.vars = "batch",
                              test.use = "wilcox") %>%
       select("avg_log2FC", "p_val", "p_val_adj") %>%
-      rename("log2FC" = "avg_log2FC", "p_val" = "p_value", "p_value_adj" = "p_val_adj") %>%
+      rename("log2FC" = "avg_log2FC", "p_value" = "p_val", "p_value_adj" = "p_val_adj") %>%
       mutate(metric = 1) %>%
       rownames_to_column("gene")
 
