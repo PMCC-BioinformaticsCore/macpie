@@ -6,7 +6,7 @@
 \usage{
 select_robust_controls(
   data,
-  combined_id,
+  samples,
   orig_ident,
   cpm_filter = 1,
   min_samps = 16,
@@ -18,7 +18,7 @@ select_robust_controls(
 \arguments{
 \item{data}{A tidyseurat object containing an RNA assay with a \strong{counts} layer.}
 
-\item{combined_id}{Character scalar: the control/treatment label to keep
+\item{samples}{the control/treatment label to keep in column samples
 (e.g., \code{"CB_43_EP73_0"}). Only cells/samples with this label are considered.}
 
 \item{orig_ident}{Character scalar: the plate/batch identifier to keep
@@ -61,7 +61,7 @@ plots per-sample expression distributions and sample–sample correlation heatma
 \details{
 Workflow:
 \enumerate{
-\item Subset to the specified \code{combined_id} \strong{and} \code{orig_ident} (plate/batch).
+\item Subset to the specified \code{samples} \strong{and} \code{orig_ident} (plate/batch).
 \item Build an \code{edgeR::DGEList}, filter lowly expressed genes using CPM and \code{min_samps}.
 \item Normalize with \strong{TMMwsp} and compute log2-CPM.
 \item Rank samples by mean Fisher z–transformed correlation to all \emph{other} samples
@@ -75,7 +75,7 @@ for easier visual inspection in plots.
 }
 \examples{
 data(mini_mac)
-res <- select_robust_controls(mini_mac,combined_id = "DMSO_0", orig_ident = "PMMSq033_mini")
+res <- select_robust_controls(mini_mac,samples = "DMSO_0", orig_ident = "PMMSq033_mini")
 
 
 

@@ -7,7 +7,7 @@
 #' plots per-sample expression distributions and sample–sample correlation heatmaps.
 #'
 #' @param data A tidyseurat object containing an RNA assay with a **counts** layer.
-#' @param combined_id Character scalar: the control/treatment label to keep
+#' @param samples the control/treatment label to keep in column samples
 #'   (e.g., `"CB_43_EP73_0"`). Only cells/samples with this label are considered.
 #' @param orig_ident Character scalar: the plate/batch identifier to keep
 #'   (e.g., `"VH02012942"`). Only cells/samples from this batch are considered.
@@ -24,7 +24,7 @@
 #'
 #' @details
 #' Workflow:
-#' 1) Subset to the specified `combined_id` **and** `orig_ident` (plate/batch).  
+#' 1) Subset to the specified `samples` **and** `orig_ident` (plate/batch).  
 #' 2) Build an `edgeR::DGEList`, filter lowly expressed genes using CPM and `min_samps`.  
 #' 3) Normalize with **TMMwsp** and compute log2-CPM.  
 #' 4) Rank samples by mean Fisher z–transformed correlation to all *other* samples
@@ -49,7 +49,7 @@
 #'
 #' @examples
 #' data(mini_mac)
-#' res <- select_robust_controls(mini_mac,combined_id = "DMSO_0", orig_ident = "PMMSq033_mini")
+#' res <- select_robust_controls(mini_mac,samples = "DMSO_0", orig_ident = "PMMSq033_mini")
 #'
 #' 
 #'
@@ -60,7 +60,7 @@
 
 select_robust_controls <- function(
     data,
-    combined_id,                 # e.g. "CB_43_EP73_0"
+    samples,                 # e.g. "CB_43_EP73_0"
     orig_ident,                  # e.g. "VH02012942"
     cpm_filter    = 1,           # CPM threshold for gene filtering
     min_samps     = 16,          # number of samples a gene must be expressed in
@@ -68,8 +68,36 @@ select_robust_controls <- function(
     top_n         = 5,
     make_plots    = TRUE
 ){
+  validate_inputs <- function(data, samples, orig_ident) {
+    if (!inherits(data, "Seurat")) {
+      stop("argument 'data' must be a Seurat or TidySeurat object.")
+    }
+
+    # check samples and orig_ident columns
+    if (colnames(data@meta.data)%in% c("combined_id","orig.ident") %>% sum() < 2) {
+      stop("The 'data' object must contain 'combined_id' and 'orig.ident' columns in its metadata.")
+    }
+    # check samples in samples column
+    if (is.null(samples)){
+      stop("Please provide a value for 'samples'.")
+    } else if (!all(samples %in% unique(data$combined_id))) {
+      stop("Some values in 'samples' are not found in the 'combined_id' column of 'data'.")
+    }
+    # check orig.ident in the orig.ident column
+    if (is.null(orig_ident)){
+      stop("Please provide a value for 'orig_ident'.")
+    } else if (!orig_ident %in% unique(data$orig.ident)) {
+      stop("The value of 'orig_ident' is not found in the 'orig.ident' column of 'data'.")
+    }
+    return(list(data = data, samples = samples, orig_ident = orig_ident))
+  }
+  validated <- validate_inputs(data = data, samples = samples, orig_ident = orig_ident)
+  data <- validated$data
+  group_by <- validated$orig_ident
+  samples <- validated$samples
+  
   corr_method <- match.arg(corr_method)
-  sel_cells <- colnames(data)[data$combined_id == combined_id &
+  sel_cells <- colnames(data)[data$combined_id == samples &
                                 data$orig.ident  == orig_ident]
   if (length(sel_cells) == 0L) {
     stop("No cells/samples match the specified 'combined_id' and 'orig_ident'.")
