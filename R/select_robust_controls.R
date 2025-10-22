@@ -49,7 +49,7 @@
 #'
 #' @examples
 #' data(mini_mac)
-#' res <- select_good_controls(mini_mac,combined_id = "DMSO_0", orig_ident = "PMMSq033_mini")
+#' res <- select_robust_controls(mini_mac,combined_id = "DMSO_0", orig_ident = "PMMSq033_mini")
 #'
 #' 
 #'
@@ -58,7 +58,7 @@
 #' @importFrom tidyr pivot_longer
 #' @export
 
-select_good_controls <- function(
+select_robust_controls <- function(
     data,
     combined_id,                 # e.g. "CB_43_EP73_0"
     orig_ident,                  # e.g. "VH02012942"
