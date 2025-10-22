@@ -27,6 +27,7 @@ the distribution of expression data after normalization or log transformation.">
     <li><a class="dropdown-item" href="../articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
     <li><a class="dropdown-item" href="../articles/integration_across_modalities.html">Integration across modalities</a></li>
     <li><a class="dropdown-item" href="../articles/macpie_bioc.html">Working with Bioconductor classes</a></li>
+    <li><a class="dropdown-item" href="../articles/assessing_zero_inflation.html">Assessing zero-inflation</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="https://github.com/PMCC-BioinformaticsCore/macpie.git"><span class="fa fa-github"></span></a></li>
@@ -57,7 +58,8 @@ the distribution of expression data after normalization or log transformation.</
 <span>  log <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  normalisation <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  spikes <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  spikes <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  num_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,11 +98,15 @@ number of samples.</p></dd>
 
 <dt id="arg-normalisation">normalisation<a class="anchor" aria-label="anchor" href="#arg-normalisation"></a></dt>
 <dd><p>One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "zinb". If empty, defaults to raw.</p></dd>
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb". If empty, defaults to raw.</p></dd>
 
 
 <dt id="arg-spikes">spikes<a class="anchor" aria-label="anchor" href="#arg-spikes"></a></dt>
 <dd><p>List of genes to use as spike controls in RUVg</p></dd>
+
+
+<dt id="arg-num-cores">num_cores<a class="anchor" aria-label="anchor" href="#arg-num-cores"></a></dt>
+<dd><p>Number of cores for edgeR and zinb calculations</p></dd>
 
 </dl></div>
     <div class="section level2">

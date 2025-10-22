@@ -27,6 +27,7 @@ for normalisation, with the default of limma-voomLmFit."><meta property="og:imag
     <li><a class="dropdown-item" href="../articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
     <li><a class="dropdown-item" href="../articles/integration_across_modalities.html">Integration across modalities</a></li>
     <li><a class="dropdown-item" href="../articles/macpie_bioc.html">Working with Bioconductor classes</a></li>
+    <li><a class="dropdown-item" href="../articles/assessing_zero_inflation.html">Assessing zero-inflation</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="https://github.com/PMCC-BioinformaticsCore/macpie.git"><span class="fa fa-github"></span></a></li>
@@ -55,7 +56,8 @@ for normalisation, with the default of limma-voomLmFit.</p>
 <span>  batch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  k <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  spikes <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  max_counts <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  max_counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  num_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -70,7 +72,7 @@ for normalisation, with the default of limma-voomLmFit.</p>
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>One of "raw", "logNorm", "cpm", "clr", "SCT", "DESeq2",
-"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom"</p></dd>
+"edgeR", "RUVg", "RUVs", "RUVr", "limma_voom", "limma_trend", "zinb"</p></dd>
 
 
 <dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
@@ -79,7 +81,7 @@ number of samples</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>Parameter k for RUVSeq methods, check RUVSeq tutorial</p></dd>
+<dd><p>Parameter k for RUVSeq and zinb methods</p></dd>
 
 
 <dt id="arg-spikes">spikes<a class="anchor" aria-label="anchor" href="#arg-spikes"></a></dt>
@@ -88,6 +90,10 @@ number of samples</p></dd>
 
 <dt id="arg-max-counts">max_counts<a class="anchor" aria-label="anchor" href="#arg-max-counts"></a></dt>
 <dd><p>Maximum count for a gene across all samples</p></dd>
+
+
+<dt id="arg-num-cores">num_cores<a class="anchor" aria-label="anchor" href="#arg-num-cores"></a></dt>
+<dd><p>Number of cores</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -100,253 +106,253 @@ number of samples</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">compute_normalised_counts</span><span class="op">(</span><span class="va">mini_mac</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AACAGGCAAT AACCAGCCAG AACCAGTTGA AACCGGCGTA AACCTAGTCC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.66997  14.260025   14.44157  13.909156   13.56072</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   12.08500   9.867707   10.19365   9.661228   10.75337</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          12.08500   9.867707   10.19365   9.661228   10.75337</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.7      14.26       14.4      13.91       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       12.1       9.87       10.2       9.66       10.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              12.1       9.87       10.2       9.66       10.8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AACTCTACAC AACTGTGTCA AAGATGTCCA AAGCATATGG AAGCTCACCT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.045187   13.47592   14.06636  13.843252  14.546433</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.797259   10.30599   10.60693   9.936361   9.902577</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.797259   10.30599   10.60693   9.936361   9.902577</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.0       13.5       14.1      13.84       14.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869        9.8       10.3       10.6       9.94        9.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT               9.8       10.3       10.6       9.94        9.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AAGGCATGCG AAGTTCCTTG AATACCGGTA AATCCATCTG AATCGTCCGC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.09024  14.236369   12.65557  14.390264   14.19258</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.38980   9.988441   10.33364   9.866702   10.28569</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.38980   9.988441   10.33364   9.866702   10.28569</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.1      14.24       12.7      14.39       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       9.99       10.3       9.87       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       9.99       10.3       9.87       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AATGACCTTC AATGAGAGCA AATGTCAGTG AATTAGGCCG AATTGCGATG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.13132   13.84006   14.23717   14.78534   14.04032</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.22443   10.38063   10.14970   10.26178   10.33988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.22443   10.38063   10.14970   10.26178   10.33988</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.1       13.8       14.2       14.8       14.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.4       10.1       10.3       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.4       10.1       10.3       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACAACAGTCG ACAACCATAC ACAACGGAGC ACAAGCGCGA ACACAATCTC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.22746   13.67637   13.29803   13.91466  14.152842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.32057   11.80190   10.49068   10.21422   9.904915</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.32057   10.21694   10.49068   10.21422   9.904915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.2       13.7       13.3       13.9       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       11.8       10.5       10.2        9.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.2       10.5       10.2        9.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACACAGTGAA ACACCGAATT ACACGCAGTA ACACGGTCCT ACACTTGCTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.77927   10.32576   13.33117  14.389019   12.62004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.97192   10.32576   10.16124   9.996701   10.29811</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.97192   10.32576   10.16124   9.996701   10.29811</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.8       10.3       13.3       14.4       12.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       11.0       10.3       10.2       10.0       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              11.0       10.3       10.2       10.0       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACAGTGCCAA ACATGTGTGC ACCAGGACCA ACCATAACAC ACCGAACCGT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             12.62198  14.458157   14.78237   13.93570   13.72066</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   11.03701   9.934595   10.13852   10.23526   10.02022</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          11.03701   9.934595   10.13852   10.23526   10.02022</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 12.6      14.46       14.8       13.9       13.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       11.0       9.93       10.1       10.2       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              11.0       9.93       10.1       10.2       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACCGAGAGTC ACCGGTACAG ACCGTACTTC ACCTCCGACA ACCTCTCTCC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.58220   13.33547   13.61461   13.80380   13.68839</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.41227   10.52812   10.44468   10.34436   10.22896</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.41227   10.52812   10.44468   10.34436   10.22896</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       13.3       13.6       13.8       13.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.5       10.4       10.3       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.5       10.4       10.3       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACCTGTCCGA ACGAATGACA ACGCTGGATA ACGTAGGCAC ACGTGCTGAT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.90623  13.378382   14.08211   13.58088   14.05796</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.44680   9.918951   10.38167   10.41096   10.35752</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.44680   9.918951   10.38167   10.41096   10.35752</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.9      13.38       14.1       13.6       14.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       9.92       10.4       10.4       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       9.92       10.4       10.4       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACTCCAAGCC ACTGGCGCAT ACTGGCTTCC ACTTAACTGC ACTTCATCAC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.32798   14.19152   13.23157  14.524254   13.89201</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.08005   10.10406   10.90964   9.769367   10.19157</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.08005   10.10406   10.90964   9.769367   10.19157</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.3       14.2       13.2      14.52       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.1       10.9       9.77       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.1       10.9       9.77       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ACTTCGTTGA ACTTCTCCTG ACTTGAGGAA ACTTGTAAGG AGAACCACGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.99649   12.88988  13.439895   12.75603   14.19658</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.08960   10.56795   9.980464   10.43410   10.49614</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.08960   10.56795   9.980464   10.43410   10.49614</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.0       12.9      13.44       12.8       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.6       9.98       10.4       10.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.6       9.98       10.4       10.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AGAAGCAATC AGACCGTTAT AGACTAGCAT AGAGATGCAG AGAGCTTACA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.22715  14.205986   13.93058   13.96693   14.25161</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.13969   9.958058   10.76066   10.26649   10.00369</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.13969   9.958058   10.76066   10.26649   10.00369</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.2      14.21       13.9       14.0       14.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       9.96       10.8       10.3       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       9.96       10.8       10.3       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AGAGTGTAAC AGAGTTCTGC AGATAGTGCT AGCAATGCGC AGCATGTCAT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.66390   14.53844  13.406628   13.95211   14.20371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.20447   10.63155   9.947196   10.04522   10.29682</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.20447   10.63155   9.947196   10.04522   10.29682</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.7       14.5      13.41       14.0       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.6       9.95       10.0       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.6       9.95       10.0       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AGCCACTAGC AGCCAGAATA AGCCAGCTCT AGCGATAACG AGCTATTCCA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.39311  14.045900  13.896092   13.11280  14.355971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.14518   9.958437   9.989202   10.30545   9.963654</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.14518   9.958437   9.989202   10.30545   9.963654</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.4      14.05      13.90       13.1      14.36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       9.96       9.99       10.3       9.96</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       9.96       9.99       10.3       9.96</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AGGCGTCTGT AGGTCACCAA AGTAACTCAC AGTAAGCGTT AGTCCACGTA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.59436   13.67424   13.90536   14.07932  14.083966</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.20205   10.21480   10.20492   10.37888  12.318431</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.20205   10.21480   10.20492   10.37888   9.996503</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.6       13.7       13.9       14.1       14.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.2       10.2       10.4       12.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.2       10.2       10.4       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 AGTCTCGGCA AGTCTGTACG AGTGCAATGT ATAACGCCTC ATAAGAGGTC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.48354   13.37684   13.81293   14.11309   14.19242</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.39608   10.20691   10.35350    9.86516   10.49198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.39608   10.20691   10.35350    9.86516   10.49198</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.5       13.4       13.8      14.11       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.2       10.4       9.87       10.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.2       10.4       9.87       10.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ATAAGGTGCA ATACACGACA ATACCTCCGG ATAGCAGTGC ATAGGCCATT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.59311   14.15351  13.380159   12.64341   13.91116</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.13368   10.24661   9.920727   10.32148   10.00427</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.13368   10.24661   9.920727   10.32148   10.00427</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       14.2      13.38       12.6       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.2       9.92       10.3       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.2       9.92       10.3       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ATATCCGCAT ATCAGCACTT ATCAGCGAGG ATCCAATACG ATCCGCTGTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.20469   14.30919   14.28599  13.835359   13.51872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.39733   10.40230   10.37910   9.928468   10.34879</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.39733   10.40230   10.37910   9.928468   10.34879</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.2       14.3       14.3      13.84       13.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.4       10.4       9.93       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.4       10.4       9.93       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ATCCGTCCAT ATCGACGGCT ATCGCGATTA ATCGGTAGGC ATCTAAGGAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            13.655788   14.27063   13.72080   13.77757  14.418766</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.955348   10.36374   10.02036   10.07713   9.895204</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.955348   10.36374   10.02036   10.07713   9.895204</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                13.66       14.3       13.7       13.8       14.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.96       10.4       10.0       10.1        9.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.96       10.4       10.0       10.1        9.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ATGACGGTAA ATGACTCAGT ATGCGGACTG ATGGTCTTAG ATGTGGAAGC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.47485   13.83903  14.708160   13.34782   13.85146</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.22693    9.93214   9.850179   10.54047   10.39203</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.22693    9.93214   9.850179   10.54047   10.39203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.5      13.84      14.71       13.3       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       9.93       9.85       10.5       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       9.93       9.85       10.5       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 ATTATCGGAC ATTCGGAACA CAACAATCCA CAAGAAGCAT CAAGATGAGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.38714   12.83998   14.14760   13.75141  13.759497</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.29968   10.51805   10.24071   10.29198   9.852606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.29968   10.51805   10.24071   10.29198   9.852606</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.4       12.8       14.1       13.8      13.76</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.5       10.2       10.3       9.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.5       10.2       10.3       9.85</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CAAGCCAACG CAAGTGGATC CACAGTTCAT CACGAGTCTG CACGCTCCAA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             12.79278   14.13392   14.03263   14.62014   14.13498</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   11.20782    9.88599   10.33219   10.09658   10.43454</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          11.20782    9.88599   10.33219   10.09658   10.43454</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 12.8      14.13       14.0       14.6       14.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       11.2       9.89       10.3       10.1       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              11.2       9.89       10.3       10.1       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CACTGAGCAC CAGATCAATG CAGTGCTCTT CAGTTAAGCA CATAGCTATC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.35395   13.84167   14.23031   13.81527   13.89587</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.10602   10.38224    9.98238   10.35584   10.19543</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.10602   10.38224    9.98238   10.35584   10.19543</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.4       13.8      14.23       13.8       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.4       9.98       10.4       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.4       9.98       10.4       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CATCACCACC CATGTACGCC CATTACACTG CATTCGACGA CCAACTATGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.75381   13.92909   14.08192  13.895667   12.88798</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.50588   10.02220   10.38148   9.988777   10.56605</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.50588   10.02220   10.38148   9.988777   10.56605</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.8       13.9       14.1      13.90       12.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.5       10.0       10.4       9.99       10.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.5       10.0       10.4       9.99       10.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCAAGGAGTT CCAATTGTTC CCACAAGTGC CCAGCTTAGT CCATAACTTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.453685   14.38994  14.464874   14.09772  13.624526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.809829   10.30248   9.941312   10.92780   9.717635</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.809829   10.30248   9.941312   10.92780   9.717635</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                14.45       14.4      14.46       14.1      13.62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.81       10.3       9.94       10.9       9.72</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.81       10.3       9.94       10.9       9.72</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCATAGATCA CCGAACAAGC CCGAAGACCT CCGAATAGTG CCGACTTCTC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.192856   13.64834   14.32621   14.43232   14.71488</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.800538   12.06338   10.62577   10.04000   10.32257</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.800538   10.47842   10.62577   10.04000   10.32257</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.2       13.6       14.3       14.4       14.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869        9.8       12.1       10.6       10.0       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT               9.8       10.5       10.6       10.0       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCGATCCACT CCGATGATAC CCGCGTTATG CCGCTAGCTT CCGGAGTATC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.59321   14.04795   13.86349   14.13613   14.81530</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   12.00824   10.58852   10.16305   10.22924   10.06041</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.42328   10.58852   10.16305   10.22924   10.06041</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       14.0       13.9       14.1       14.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       12.0       10.6       10.2       10.2       10.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.6       10.2       10.2       10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCGGCCAATT CCGGTCTCTA CCGTACGATG CCGTCAGAAC CCTAGACACG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.99348   14.58924   13.39697  14.166851   13.85250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.29304   10.06568   10.58962   9.774533   10.15206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.29304   10.06568   10.58962   9.774533   10.15206</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.0       14.6       13.4      14.17       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.1       10.6       9.77       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.1       10.6       9.77       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCTAGTTGAG CCTATTCTGT CCTCAACCGA CCTCCATAAG CCTGATGCCA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.44526   14.80778   14.62671   14.11069   13.94918</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.19734   10.55986   10.23439   10.20380    9.86172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.19734   10.55986   10.23439   10.20380    9.86172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.4       14.8       14.6       14.1      13.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.6       10.2       10.2       9.86</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.6       10.2       10.2       9.86</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CCTGCAATAC CCTTGTATTC CGAGATCTCT CGAGGAACAA CGATAACCGC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.49066   13.96961   13.38090   14.73580   14.19375</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.32073   10.06272   10.57355   11.67691   10.28686</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.32073   10.06272   10.57355   10.09195   10.28686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.5       14.0       13.4       14.7       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.1       10.6       11.7       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.1       10.6       10.1       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CGATCCTGTG CGCCAACCAT CGCCAGTGTT CGCGGATTCA CGCTTCTTGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.069789   13.76564   14.45898  13.696850   14.54643</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.982326   11.44371   10.06667   9.996411   10.29851</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.982326   11.44371   10.06667   9.996411   10.29851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                14.07       13.8       14.5       13.7       14.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.98       11.4       10.1       10.0       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.98       11.4       10.1       10.0       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CGGAATACAC CGGAGATTGG CGGAGCTCAA CGGATCGGTA CGGATTCTAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.10723   14.45082   13.96841  14.499409   13.11294</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.40679   10.36335   10.26797   9.855552   10.30559</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.40679   10.36335   10.26797   9.855552   10.30559</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.1       14.5       14.0      14.50       13.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.4       10.3       9.86       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.4       10.3       9.86       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CGGCAACTTA CGGCTCATCA CGGTCGTATT CGGTGACATC CGTAACGGAT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             12.82179   14.11113   14.16814   12.88258   14.34739</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.01443   10.41069   10.08067   10.56065   10.09946</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.01443   10.41069   10.08067   10.56065   10.09946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 12.8       14.1       14.2       12.9       14.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.0       10.4       10.1       10.6       10.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.0       10.4       10.1       10.6       10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CGTAAGATTC CGTACTGTAA CGTAGAAGAC CGTCCTAGGA CGTCGGCAAT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.64759   13.57998   14.45721  13.888355   13.45407</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.18816   10.12055   10.36975   9.981465   10.28415</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.18816   10.12055   10.36975   9.981465   10.28415</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       13.6       14.5      13.89       13.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.1       10.4       9.98       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.1       10.4       9.98       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CGTGAGTTAT CGTGTCAAGC CTAACTTCAG CTAATAGCGT CTACACCAGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.21134   12.86255  14.389230   13.88852  14.203103</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.12387   10.54062   9.996913   12.01405   9.955175</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.12387   10.54062   9.996913   10.42908   9.955175</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.2       12.9       14.4       13.9      14.20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.5       10.0       12.0       9.96</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.5       10.0       10.4       9.96</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CTAGCACAAT CTATGAACGG CTCAAGGACC CTCACCTGTC CTCCTATTGT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            13.973762  14.283509   14.02354   14.41938  13.524988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.886299   9.891191   10.32310   10.02706   9.824548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.886299   9.891191   10.32310   10.02706   9.824548</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                13.97      14.28       14.0       14.4      13.52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.89       9.89       10.3       10.0       9.82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.89       9.89       10.3       10.0       9.82</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CTCGCAACGT CTGGATTGAC CTGTCTGTGT CTTATGTTGC CTTCATATCG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            13.903956   14.25770   13.56746   14.12393  13.892189</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.997065   10.17024   10.39753   10.21704   9.804727</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.997065   10.17024   10.39753   10.21704   9.804727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.9       14.3       13.6       14.1       13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.0       10.2       10.4       10.2        9.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.0       10.2       10.4       10.2        9.8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 CTTGCTGACG CTTGGATCTT GAAGAGTTCT GAAGGATTAG GAATCGAGCC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.53461   14.10169   14.60146   13.85138   13.17640</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.72725   10.01423   10.20914   10.15094   10.36904</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.72725   10.01423   10.20914   10.15094   10.36904</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.5       14.1       14.6       13.9       13.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.7       10.0       10.2       10.2       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.7       10.0       10.2       10.2       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GAATCTTCTC GAATTACGGC GACCATCTAA GACGACCACA GAGAACGAAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.20838   14.26026  14.169591   14.15530   14.32893</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.03845   10.35336   9.921664   10.45486   11.66597</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.03845   10.35336   9.921664   10.45486   10.08101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.2       14.3      14.17       14.2       14.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.0       10.4       9.92       10.5       11.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.0       10.4       9.92       10.5       10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GAGACAAGGC GAGACATCTT GAGCGAGTCA GAGTAGACCA GATACGCTTA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.17458   13.31867   12.82448   13.94739   12.69029</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   11.85265   10.14874   10.50256   10.04050   11.10533</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.26769   10.14874   10.50256   10.04050   11.10533</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.2       13.3       12.8       13.9       12.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       11.9       10.1       10.5       10.0       11.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.1       10.5       10.0       11.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GATAGACTGT GATAGAGGCG GATAGGTCAA GATATCAGGA GATCTCATTC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             12.95078   13.50194   14.17048   13.76605   13.58436</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.62885   10.69458   10.08301   10.30662   10.12493</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.62885   10.69458   10.08301   10.30662   10.12493</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.0       13.5       14.2       13.8       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.6       10.7       10.1       10.3       10.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.6       10.7       10.1       10.3       10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GATCTGGTCG GATGAGTGAC GATGGATACA GATGTGACAG GATTGCACGC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.44772  14.225836   14.69629   13.99576   10.88166</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.27780   9.977908   10.17273   10.08887   10.88166</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.27780   9.977908   10.17273   10.08887   10.88166</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.4      14.23       14.7       14.0       10.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       9.98       10.2       10.1       10.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       9.98       10.2       10.1       10.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GCACACTATA GCACTGCGTT GCACTTAATC GCAGGAGATG GCAGTACTGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.06808   13.50116  13.875953   13.89685  14.519691</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.36764   10.33124   9.969063   10.43742   9.996129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.36764   10.33124   9.969063   10.43742   9.996129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.1       13.5      13.88       13.9       14.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.3       9.97       10.4       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.3       9.97       10.4       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GCATATGAGT GCATCCGATC GCCAAGTACA GCCACGATTC GCCATAGGTT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.49169   14.25239   13.43202   14.41545   13.66035</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.24377   10.00446   10.26210   10.02313   10.20092</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.24377   10.00446   10.26210   10.02313   10.20092</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.5       14.3       13.4       14.4       13.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.0       10.3       10.0       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.0       10.3       10.0       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GCCATATCGA GCCGTCAATA GCCTGGACAT GCGTAATTAC GCTATTATCC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.140329   13.76553  14.089849   13.80946  13.486204</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.892401   10.30610  11.426884   10.35003   9.785764</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.892401   10.30610   9.841921   10.35003   9.785764</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                14.14       13.8      14.09       13.8      13.49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.89       10.3      11.43       10.4       9.79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.89       10.3       9.84       10.4       9.79</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GCTCAGTAAT GCTGCTTATA GGAATAAGCA GGACGATGCT GGCATCGTGA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.63412   13.83237   14.28263   12.39894   13.61543</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.82677   10.13193   10.37574   10.07701   10.44550</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.82677   10.13193   10.37574   10.07701   10.44550</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       13.8       14.3       12.4       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.8       10.1       10.4       10.1       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.8       10.1       10.4       10.1       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GGCATTATTG GGCCGAGATT GGCGCTATAA GGCGTTAAGT GGCTATTGAT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.04289   13.62700  14.160058   13.67315   13.21275</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.13600   10.16757  11.497093   10.21372   10.04282</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.13600   10.16757   9.912131   10.21372   10.04282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.0       13.6      14.16       13.7       13.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.2      11.50       10.2       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.2       9.91       10.2       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GGCTGCTACT GGTAATGTGT GGTGTTCACC GGTTCACTGG GTAACCAGTA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.78544   14.27067   14.54249   14.02450   13.62434</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.32600   10.02274   10.15017   10.56507   10.16491</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.32600   10.02274   10.15017   10.56507   10.16491</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.8       14.3       14.5       14.0       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.0       10.2       10.6       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.0       10.2       10.6       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GTAACCTTGG GTAAGAACCT GTAAGGCTCC GTAATCCACG GTATTGTGGA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.73078   13.77462   13.65875   13.50599   14.16883</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.03034   10.07418   10.19932   10.04656   10.08136</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.03034   10.07418   10.19932   10.04656   10.08136</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.7       13.8       13.7       13.5       14.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.0       10.1       10.2       10.0       10.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.0       10.1       10.2       10.0       10.1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GTCCGCATCA GTCCTTCGGT GTCGCTCTCT GTCGGTGACA GTCTCGAGTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.12045   15.05770   13.97768  13.309835   13.63661</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.42001   10.19971   10.27725   9.850403   10.46669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.42001   10.19971   10.27725   9.850403   10.46669</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.1       15.1       14.0      13.31       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.2       10.3       9.85       10.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.2       10.3       9.85       10.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GTCTCTTAAG GTCTTCCGAG GTGACTATAC GTGGTTAATG GTGTGCCTGT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.31048   13.69240  13.944329   14.18121   13.72460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.40359   10.52248   9.856866   10.27432   10.26517</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.40359   10.52248   9.856866   10.27432   10.26517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.3       13.7      13.94       14.2       13.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.5       9.86       10.3       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.5       9.86       10.3       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GTGTGTGTCC GTTCATTGCC GTTCCGGTGA GTTCGTCGAA GTTGAATTGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.26303   14.22101   13.25959   13.86624   13.57186</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.17557   10.13355   10.45223    9.95935   10.40194</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.17557   10.13355   10.45223    9.95935   10.40194</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.3       14.2       13.3      13.87       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.1       10.5       9.96       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.1       10.5       9.96       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 GTTGATCCGC GTTGTATGCT TAACCGTAGC TAACGTCGAT TAAGGTACGG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            12.701573  14.043267   14.33462   14.06657  14.598048</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.894218   9.955805   10.08669   10.15967   9.843161</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.894218   9.955805   10.08669   10.15967   9.843161</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                12.70      14.04       14.3       14.1      14.60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.89       9.96       10.1       10.2       9.84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.89       9.96       10.1       10.2       9.84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TACTACCGCC TAGCGCCAAC TAGGTTGCAA TAGTAGTCTC TAGTCCGCTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT            14.569266   13.52407   13.96091  14.282132   13.62775</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   9.925409   10.71671   10.26047   9.889814   10.45783</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          9.925409   10.71671   10.26047   9.889814   10.45783</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                14.57       13.5       14.0      14.28       13.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       9.93       10.7       10.3       9.89       10.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              9.93       10.7       10.3       9.89       10.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TAGTGGAACT TATCATGCAG TATCGTTACG TCAAGTGCAG TCACAGATAC</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             12.60432   13.34823   13.97041   13.79348   14.55655</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.28239   10.17831   10.06351   10.33404   10.03298</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.28239   10.17831   10.06351   10.33404   10.03298</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 12.6       13.3       14.0       13.8       14.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.2       10.1       10.3       10.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.2       10.1       10.3       10.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TCACCGCCTA TCACGCCACT TCACGTTGGC TCATTGTCCA TCCACACTAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.97246   13.98971   13.50309   14.64208   13.02373</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.27202   10.08282   10.33316   10.11852   10.21638</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.27202   10.08282   10.33316   10.11852   10.21638</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.0       14.0       13.5       14.6       13.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.3       10.1       10.3       10.1       10.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.3       10.1       10.3       10.1       10.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TCCACGGTCA TCCACTCGCT TCCGACTAAC TCCGTTATCT TCCTAAGAGA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.64278   12.33585   14.71994   14.10845   14.34250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.11922   10.75088   10.19638   10.20156   10.43561</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.11922   10.75088   10.19638   10.20156   10.43561</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.6       12.3       14.7       14.1       14.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.8       10.2       10.2       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.8       10.2       10.2       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TCCTCTAGTA TCGAAGCATT TCGAGAGAGC TCGCACTTGA TCGCCTACTG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.62554   13.77115   11.95421  14.833341   12.67466</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.81819   10.60123   10.36925   9.879145   10.35273</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.81819   10.60123   10.36925   9.879145   10.35273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6       13.8       12.0      14.83       12.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.8       10.6       10.4       9.88       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.8       10.6       10.4       9.88       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TCGCGTAGCA TCGGCGTTAA TCTACATCCG TCTCTCCTAT TGAAGAAGGT</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.52208   14.43634   14.58437   14.92699   14.93352</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.35215   10.04402   10.49691    9.97279   10.28966</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.35215   10.04402   10.49691    9.97279   10.28966</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.5       14.4       14.6      14.93       14.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.4       10.0       10.5       9.97       10.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.4       10.0       10.5       9.97       10.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TGAGCGTTCC TGAGTACGTA TGGAATGGAG TGTCATTCGC TGTGCTTCAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.47326   13.31961   13.66720   14.58681  14.197272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.08094   10.51225   10.20777   10.49935  11.534307</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.08094   10.51225   10.20777   10.49935   9.949344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.5       13.3       13.7       14.6      14.20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.1       10.5       10.2       10.5      11.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.1       10.5       10.2       10.5       9.95</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TGTTCAGGAT TTACACACGT TTACTGTGAC TTATGCCGCG TTCACGGAAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             13.63357  14.565143   14.50972   14.45371   14.27686</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.17414   9.707162   10.60283   10.06139   10.36997</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.17414   9.707162   10.60283   10.06139   10.36997</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 13.6      14.57       14.5       14.5       14.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       9.71       10.6       10.1       10.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       9.71       10.6       10.1       10.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 TTCGAGTGAT TTCTGTACCT TTGGTAACAG</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT             14.59300   14.17005  14.297836</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869   10.20068   10.71062   9.905519</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT          10.20068   10.71062   9.905519</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NAMPT                 14.6       14.2      14.30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ENSG00000278869       10.2       10.7       9.91</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> CABP7-DT              10.2       10.7       9.91</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [ reached getOption("max.print") -- omitted 497 rows ]</span>
 </code></pre></div>
     </div>

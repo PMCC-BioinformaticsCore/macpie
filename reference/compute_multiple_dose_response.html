@@ -27,6 +27,7 @@ using the drc package. It returns EC50 values per gene per treatment."><meta pro
     <li><a class="dropdown-item" href="../articles/cross_platform_compatibility.html">Cross-platform compatibility</a></li>
     <li><a class="dropdown-item" href="../articles/integration_across_modalities.html">Integration across modalities</a></li>
     <li><a class="dropdown-item" href="../articles/macpie_bioc.html">Working with Bioconductor classes</a></li>
+    <li><a class="dropdown-item" href="../articles/assessing_zero_inflation.html">Assessing zero-inflation</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="https://github.com/PMCC-BioinformaticsCore/macpie.git"><span class="fa fa-github"></span></a></li>
@@ -124,23 +125,23 @@ using the <code>drc</code> package. It returns EC50 values per gene per treatmen
 <span class="r-out co"><span class="r-pr">#&gt;</span> Erlotinib_hydrochlorideNutlin-3aMk-2206_dihydrochlorideRibociclibAdavosertibTrametinibTemsirolimusAbemaciclibPonatinibFludarabine</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Staurosporine DMSO Media Paclitaxel Thapsigargin Vinblastine_sulfate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR         4.4164   NA    NA 5783042.00           NA             0.12721</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2        3.9857   NA    NA     109.89      0.70869             0.36661</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Chlorambucil Etoposide Cytarabine   Azd-5991 5-azacytidine  Mik665</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR        6.6185    4.4211         NA 7.6479e+19      0.069563 46.1340</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2      26.1280   23.8280         NA 9.2609e-01      0.048804  1.4967</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Luminespib Camptothecin Anastrozole Sb590885 Fluvastatin_sodium</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR     0.08212       3.1342      62.325  0.15654             1.6629</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2    4.49240     236.6200     110.150  1.17420            14.4120</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR           4.42   NA    NA    5783042           NA               0.127</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2          3.99   NA    NA        110        0.709               0.367</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Chlorambucil Etoposide Cytarabine                 Azd-5991 5-azacytidine</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR          6.62      4.42         NA 76479449657720373248.000        0.0696</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2        26.10     23.80         NA                    0.926        0.0488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Mik665 Luminespib Camptothecin Anastrozole Sb590885 Fluvastatin_sodium</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR    46.1     0.0821         3.13        62.3    0.157               1.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2    1.5     4.4900       237.00       110.0    1.170              14.40</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Ceralasertib Capivasertib Erlotinib_hydrochloride Nutlin-3a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR       1.26270    0.0067156                 0.26679   0.33298</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2      0.37764           NA                 0.30657   0.57002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR         1.260      0.00672                   0.267     0.333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2        0.378           NA                   0.307     0.570</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Mk-2206_dihydrochloride Ribociclib Adavosertib Trametinib Temsirolimus</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR                  3.02950   0.065756     0.21233   0.017333       9.7503</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2                 0.54178   0.506880     1.03570   1.102000      18.6660</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR                    3.030     0.0658       0.212     0.0173         9.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2                   0.542     0.5070       1.040     1.1000        18.70</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Abemaciclib Ponatinib Fludarabine</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR      1.89380    3.0276 140255.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2     0.63033    2.7319      1.9245</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> FSHR         1.89      3.03   140255.00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ITFG2        0.63      2.73        1.92</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
