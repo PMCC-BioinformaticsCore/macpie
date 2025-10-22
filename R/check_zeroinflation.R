@@ -157,9 +157,9 @@ check_zeroinflation <- function(data = NULL,
       group            = unique(df$group),
       n_genes          = nrow(df),
       n_wells          = sum(combined_id == unique(df$group)),
-      median_p0_obs    = median(df$p0_obs),
-      median_p0_nb     = median(df$p0_nb),
-      median_ZI        = median(df$ZI),
+      mean_p0_obs    = mean(df$p0_obs),
+      mean_p0_nb     = mean(df$p0_nb),
+      mean_ZI        = mean(df$ZI),
       observed_zeros_num       = sum(df$obs_zeros_num),
       expected_zeros_num  = sum(df$expected_zeros_num) 
     )
