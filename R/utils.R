@@ -1,3 +1,4 @@
 utils::globalVariables(c("diff_expressed", "gene_labels", ".cell",
                          "UMAPde_1", "UMAPde_2",
-                         "padj", "target", "target_id"))
+                         "padj", "target", "target_id",
+                         "log_cpm"))
