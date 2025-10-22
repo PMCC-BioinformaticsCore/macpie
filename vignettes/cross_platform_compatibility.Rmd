@@ -40,6 +40,10 @@ This vignette will cover the following two parts:
   - Performing differential expression and pathway enrichment tests on merged data with limma-voom correction.
 
 
+**3. Benchmark**
+
+  - Benchmarking the performance of macpie functions on DRUGseq data. It includes both filtering robust DMSO controls and DEG concordance. 
+  
 
 The DRUGseq dataset is a large-scale drug screening dataset that includes a large set of small molecules (N = 4,343) tested on U2OS cells. This dataset was retrieved from [Zenodo](https://doi.org/10.5281/zenodo.14291446) (Ozer et al., 2024).
 
@@ -64,15 +68,19 @@ devtools::load_all(paste0(dir, "macpie/"))
 
 
 ```{r setup}
-library(macpie)
-library(tibble)
-library(stringr)
-library(pheatmap)
-library(ggiraph)
-library(tidyseurat)
-library(purrr)
+suppressMessages(library(macpie))
+suppressMessages(library(tibble))
+suppressMessages(library(stringr))
+suppressMessages(library(pheatmap))
+suppressMessages(library(ggiraph))
+suppressMessages(library(tidyseurat))
+suppressMessages(library(purrr))
+suppressMessages(library(ggrepel))
 ```
 
+```{r}
+options(scipen=999, digits=3)
+```
 
 
 ## Converting a DRUGseq plate to a macpie object
@@ -318,7 +326,7 @@ Now, we convert the metadata format to macpie metadata format.
 
 The idea is to make a combined metadata and a combined count matrix for three plates with the `plate_ID` labelled. 
 
-```{r metdata_for_batch24}
+```{r}
 #make a combined metadata for three plates
 batch24_metadata <- batch24 %>% 
   map_dfr(~ {
@@ -353,7 +361,7 @@ batch24_metadata <- batch24_metadata%>%select(-c(batch_id, plate_barcode,plate_i
 
 
 
-```{r count_matrix_for_batch24}
+```{r}
 # create a combined UMI matrix for 3 plates
 batch24_counts <- batch24 %>%
   map(~ {
@@ -382,7 +390,7 @@ binded_counts <- do.call(cbind, batch24_counts)
 
 Then, we can read in the combined count matrix and metadata. 
 
-```{r load_data_batch24}
+```{r}
 as_mac <- CreateSeuratObject(counts = binded_counts, 
   min.cells = 1, 
   min.features = 1)
@@ -626,4 +634,948 @@ pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
 ```
 
 
+## Benchmark
+
+### Selecting robust DMSO controls
+
+We noticed that DRUGseq authors implemented a permutation strategy to identify robust DMSO wells in their analytics pipeline. We agree that robust control selection is critical for comparative benchmarking. The Novartis DRUGseq workflow selects DMSO controls via a 500-permutation procedure that retains wells minimising spurious DMSO–DMSO differentially expressed genes. To make this step practical for routine QC and for researchers with fewer DMSO wells, we implemented an alternative method in our macpie package `select_robust_controls` function that uses correlation-based selection of control wells. 
+
+This function ranks control wells based on their average Fisher-z-transformed correlation coefficients to all other control wells, selecting those with the highest average correlation scores as the 'robust' controls.
+
+
+The DRUGseq data contains three replicate plates with 48 DMSO controls (CB-43-EP73). We applied our `select_robust_controls` function to these DMSO wells. It filters genes, normalises with TMMwsp, computes log-CPM, and ranks wells by mean Fisher-z–transformed correlation to all other replicate wells. The top 5 wells with the highest transformed correlation were then compared to DRUGseq results. 
+
+We benchmark the performance of macpie's `select_robust_controls` function on DRUGseq data to select robust DMSO controls from three replicate plates. 
+
+
+#### DRUGseq: 6 robust DMSO wells
+
+First we load the file of robust DMSO control wells identified by the DRUGseq authors in their github repo. 
+
+Here, we show the robust DMSO wells for batch 24, which contains the three plates we are interested in (VH02012942, VH02012944, VH02012956).
+
+These 6 robust DMSO wells are used as the benchmark standard to compare with macpie selected robust DMSO wells.
+
+```{r}
+robust_DMSO_DRUGseq <- read.csv(paste0(dir, "DRUGseqData/robust_RC_ReferenceControl_DMSO_wells.txt"), sep="")
+robust_DMSO_DRUGseq %>% filter(batch_id==24) %>% select(batch_id, plate_barcode, well_id)
+```
+
+As from their results of robust DMSO controls, these are the robust DMSO wells for batch 24:
+
+ VH02012942: I23, M23
+ 
+ VH02012944: D23, H23 
+ 
+ VH02012956: I23, J23 
+
+
+***
+<br>
+
+
+#### macpie: select robust DMSO wells
+
+
+
+Now we will use a function `select_robust_controls` to identify robust DMSO controls from batch 24. 
+
+This function: 
+
+  - applies CPM filtering, 
+  
+  - performs TMMwsp normalisation and computes log-CPM, 
+  
+  - ranks wells by their mean Fisher-z–transformed sample–sample correlation to all other wells (Pearson or Spearman)
+  
+  - selects the top n wells (user-defined) as robust controls.
+  
+```{r}
+mac_filtered <- readRDS(paste0(dir, "/DRUGseqData/macpie_filtered_batch24.Rds"))
+mac_filtered$combined_id <- str_replace_all(mac_filtered$combined_id, "-","_")
+```
+
+
+
+
+Now we will apply the `select_robust_controls` function to each of the three plates in batch 24 to identify robust DMSO controls.
+
+This function generates three plots:
+ 
+ - Boxplot of log2-CPM (TMMwsp)
+ 
+ - Sample–sample correlation (Pearson, log2-CPM)
+ 
+ - Sample–sample correlation (Spearman, log2-CPM)
+ 
+ These plots help to visualize the distribution of gene expression and the correlation between samples, aiding in the assessment of DMSO control quality.
+
+
+```{r}
+#to use lapply on three plates
+plates <- c("VH02012942", "VH02012944", "VH02012956")
+results <- lapply(plates, function(plate) {
+  select_robust_controls(
+    mac_filtered,
+    combined_id = "CB_43_EP73_0",
+    orig_ident  = plate,
+    cpm_filter  = 1,
+    min_samps   = 8,
+    corr_method = "spearman",
+    top_n       = 5,
+    make_plots  = FALSE
+  )
+})
+
+names(results) <- plates
+```
+
+
+As make_plots = FALSE in the above function, we can now visualise the plots for each plate separately. If you set make_plots = TRUE, the function will automatically generate the plots for you.
+
+##### Plate VH02012942
+
+```{r}
+pheatmap::pheatmap(results$VH02012942$cor_pearson,
+  main = "Sample-sample Pearson correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+pheatmap::pheatmap(results$VH02012942$cor_spearman,
+  main = "Sample-sample Spearman correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+```
+
+
+Apart from correlation heatmaps, the function also returns a ranking of wells by their mean correlation to all other wells.
+
+```{r}
+results$VH02012942$scores_mean_to_others
+```
+
+Finally, it returns the top N wells as robust DMSO controls.
+
+```{r}
+results$VH02012942$topN
+```
+
+Now we can see for plate VH02012942, the 2 of top 5 DMSO wells selected by macpie are I23 and J23, which are exactly the same as the robust DMSO wells identified by the DRUGseq authors.
+
+
+Let's repeat the same process for the other two plates in batch 24.
+
+##### Plate VH02012944
+
+```{r}
+pheatmap::pheatmap(results$VH02012944$cor_pearson,
+  main = "Sample-sample Pearson correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+pheatmap::pheatmap(results$VH02012944$cor_spearman,
+  main = "Sample-sample Spearman correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+```
+
+
+Apart from correlation heatmaps, the function also returns a ranking of wells by their mean correlation to all other wells.
+
+```{r}
+results$VH02012944$scores_mean_to_others
+```
+
+Finally, it returns the top N wells as robust DMSO controls.
+
+```{r}
+results$VH02012944$topN
+```
+
+For plate VH02012944, the DRUGseq selected D23 and H23 DMSO wells are not in our top 5. However, H23 is ranked 6th by macpie, which is very close to the top 5. 
+
+
+##### Plate VH02012956
+```{r}
+pheatmap::pheatmap(results$VH02012956$cor_pearson,
+  main = "Sample-sample Pearson correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+pheatmap::pheatmap(results$VH02012956$cor_spearman,
+  main = "Sample-sample Spearman correlation (log2-CPM)", 
+  fontsize_row = 8, fontsize_col = 8)
+```
+
+
+Apart from correlation heatmaps, the function also returns a ranking of wells by their mean correlation to all other wells.
+
+```{r}
+results$VH02012956$scores_mean_to_others
+```
+
+Finally, it returns the top N wells as robust DMSO controls.
+
+```{r}
+results$VH02012942$topN
+```
+
+For plate VH02012956, the DRUGseq selected I23 and J23 DMSO wells are exactly the same as our top DMSO wells selected by macpie. 
+
+
+### Summary
+
+To summarise the performance of macpie in selecting robust DMSO wells, we compare our selected top 5 DMSO wells with the DRUGseq authors' selected robust DMSO wells for each plate in batch 24.
+
+```{r}
+# DRUG-seq authors' robust DMSO wells (batch 24)
+expected_df <- as_tibble(data.frame(
+  plate = c("VH02012942", "VH02012942", "VH02012944", "VH02012944", "VH02012956", "VH02012956"),
+  well  = c("I23", "M23", "D23", "H23", "I23", "J23"),
+  source = "expected"))
+
+
+# Helper: extract topN wells (names are like "VH02012942_I23")
+extract_top_wells <- function(res_per_plate) {
+  tibble(sample = names(res_per_plate$topN),
+         score  = as.numeric(res_per_plate$topN)) |>
+    mutate(
+      plate = sub("_.*$", "", sample),
+      well  = sub("^.*_", "", sample),
+      rank  = row_number()
+    ) |>
+    select(plate, well, rank, score)
+}
+
+top_df <- map_df(names(results), ~{
+  extract_top_wells(results[[.x]])
+})
+
+
+matched_df <- expected_df |>
+  left_join(top_df, by = c("plate", "well")) |>
+  mutate(found = !is.na(rank))
+
+
+plate_summary <- matched_df |>
+  group_by(plate) |>
+  summarise(
+    expected = n(),
+    recovered = sum(found),
+    recovery_rate = recovered / expected
+  )
+
+plate_summary
+
+overall <- summarise(plate_summary,
+                     total_expected = sum(expected),
+                     total_recovered = sum(recovered),
+                     overall_rate = total_recovered / total_expected)
+overall
+
+```
+```{r}
+ggplot(plate_summary, aes(x = plate, y = recovered, fill = plate)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = sprintf("%d / %d (%.0f%%)",
+                                recovered, expected, 100*recovery_rate)),
+            vjust = -0.6) +
+  ylim(0, max(plate_summary$expected) + 0.8) +
+  labs(title = "Recovered DRUG-seq robust DMSO wells by plate",
+       x = "Plate", y = "Recovered wells") +
+  theme_classic()
+
+```
+
+
+In summary, for the three plates in batch 24, macpie successfully identified 4 out of 6 robust DMSO wells (with ~66.7% overall recovery rate) that were also selected by the DRUGseq authors. Only for plate VH02012944, one of the DRUGseq selected DMSO wells (D23) was not in our top 5, but the other well (H23) was ranked 6th by macpie, which is very close to the top 5. This demonstrates that macpie is effective in selecting high-quality DMSO controls for downstream analysis without running permutation tests, making it a computationally efficient choice.
+
+This function runs for each plate, it does not take into account any batches or plates. If it's a cross-plates design, it is recommended to either compute within-plate or remove plate effects (e.g. using ComBat, limma removeBatchEffect functions) first. 
+
+***
+<br>
+
+
+### DEG concordance 
+
+Now we compare macpie implementations of limma-voom, edgeR, DEseq2 and limma-trend against DRUGseq limma-trend result on the FF_86_NH56 (10uM) vs DMSO control from batch 24. We evaluated three control settings: (i) all DMSO wells (48 wells), (ii) top 15 DMSO selected by our correlation-based approach, and (iii) 6 DMSO wells identified by DRUGseq 500 permutation-based method. 
+
+We only focus on up-regulated genes in FF_86_NH56 (genes were called DEG if BH-adjusted p < 0.05 and log2FC > 0).
+
+
+
+
+#### DRUGseq DEG results
+
+For the purpose of this vignette, we only load the DRUGseq DEG results for FF_86_NH56 (10uM) vs DMSO control from batch 24.
+
+```{r}
+batch24_de <- readRDS(paste0(dir,"DRUGseqData/DE_batch24.Rds"))
+FF86_res <- batch24_de %>% filter(cmpd_sample_id=="FF-86-NH56")
+ff86_res_toptable <- FF86_res[,13:18]
+ff86_res_toptable <- ff86_res_toptable %>% 
+  separate(gene.ID, into = c("gene", "chrom"), sep = ",") %>%
+  select(-chrom) %>% mutate(combined_id ="FF_86_NH56_10") %>%
+  rename(log2FC=logFC, p_value_adj = adj.P.Val)
+
+```
+
+```{r, fig.height=6, fig.width=8}
+plot_volcano(ff86_res_toptable, max.overlaps =3)
+```
+
+```{r}
+ff86_res_toptable %>% filter(p_value_adj <0.05 & log2FC >0) %>% nrow()
+
+drugseq_deg <- ff86_res_toptable %>% filter(p_value_adj <0.05 & log2FC >0) %>% select(gene) %>% pull()
+```
+
+There are 1423 up-regulated DEGs identified by DRUGseq limma-trend method for FF_86_NH56 (10uM) vs DMSO control from batch 24.
+
+
+
+#### macpie DEG results with all DMSO wells
+
+
+Load filered data
+
+```{r}
+mac_filtered <- readRDS(paste0(dir, "/DRUGseqData/macpie_filtered_batch24.Rds"))
+mac_filtered$combined_id <- str_replace_all(mac_filtered$combined_id, "-","_")
+```
+
+
+
+
+#####  Differential gene expression
+
+In here, you can specify a single condition in the combined_id column and compare with DMSO (i.e.CB_43_EP73_0). By using the plate IDs in the column of orig.ident as the input for batch parameter, `compute_singe_de` function can perform differential expression analysis using the preferred method (limma voom in this example) with batch information. 
+
+
+
+```{r}
+methods <- c("limma_voom", "DESeq2", "edgeR", "limma_trend")
+
+methods_res <- lapply(methods, function(m){
+  
+  message("\n","Processing method: ", m,"\n") 
+  # m<-"limma_voom"
+  treatment_samples <- "FF_86_NH56_10"
+  control_samples <- "CB_43_EP73_0"
+  subset <- mac_filtered%>%filter(combined_id%in%c(treatment_samples,control_samples))
+
+  batch <- subset$orig.ident
+
+
+  top_table <- compute_single_de(subset, treatment_samples, control_samples, method =  m, batch = batch)
+  
+  # plot(plot_volcano(top_table, max.overlaps = 5))
+  alldmso_degs <- top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  length(intersect(alldmso_degs, drugseq_deg))
+  
+  top_table <- top_table %>%
+    arrange(p_value_adj, desc(log2FC)) %>%
+    mutate(gene = factor(gene, levels = unique(gene)))
+  # add a column if there are in the intersect(alldmso_degs, drugseq_deg)
+  top_table <- top_table %>%
+    mutate(in_drugseq_deg = ifelse(gene %in% intersect(alldmso_degs, drugseq_deg), "yes", "no"))
+
+  # label a few top overlapping genes
+  lab_genes <- top_table[top_table$in_drugseq_deg=="yes", ] |>
+    dplyr::arrange(p_value_adj, dplyr::desc(log2FC)) 
+  
+  volcano_overlap <- ggplot(top_table, aes(x = log2FC, y = -log10(p_value_adj), color = in_drugseq_deg)) +
+    geom_point(alpha = 0.6, size = 1.2) +
+    geom_text_repel(data = lab_genes, aes(label = gene), size = 3, max.overlaps = 50) +
+    scale_color_manual(values = c("no"="#bdbdbd","yes"="#2b8cbe"))+
+    theme_classic()
+  
+  
+  #return 
+  result_list <- list(top_table = top_table,
+                      num_degs_macpie = length(alldmso_degs),
+                      n_overlap = length(intersect(alldmso_degs, drugseq_deg)),
+                      volcano_plot = volcano_overlap)
+
+  return(result_list)
+  
+})
+
+names(methods_res) <- methods
+
+```
+
+
+##### Summary table
+
+
+```{r}
+#get a table to show number of DEGs and number of overlapping genes with DRUGseq for each method
+deg_summary <- map_df(methods_res, function(x) {
+  data.frame(
+    num_degs_macpie = x$num_degs_macpie,
+    n_overlap = x$n_overlap,
+    num_degs_DRUGseq = length(drugseq_deg)
+  )
+}, .id = paste0("macpie_methods"))
+
+deg_summary
+```
+
+
+
+##### Overlapping volcano plot
+
+```{r}
+methods_res$limma_voom$volcano_plot
+methods_res$DESeq2$volcano_plot
+methods_res$edgeR$volcano_plot
+methods_res$limma_trend$volcano_plot
+```
+
+
+
+
+#### macpie DEG results with 15 robust DMSO wells
+
+From our select_robust_controls function above, we identified the following top 15 DMSO wells from three plates in batch 24 using `select_robust_controls`:
+
+
+```{r}
+batch24 <- readRDS(paste0(dir,"DRUGseqData/Exp_batch24.Rds"))
+names(batch24)
+```  
+
+```{r metdata}
+#make a combined metadata for three plates
+batch24_metadata <- batch24 %>% 
+  map_dfr(~ {
+    .x$Annotation %>%
+      mutate(
+        Plate_ID        = plate_barcode,
+        Well_ID         = well_id,
+        Barcode         = paste0(plate_barcode, "_", well_index),
+        Row             = LETTERS[row],
+        Column          = as.integer(col),
+        Species         = "human",
+        Cell_type       = "U2OS",
+        Model_type      = "2D_adherent",
+        Time            = as.factor(hours_post_treatment),
+        Unit            = "h",
+        Treatment_1     = cmpd_sample_id,
+        Concentration_1 = as.numeric(concentration),
+        Unit_1          = unit,
+        Sample_type     = if_else(well_type == "SA" & col == 24,
+                                  "Positive Control",
+                                  well_type)
+      )
+  })
+
+
+batch24_metadata <- batch24_metadata%>%select(-c(batch_id, plate_barcode,plate_index, well_id,
+                                                 well_index, col, row, biosample_id, external_biosample_id,
+                                                 cmpd_sample_id, well_type, cell_line_name, cell_line_ncn, concentration, unit, hours_post_treatment, Sample))
+```
+
+
+
+```{r count_matrix}
+# create a combined UMI matrix for 3 plates
+batch24_counts <- batch24 %>%
+  map(~ {
+    .x$UMI.counts %>%
+      as.data.frame() %>% 
+      rownames_to_column("gene_id") %>%
+      separate(col = gene_id, into = c("gene_name", "chrom"), sep = ",") %>%
+      mutate(gene_name = make.unique(gene_name)) %>%
+      select(-chrom) %>%
+      tibble::column_to_rownames(var = "gene_name") %>%
+      as.matrix()
+  })
+
+binded_counts <- do.call(cbind, batch24_counts)
+
+
+  
+```
+
+
+
+```{r load_data}
+as_mac <- CreateSeuratObject(counts = binded_counts, 
+  min.cells = 1, 
+  min.features = 1)
+
+as_mac<- as_mac%>% inner_join(batch24_metadata, by = c(".cell"="Barcode"))
+```
+
+
+```{r}
+
+as_mac$combined_id <- paste0(as_mac$Treatment_1,"_", as_mac$Concentration_1)
+
+badDMSO <- as_mac@meta.data %>% filter(Treatment_1 == "CB-43-EP73") %>% 
+ filter((Plate_ID == "VH02012942" & !(Well_ID %in% c("I23", "M23", "K23", "J23","C23"))) |
+        (Plate_ID == "VH02012944" & !(Well_ID %in% c("I23", "M23", "J23", "G23", "K23")))|
+        (Plate_ID == "VH02012956" & !  (Well_ID %in% c("I23", "J23", "O23","M23","K23"))))
+
+
+
+keep_wells <- setdiff(rownames(as_mac@meta.data), rownames(badDMSO))
+
+
+mac_badDSMOremoved <- as_mac[,keep_wells]
+
+mac_badDSMOremoved$combined_id <- str_replace_all(mac_badDSMOremoved$combined_id, "-","_")
+
+
+```
+
+
+```{r}
+min_sample_num <- min(table(mac_badDSMOremoved$combined_id))
+mac_badDSMOremoved <- filter_genes_by_expression(mac_badDSMOremoved,
+                                           group_by = "combined_id", min_counts =10,
+                                           min_samples = min_sample_num)
+
+```
+
+
+
+
+
+#####  Differential gene expression 
+
+```{r}
+methods <- c("limma_voom", "DESeq2", "edgeR", "limma_trend")
+
+five_dmso_methods_res <- lapply(methods, function(m){
+  message("Processing method: ", m) 
+  # m<-"limma_voom"
+  treatment_samples <- "FF_86_NH56_10"
+  control_samples <- "CB_43_EP73_0"
+  subset <- mac_badDSMOremoved%>%filter(combined_id%in%c(treatment_samples,control_samples))
+
+  batch <- subset$orig.ident
+
+  badDMSO_out_top_table <- compute_single_de(subset, treatment_samples, control_samples, method =  m, batch = batch)
+
+ 
+  # plot(plot_volcano(top_table, max.overlaps = 5))
+  badDMSO_out_degs <- badDMSO_out_top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  length(intersect(badDMSO_out_degs, drugseq_deg))
+  
+  badDMSO_out_top_table <- badDMSO_out_top_table %>%
+    arrange(p_value_adj, desc(log2FC)) %>%
+    mutate(gene = factor(gene, levels = unique(gene)))
+  # add a column if there are in the intersect(alldmso_degs, drugseq_deg)
+  badDMSO_out_top_table <- badDMSO_out_top_table %>%
+    mutate(in_drugseq_deg = ifelse(gene %in% intersect(badDMSO_out_degs, drugseq_deg), "yes", "no"))
+  
+  # label a few top overlapping genes
+  lab_genes <- badDMSO_out_top_table[badDMSO_out_top_table$in_drugseq_deg=="yes", ] |>
+    dplyr::arrange(p_value_adj, dplyr::desc(log2FC)) 
+  
+  volcano_overlap <- ggplot(badDMSO_out_top_table, aes(x = log2FC, y = -log10(p_value_adj), color = in_drugseq_deg)) +
+    geom_point(alpha = 0.6, size = 1.2) +
+    geom_text_repel(data = lab_genes, aes(label = gene), size = 3, max.overlaps = 10) +
+    scale_color_manual(values = c("no"="#bdbdbd","yes"="#2b8cbe"))+
+    theme_classic()
+
+  #return 
+  result_list <- list(top_table = badDMSO_out_top_table,
+                      num_degs_macpie = length(badDMSO_out_degs),
+                      n_overlap = length(intersect(badDMSO_out_degs, drugseq_deg)),
+                      volcano_plot = volcano_overlap)
+  return(result_list)
+  
+})
+
+names(five_dmso_methods_res) <- methods
+
+```
+
+##### Summary table
+
+```{r}
+#get a table to show number of DEGs and number of overlapping genes with DRUGseq for each method
+deg_summary <- map_df(five_dmso_methods_res, function(x) {
+  data.frame(
+    num_degs_macpie = x$num_degs_macpie,
+    n_overlap = x$n_overlap,
+    num_degs_DRUGseq = length(drugseq_deg)
+  )
+}, .id = paste0("macpie_methods"))
+
+deg_summary
+```
+
+
+##### Overlapping volcano plot
+
+```{r}
+five_dmso_methods_res$limma_voom$volcano_plot
+five_dmso_methods_res$DESeq2$volcano_plot
+five_dmso_methods_res$edgeR$volcano_plot
+five_dmso_methods_res$limma_trend$volcano_plot
+```
+
+
+
+
+#### macpie DEG results with 6 robust DMSO wells from DRUGseq
+
+From public DRUG-seq analysis pipeline, authors identified two reference controls: all DMSO wells and the ‘robust DMSO’ wells. 
+
+We know these robust DMSO wells for batch 24 from their published data:
+
+  - VH02012942: I23, M23
+  
+  - VH02012944: D23, H23
+  
+  - VH02012956: I23, J23
+  
+
+```{r}
+batch24 <- readRDS(paste0(dir,"DRUGseqData/Exp_batch24.Rds"))
+names(batch24)
+```  
+
+```{r metdata_for_batch24}
+#make a combined metadata for three plates
+batch24_metadata <- batch24 %>% 
+  map_dfr(~ {
+    .x$Annotation %>%
+      mutate(
+        Plate_ID        = plate_barcode,
+        Well_ID         = well_id,
+        Barcode         = paste0(plate_barcode, "_", well_index),
+        Row             = LETTERS[row],
+        Column          = as.integer(col),
+        Species         = "human",
+        Cell_type       = "U2OS",
+        Model_type      = "2D_adherent",
+        Time            = as.factor(hours_post_treatment),
+        Unit            = "h",
+        Treatment_1     = cmpd_sample_id,
+        Concentration_1 = as.numeric(concentration),
+        Unit_1          = unit,
+        Sample_type     = if_else(well_type == "SA" & col == 24,
+                                  "Positive Control",
+                                  well_type)
+      )
+  })
+
+
+batch24_metadata <- batch24_metadata%>%select(-c(batch_id, plate_barcode,plate_index, well_id,
+                                                 well_index, col, row, biosample_id, external_biosample_id,
+                                                 cmpd_sample_id, well_type, cell_line_name, cell_line_ncn, concentration, unit, hours_post_treatment, Sample))
+```
+
+
+
+```{r count_matrix_for_batch24}
+# create a combined UMI matrix for 3 plates
+batch24_counts <- batch24 %>%
+  map(~ {
+    .x$UMI.counts %>%
+      as.data.frame() %>% 
+      rownames_to_column("gene_id") %>%
+      separate(col = gene_id, into = c("gene_name", "chrom"), sep = ",") %>%
+      mutate(gene_name = make.unique(gene_name)) %>%
+      select(-chrom) %>%
+      tibble::column_to_rownames(var = "gene_name") %>%
+      as.matrix()
+  })
+
+binded_counts <- do.call(cbind, batch24_counts)
+
+
+  
+```
+
+
+
+```{r load_data_batch24}
+as_mac <- CreateSeuratObject(counts = binded_counts, 
+  min.cells = 1, 
+  min.features = 1)
+
+as_mac<- as_mac%>% inner_join(batch24_metadata, by = c(".cell"="Barcode"))
+```
+
+
+
+
+```{r}
+
+as_mac$combined_id <- paste0(as_mac$Treatment_1,"_", as_mac$Concentration_1)
+
+badDMSO <- as_mac@meta.data %>% filter(Treatment_1 == "CB-43-EP73") %>% 
+ filter((Plate_ID == "VH02012942" & !(Well_ID %in% c("I23", "M23"))) |
+        (Plate_ID == "VH02012944" & !(Well_ID %in% c("D23", "H23")))|
+        (Plate_ID == "VH02012956" & !  (Well_ID %in% c("I23", "J23"))))
+
+
+
+keep_wells <- setdiff(rownames(as_mac@meta.data), rownames(badDMSO))
+
+
+mac_badDSMOremoved <- as_mac[,keep_wells]
+
+mac_badDSMOremoved$combined_id <- str_replace_all(mac_badDSMOremoved$combined_id, "-","_")
+
+
+```
+
+
+```{r}
+min_sample_num <- min(table(mac_badDSMOremoved$combined_id))
+mac_badDSMOremoved <- filter_genes_by_expression(mac_badDSMOremoved,
+                                           group_by = "combined_id", min_counts =10,
+                                           min_samples = min_sample_num)
+
+```
+
+
+
+
+
+
+#####  Differential gene expression 
+
+
+```{r}
+methods <- c("limma_voom", "DESeq2", "edgeR", "limma_trend")
+
+robust_dmso_methods_res <- lapply(methods, function(m){
+  message("Processing method: ", m) 
+  # m<-"limma_voom"
+  treatment_samples <- "FF_86_NH56_10"
+  control_samples <- "CB_43_EP73_0"
+  subset <- mac_badDSMOremoved%>%filter(combined_id%in%c(treatment_samples,control_samples))
+
+  batch <- subset$orig.ident
+
+  badDMSO_out_top_table <- compute_single_de(subset, treatment_samples, control_samples, method =  m, batch = batch)
+
+  # plot(plot_volcano(top_table, max.overlaps = 5))
+  badDMSO_out_degs <- badDMSO_out_top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  length(intersect(badDMSO_out_degs, drugseq_deg))
+  
+  badDMSO_out_top_table <- badDMSO_out_top_table %>%
+    arrange(p_value_adj, desc(log2FC)) %>%
+    mutate(gene = factor(gene, levels = unique(gene)))
+  # add a column if there are in the intersect(alldmso_degs, drugseq_deg)
+  badDMSO_out_top_table <- badDMSO_out_top_table %>%
+    mutate(in_drugseq_deg = ifelse(gene %in% intersect(badDMSO_out_degs, drugseq_deg), "yes", "no"))
+
+  # label a few top overlapping genes
+  lab_genes <- badDMSO_out_top_table[badDMSO_out_top_table$in_drugseq_deg=="yes", ] |>
+    dplyr::arrange(p_value_adj, dplyr::desc(log2FC)) 
+  
+  volcano_overlap <- ggplot(badDMSO_out_top_table, aes(x = log2FC, y = -log10(p_value_adj), color = in_drugseq_deg)) +
+    geom_point(alpha = 0.6, size = 1.2) +
+    geom_text_repel(data = lab_genes, aes(label = gene), size = 3, max.overlaps = 10) +
+    scale_color_manual(values = c("no"="#bdbdbd","yes"="#2b8cbe"))+
+    theme_classic()
+  
+  #return 
+  result_list <- list(top_table = badDMSO_out_top_table,
+                      num_degs_macpie = length(badDMSO_out_degs),
+                      n_overlap = length(intersect(badDMSO_out_degs, drugseq_deg)),
+                      volcano_plot = volcano_overlap)
+  return(result_list)
+  
+})
+
+names(robust_dmso_methods_res) <- methods
+
+```
+
+##### Summary table
+
+```{r}
+#get a table to show number of DEGs and number of overlapping genes with DRUGseq for each method
+deg_summary <- map_df(robust_dmso_methods_res, function(x) {
+  data.frame(
+    num_degs_macpie = x$num_degs_macpie,
+    n_overlap = x$n_overlap,
+    num_degs_DRUGseq = length(drugseq_deg)
+  )
+}, .id = paste0("macpie_methods"))
+
+deg_summary
+```
+
+
+##### Overlapping volcano plot
+
+```{r}
+robust_dmso_methods_res$limma_voom$volcano_plot
+robust_dmso_methods_res$DESeq2$volcano_plot
+robust_dmso_methods_res$edgeR$volcano_plot
+robust_dmso_methods_res$limma_trend$volcano_plot
+```
+
+
+
+
+### Summary of DEG concordance
+
+To compare DEGs with different replicate numbers and different methods
+
+```{r}
+methods <- c("limma_voom", "DESeq2", "edgeR", "limma_trend")
+
+get_jaccard <- function(deg_set, drugseq_deg){
+  intersection <- length(intersect(deg_set, drugseq_deg))
+  union <- length(union(deg_set, drugseq_deg))
+  jaccard_index <- intersection / union
+  return(jaccard_index)
+}
+
+jaccard_index <- lapply(methods, function(m){
+  # all dmso
+  degs <- methods_res[[m]]$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  jaccard_all <- get_jaccard(degs, drugseq_deg)
+  # five dmso
+  degs <- five_dmso_methods_res[[m]]$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  jaccard_five <- get_jaccard(degs, drugseq_deg)
+  # three dmso
+  degs <- robust_dmso_methods_res[[m]]$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull()
+  jaccard_three <- get_jaccard(degs, drugseq_deg)
+  jaccard_index <- data.frame(
+    method = m,
+    jaccard_all = jaccard_all,
+    jaccard_five = jaccard_five,
+    jaccard_three = jaccard_three
+  )
+  return(jaccard_index)
+})
+
+df <- as.data.frame(do.call(rbind, jaccard_index))
+rownames(df) <- df$method
+df <- df %>% select(-method)
+colnames(df) <- c("All DMSO", "macpie: 15 DMSO", "DRUGseq: 6 DMSO")
+pheatmap::pheatmap(df,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         display_numbers = TRUE,
+         main = "Jaccard Index between macpie DEGs and DRUGseq DEGs")
+
+```
+
+#### Overlap of DEGs using all DMSO wells 
+
+
+```{r}
+library(UpSetR)
+all_dmso <- list(
+  limma_voom = methods_res$limma_voom$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DESeq2 = methods_res$DESeq2$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  edgeR = methods_res$edgeR$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  limma_trend = methods_res$limma_trend$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DRUGseq = drugseq_deg
+)
+upset(fromList(all_dmso), 
+      nsets = 5, 
+      order.by = "freq",
+      main.bar.color = "black",
+      sets.bar.color = "gray23",
+      text.scale = c(2, 2, 2, 1.5, 2, 1.5),
+      mainbar.y.label = "Number of common DEGs",
+      sets.x.label = "Number of DEGs") 
+```
+
+#### Overlap of DEGs using 15 DMSO wells 
+
+```{r}
+five_dmso <- list(
+  limma_voom = five_dmso_methods_res$limma_voom$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DESeq2 = five_dmso_methods_res$DESeq2$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  edgeR = five_dmso_methods_res$edgeR$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  limma_trend = five_dmso_methods_res$limma_trend$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DRUGseq = drugseq_deg
+)
+upset(fromList(five_dmso), 
+      nsets = 5, 
+      order.by = "freq",
+      main.bar.color = "black",
+      sets.bar.color = "gray23",
+      text.scale = c(2, 2, 2, 1.5, 2, 1.5),
+      mainbar.y.label = "Number of common DEGs",
+      sets.x.label = "Number of DEGs")
+```
+
+
+#### Overlap of DEGs using 6 DMSO wells 
+
+```{r}
+robust_dmso <- list(
+  limma_voom = robust_dmso_methods_res$limma_voom$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DESeq2 = robust_dmso_methods_res$DESeq2$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  edgeR = robust_dmso_methods_res$edgeR$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  limma_trend = robust_dmso_methods_res$limma_trend$top_table %>% filter(p_value_adj <0.05 & log2FC>0) %>% select(gene) %>% pull(),
+  DRUGseq = drugseq_deg
+)
+upset(fromList(robust_dmso), 
+      nsets = 5, 
+      order.by = "freq",
+      main.bar.color = "black",
+      sets.bar.color = "gray23",
+      text.scale = c(2, 2, 2, 1.5, 2, 1.5),
+      mainbar.y.label = "Number of common DEGs",
+      sets.x.label = "Number of DEGs")
+```
+
+From Jaccard heatmap and UpSet plots, with all 48 DMSO controls, DESeq2 and edgeR show the largest overlaps with DRGseq (Jaccard = 0.29 and 0.24; UpSet intersections in the hundreds). Limma-voom shows moderate similarity (J=0.15), and limma-trend returns a smaller set (J=0.18). Using 15 macpie-selected DMSO reduces totals and overlaps for most methods; DEseq2 and edgeR remains relatively stable (J = 0.28 and 0.24).  With only 6 DRUGseq controls, the DEG sets shrink and pair-wise intersection numbers drop. Especially DEseq2 drops down to J=0.01 and limma_voom reduces to J=0.08. While edgeR remains relatively stable with J=0.23. limma-trend run yields very few DEGs under this setting. 
+
+
+***
+<br>
+
+
+
+
+## Conclusion
+
+### Why robust DMSO subsets can reduce concordance with DRUGseq DEGs?
+
+Possible reasons are that with fewer control samples, our group-aware filter (>= 10 counts in at least 3 samples) becomes more stringent, leading to fewer genes being tested in the DE analysis. This reduction in the number of tested genes can impact the identification of DEGs and their overlap with DRUGseq results. Additionally, having fewer control samples can increase variability in the estimates of dispersion, which can affect the statistical power to detect true DEGs. This increased variability may lead to less consistent results across different methods, thereby reducing concordance with DRUGseq DEGs. 
+
+Robust DMSO are selected based on their similarity in overall expression profiles, which may slightly shift normalisation and the mean-variance trend when estimating by TMM/TMMwsp. 
+
+
+### Minimal workflow we recommend for macpie DEG analysis
+
+1. QC and filtering:
+
+- Use group-aware filtering `filter_genes_by_expression` to retain genes with consistent expression within each treatment.
+
+- Examine any batch/unwanted variation, or potential outliers in the data.
+
+2. Check zero-inflation:
+
+- Run `check_zeroinflation` before and after filtering to ensure that zero-inflation is minimized.
+
+- Decision heuristic: for example, if observed zero proportions are significantly higher than expected under NB after filtering, consider using methods that account for zero-inflation.
+
+3. Pick controls consciously:
+
+- Start with all available controls and assess any potential outliers.
+
+4. Choose a DE method:
+
+- If zero-inflation is present, use a method that accounts for it (`compute_single_de` edgeR with ZINB-WaVE weights).
+
+- If zero-inflation is not a concern,
+
+  - edgeR (QLFit) and limma-voom (with TMMwsp): both methods are designed to account for gene-specific variability and handle heteroscedasticity effectively.  
+
+  - limma-trend: remains suitable for uniformly sequenced experiments as it assumes similar library sizes/sequencing depth.
+  
+  - DESeq2: strong shrinkage & automatic independent filtering.
+  
+- If batch/unwanted variation,
+
+  - include them in the design (~ batch + condition) or adjust with limma’s removeBatchEffect / edgeR design.
+  
+  - if strong, apply RUVseq (e.g. RUVg with empirical negative controls or RUVs with replicate samples) before DE. Re-compute normalization after RUV and re-fit your DE model.
+
+
+***
+<br>
 

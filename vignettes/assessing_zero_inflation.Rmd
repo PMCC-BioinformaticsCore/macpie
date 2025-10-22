@@ -1,0 +1,328 @@
+---
+title: "Assessing zero-inflation in your data"
+output:
+  rmarkdown::html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 5
+vignette: >
+  %\VignetteIndexEntry{assessing_zero_inflation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteBuild{true}
+  
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  digits = 3
+)
+options(digits = 3) 
+```
+
+
+
+## Overview 
+
+This is a quick demonstration of the `check_zeroinflation()` function from our **macpie** package. This function is a fast diagnostic tool to help you assess whether your MACseq data exhibits zero-inflation relative to a negative binomial (NB) model.
+
+We use a lightweight convenience wrapper `subsample_genes()` around **`seqgendiff::select_counts()`** to create a smaller object with a subset of genes for faster computation. This function is also part of the **macpie** package. 
+
+
+Under the hood, `check_zeroinflation()` uses **edgeR** to estimate gene-wise dispersions and compute expected zero probabilities under a NB model. It then compares the observed and expected zero-inflated indexes for each gene within each group defined in the metadata.
+
+This function:
+
+  - estimates gene-wise tagwise dispersions with edgeR (using all selected groups),
+
+  - builds NB-expected zero probabilities from TMMwsp-scaled means, and
+
+  - returns per-gene ZI (observed zeros minus NB-expected zeros) and per-group summaries (e.g., % genes with ZI > 0.05). ZI-cutoffs are user-defined.
+  
+
+The output is a list with two elements:
+
+  - `summary_by_group`: A summary table showing the number and percentage of genes that are zero-inflated for each group at specified cutoffs.
+  
+  - `gene_metrics_by_group`: A detailed table with gene-wise metrics, including observed and expected zero numbers and proportions, zero-inflation index (ZI), mean count, and dispersion estimates for each gene in each group.
+
+**Note**: `check_zeroinflation()` relies on edgeR to estimate dispersion. The current implementation requires ≥2 groups in the design so that edgeR can stabilize gene-wise dispersions across groups. If you only have a single group and still want a design-aware baseline for expected zeros, fit a Gamma–Poisson/NB GLM and compute the expected zero probabilities from its fitted means and over-dispersion.
+
+
+***
+<br>
+
+```{r set_wd, include=FALSE}
+dir <- "/Users/liuxin/macpie_Dev/"
+devtools::load_all(paste0(dir, "macpie/"))
+```
+
+
+Load data and preprocess before subsampling genes and checking for zero-inflation.
+
+```{r setup}
+#install.packages("macpie")  # or devtools::install_github("PMCC-BioinformaticsCore/macpie")
+library(macpie)
+library(seqgendiff)
+library(ggplot2)
+library(cowplot)
+
+# Define project variables
+project_name <- "PMMSq033"
+project_metadata <- system.file("extdata/PMMSq033_metadata.csv", package = "macpie")
+# Load metadata
+metadata <- read_metadata(project_metadata)
+
+```
+
+```{r load_data}
+# Import raw data
+project_rawdata <- paste0(dir, "/macpieData/PMMSq033/raw_matrix")
+project_name <- "PMMSq033"
+raw_counts <- Read10X(data.dir = project_rawdata)
+# Create tidySeurat object
+mac <- CreateSeuratObject(counts = raw_counts,
+                          project = project_name,
+                          min.cells = 1,
+                          min.features = 1)
+# Join with metadata
+mac <- mac %>%
+  inner_join(metadata, by = c(".cell" = "Barcode"))
+# Add unique identifier
+mac <- mac %>%
+  mutate(combined_id = str_c(Compound_ID, Concentration_1, sep = "_")) %>%
+  mutate(combined_id = gsub(" ", "", .data$combined_id))
+mac <- mac %>%
+  filter(Project == "Current")
+
+```
+
+
+## Subsample genes without filtering
+
+We first subsample genes without filtering to see the zero-inflation results before filtering lowly expressed genes.
+
+This is to randomly select a subset of 1000 genes for a quick check. For a more comprehensive analysis, consider using a larger subset.
+
+```{r}
+# Subsample genes for faster computation
+sub_mac_unfiltered <- subsample_genes(mac, ngene = 1000, gselect = "random", seed = 1)
+sub_mac_unfiltered %>% nrow()
+```
+
+
+We now look at zero-inflation across high dose treatment groups and DMSO control.
+
+```{r}
+# Check for zero-inflation
+high_doses <- grep("_10$", unique(sub_mac_unfiltered$combined_id), value = TRUE)
+#add DMSO_0
+high_doses <- c(high_doses, "DMSO_0")
+zi_results_unfiltered <- check_zeroinflation(sub_mac_unfiltered, 
+                                  group_by = "combined_id",
+                                  samples = high_doses,
+                                  batch = 1,
+                                  cutoffs = c(0.1, 0.2))
+```
+
+#### View gene-wise metrics for each group
+
+For example, view the first few rows for DMSO_0 group:
+
+```{r}
+zi_results_unfiltered$gene_metrics_by_group %>% filter(group=="DMSO_0") %>% head()
+
+```
+And for Staurosporine_10 group:
+
+```{r}
+zi_results_unfiltered$gene_metrics_by_group %>% filter(group=="Staurosporine_10") %>% head()
+```
+
+
+
+#### View summary statistics for each group
+
+```{r}
+zi_results_unfiltered$summary_by_group %>% head(10)
+```
+
+
+From the summary table, we can see the summary statistics for each group, including the number and percentage of genes that are zero-inflated at the specified cutoffs.
+
+Each of the columns in the summary table are defined as follows:
+
+  - group: The treatment group
+  
+  - n_genes: Total number of genes analyzed in the group
+  
+  - n_wells:  Total number of wells/samples in the group
+  
+  - mean_p0_obs: mean observed zero proportion across genes in the group
+  
+  - mean_p0_nb: mean expected zero proportion under the NB model across genes in the group
+  
+  - mean_ZI: mean zero-inflation index (ZI = p0_obs - p0_nb for each gene) across genes in the group
+  
+  - observed_zeros_num: Number of data points with observed zeros (it shouldn't be more than n_genes*n_wells for each group)
+  
+  - expected_zeros_num: Number of data points with expected zeros under the NB model (same here, it shouldn't be more than n_genes*n_wells for each group)
+  
+  - pct_ZI_gt_0.1: Percentage of genes with ZI greater than 0.1
+  
+  - pct_ZI_gt_0.2: Percentage of genes with ZI greater than 0.2
+
+
+Visualisation of  zero-inflation metrics for high dose treatment groups and DMSO control.
+
+```{r, fig.height=10, fig.width=8}
+high_doses_zi_results_unfiltered <- zi_results_unfiltered$summary_by_group %>% filter(grepl("_10$", group))
+#concatenate with DMSO
+high_doses_zi_results_unfiltered <- rbind(high_doses_zi_results_unfiltered,
+                                zi_results_unfiltered$summary_by_group %>% filter(group=="DMSO_0"))
+
+
+long_zi_results_unfiltered <- high_doses_zi_results_unfiltered %>% select(group, mean_p0_obs, mean_p0_nb, mean_ZI) %>%
+  pivot_longer(cols = c(mean_p0_obs, mean_p0_nb, mean_ZI), 
+               names_to = "metric", 
+               values_to = "value")
+
+# rank groups by mean_p0_obs
+long_zi_results_unfiltered$group <- factor(long_zi_results_unfiltered$group,
+                                              levels = high_doses_zi_results_unfiltered$group[order(-high_doses_zi_results_unfiltered$mean_p0_obs)])
+
+#only show mean_p0_obs and mean_p0_nb
+long_zi_results_unfiltered_prop <- long_zi_results_unfiltered %>% filter(metric %in% c("mean_p0_obs", "mean_p0_nb"))
+
+
+p1 <- ggplot(long_zi_results_unfiltered_prop, aes(x = group, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Zero-Inflation Metrics by Treatment Groups (10uM) and DMSO \nmacseq-unfiltered",
+       x = "Groups",
+       y = "zero-inflation proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = macpie_colours$discrete[1:3])
+
+# show ZI separately
+p2 <- ggplot(long_zi_results_unfiltered %>% filter(metric=="mean_ZI"), aes(x = group, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean Zero-Inflation Index (ZI) by Treatment Groups (10uM) and DMSO \nmacseq-unfiltered",
+       x = "Groups",
+       y = "Mean Zero-Inflation Index (ZI)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = macpie_colours$discrete[1])
+
+
+plot_grid(p1, p2, ncol = 1)
+
+```
+
+Ranking of groups by mean observed zero proportion (mean_p0_obs) shows that Staurosporine_10 has the highest observed zero proportion, followed by Camptothecin_10, and paclitaxel_10. We can see staurosporine_10 group has the highest mean ZI value and highest proportion of zeros among all treatment groups, indicating significant zero-inflation in this group. Other treatment groups show small or even negative mean ZI values, suggesting no significant zero-inflation. As staurosporine is a cell death control, which it is expected to see zero-inflated data in this group. 
+
+DMSO control group with ~60% of zeros and small mean ZI value, indicating no significant zero-inflation in the control group.
+
+
+
+## Subsample genes after filtering lowly expressed genes
+
+Filter genes with very low counts across all samples. This step is important because genes with extremely low expression can lead to unreliable estimates of dispersion and expected zero probabilities, which can skew the zero-inflation assessment.
+
+Here we filter genes that have at least 10 counts in at least 2 samples within each group defined by `combined_id`.
+
+```{r}
+# Filter by read count per sample group
+mac <- filter_genes_by_expression(mac, 
+                                  group_by = "combined_id", 
+                                  min_counts = 10, 
+                                  min_samples = 2)
+```
+
+
+### Subsample genes for faster computation
+
+This is to randomly select a subset of 1000 genes for a quick check. For a more comprehensive analysis, consider using a larger subset.
+
+```{r}
+# Subsample genes for faster computation
+sub_mac <- subsample_genes(mac, ngene = 1000, gselect = "random", seed = 1)
+sub_mac %>% nrow()
+```
+
+
+```{r}
+# Check for zero-inflation
+all_conditions <- unique(sub_mac$combined_id)
+zi_results <- check_zeroinflation(sub_mac, 
+                                  group_by = "combined_id",
+                                  samples = all_conditions,
+                                  batch = 1,
+                                  cutoffs = c(0.1, 0.2))
+```
+
+#### View gene-wise metrics for each group
+
+```{r}
+zi_results$gene_metrics_by_group %>% filter(group=="Luminespib_10") %>% head()
+
+```
+
+
+```{r}
+zi_results$summary_by_group %>% head(10)
+```
+
+```{r, fig.height=10, fig.width=8}
+high_doses_zi_results <- zi_results$summary_by_group %>% filter(grepl("_10$", group))
+#concatenate with DMSO
+high_doses_zi_results <- rbind(high_doses_zi_results,
+                                zi_results$summary_by_group %>% filter(group=="DMSO_0"))
+
+
+long_zi_results <- high_doses_zi_results %>% select(group, mean_p0_obs, mean_p0_nb, mean_ZI) %>%
+  pivot_longer(cols = c(mean_p0_obs, mean_p0_nb, mean_ZI), 
+               names_to = "metric", 
+               values_to = "value")
+
+# rank groups by mean_p0_obs
+long_zi_results$group <- factor(long_zi_results$group,
+                                              levels = high_doses_zi_results$group[order(-high_doses_zi_results$mean_p0_obs)])
+
+#only show mean_p0_obs and mean_p0_nb
+long_zi_results_prop <- long_zi_results %>% filter(metric %in% c("mean_p0_obs", "mean_p0_nb"))
+
+
+p1 <- ggplot(long_zi_results_prop, aes(x = group, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Zero-Inflation Metrics by Treatment Groups (10uM) and DMSO \nmacseq-filtered",
+       x = "Groups",
+       y = "zero-inflation proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = macpie_colours$discrete[1:3])
+
+# show ZI separately
+p2 <- ggplot(long_zi_results %>% filter(metric=="mean_ZI"), aes(x = group, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Mean Zero-Inflation Index (ZI) by Treatment Groups (10uM) and DMSO \nmacseq-filtered",
+       x = "Groups",
+       y = "Mean Zero-Inflation Index (ZI)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = macpie_colours$discrete[1])
+
+
+plot_grid(p1, p2, ncol = 1)
+```
+
+After filtering lowly expressed genes, we observe proportions of both expected and observed zeros decrease across all treatment groups compared to the unfiltered data. These results suggest that lowly expressed genes contribute significantly to the overall zero counts or sparsity in the data. 
+
+DMSO control group has the lowest observed and expected zero proportions among all groups, and staurosporine_10 has the highest observed and expected zero proportions. These findings are expected as these are vehicle and positive controls.
+
+
+
