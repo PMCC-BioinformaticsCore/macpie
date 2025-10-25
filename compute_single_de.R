@@ -114,7 +114,7 @@ compute_single_de <- function(data = NULL,
                    group = pheno_data$condition)
     dge <- estimateDisp(dge, model_matrix)
     dge <- calcNormFactors(dge, method = "TMMwsp")
-    logCPM <- cpm(dge, log=TRUE, prior.count=3)
+    logCPM <- log2(edgeR::cpm(dge,  normalized.lib.sizes=T,log=F)+1)
     fit <- lmFit(logCPM, model_matrix)
     myargs <- list(paste0("combined_id",
                           treatment_samples, "-",
@@ -159,8 +159,7 @@ compute_single_de <- function(data = NULL,
     combined_id <- data$combined_id
     dds <- DESeqDataSetFromMatrix(countData = data@assays$RNA$counts,
                                   colData = pheno_data,
-                                  # design = ~ condition)
-                                  design = if (length(batch) == 1) ~ condition else ~ condition + batch)
+                                  design = ~ condition)
     dds <- DESeq(dds)
     res <- results(dds, contrast = c("condition", treatment_samples, control_samples))
     top_table <- as.data.frame(res) %>%
@@ -212,7 +211,8 @@ compute_single_de <- function(data = NULL,
       )
     }
     if (!all(spikes %in% row.names(data@assays$RNA$counts))) {
-      stop("Some or all of your control genes are not present in the dataset.")
+      warning("Some or all of your control genes are not present in the dataset.")
+      spikes <- spikes[spikes %in% row.names(data@assays$RNA$counts)]
     }
     #k defines number of sources of variation, two have been chosen for row and column
     set <- EDASeq::newSeqExpressionSet(counts = as.matrix(data@assays$RNA$counts),
@@ -364,8 +364,42 @@ compute_single_de <- function(data = NULL,
     doParallel::registerDoParallel()
     return(as.data.frame(top_table))
   }
-
-
+  de_limma_zinb <- function(data, pheno_data, treatment_samples, control_samples, batch, k) {
+    combined_id <- data$combined_id
+    model_matrix <- if (length(batch) == 1) model.matrix(~0 + combined_id) else
+      model.matrix(~0 + combined_id + batch)
+    
+    data_sce <- as.SingleCellExperiment(data)
+    filtered_sce <- subset(data_sce, rowSums(as.data.frame(counts(data_sce))) > 0)
+    cl <- makeCluster(num_cores)
+    doParallel::registerDoParallel(cl)
+    p <- BiocParallel::DoparParam()
+    suppressWarnings(zinb <- zinbwave::zinbwave(filtered_sce, K = k,
+                                                epsilon=12000,
+                                                BPPARAM = p,
+                                                observationalWeights = TRUE, verbose = F))
+    counts <- zinb@assays@data$counts
+    weights <- zinb@assays@data$weights 
+    
+    dge <- DGEList(counts = counts(filtered_sce), samples = pheno_data$condition, group = pheno_data$condition)
+    dge <- calcNormFactors(dge, method = "TMMwsp")
+    v <- voom(dge, design = model_matrix, plot = FALSE, weights = weights)
+    fit <- lmFit(v, model_matrix)
+    myargs <- list(paste0("combined_id",
+                          treatment_samples, "-",
+                          paste0("combined_id", control_samples)),
+                   levels = model_matrix)
+    contrasts <- do.call(makeContrasts, myargs)
+    tmp <- contrasts.fit(fit, contrasts)
+    tmp <- eBayes(tmp, robust = TRUE)
+    top_table <- topTable(tmp, number = Inf, sort.by = "P") %>%
+      select("logFC", "t", "P.Value", "adj.P.Val") %>%
+      rename("log2FC" = "logFC", "metric" = "t", "p_value" = "P.Value", "p_value_adj" = "adj.P.Val") %>%
+      rownames_to_column("gene")
+    stopCluster(cl)
+    doParallel::registerDoParallel()
+    return(as.data.frame(top_table))
+  }
   # Main function
   validate_inputs(data, method, treatment_samples, control_samples)
   prepared <- prepare_data(data, treatment_samples, control_samples, batch)
@@ -384,7 +418,7 @@ compute_single_de <- function(data = NULL,
     RUVs = de_ruvs(data, pheno_data, treatment_samples, control_samples, batch, k),
     RUVr = de_ruvr(data, pheno_data, treatment_samples, control_samples, batch, k),
     edgeR_zinb = de_edgeR_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
-    limma_zinb = limma_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
+    limma_zinb = de_limma_zinb(data, pheno_data, treatment_samples, control_samples, batch, k),
     stop("Unsupported DE method.")
   )
   return(de_data)
