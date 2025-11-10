@@ -31,8 +31,8 @@ MAC-seq is a cost-effective, high-throughput transcriptomic platform, developed 
 In this vignette we cover the basic functionality of <b>macpie</b>, from input, quality control to transcriptional and screen-related analyses. For more in-depth workflows, please refer to other vignettes:
 
 - [Quality control](quality_control.html)
-- [Transcriptional analysis](transcriptional_analysis.html)
-- [Compound screening](compound_screening.html)
+- [Transcriptional analysis](transcriptional_analyses.html)
+- [Compound screening](high_throughput_screens.html)
 - [Cross-platform compatibility](cross_platform_compatibility.html)
 
 ### 1. Metadata import and QC
@@ -91,7 +91,7 @@ plot_metadata_heatmap(metadata)
   -  use **plot_mds** to check sample grouping (umap/pca is also available using Seurat's functions)
   -  use **compute_qc_metrics**, **plot_qc_metrics_heatmap**, and **plot_distance** to check sample variability and outliers
   -  use **plot_rle** to check any row/column/plate effects and compare normalization methods
-  -  more detailed methods avaailable in vignette [Quality control](articles/quality_control.html)
+  -  more detailed methods available in vignette [Quality control](articles/quality_control.html)
 
 #### 2.1 Import data to tidySeurat object 
 
@@ -315,7 +315,7 @@ pheatmap(enriched_pathways_mat, color = macpie_colours$continuous_rev)
   gene expression or pathway enrichment
   - use **compute_multi_screen_profile** to find perturbations similar to your target profile or 
   a known gene set
-  - more detailed methods avaailable in vignette [Compound screening](articles/compound_screening.html)
+  - more detailed methods available in vignette [Compound screening](articles/high_throughput_screens.html)
 
 #### 4.1. UMAP clustering based on DE genes
 
