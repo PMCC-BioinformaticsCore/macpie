@@ -34,6 +34,9 @@ In this vignette we cover the basic functionality of <b>macpie</b>, from input, 
 - [Transcriptional analysis](transcriptional_analyses.html)
 - [Compound screening](high_throughput_screens.html)
 - [Cross-platform compatibility](cross_platform_compatibility.html)
+- [Assessing sparsity](assessing_zero_inflation.html)
+- [Working with Bioconductor classes](macpie_bioc.html)
+
 
 ### 1. Metadata import and QC
 
