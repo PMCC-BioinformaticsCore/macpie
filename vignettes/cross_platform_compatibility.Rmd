@@ -28,7 +28,7 @@ This vignette will cover the following two parts:
 
   - Validating the metadata format and content.
 
-  - Some basic QC steps from [QC vignette](articles/quality_control.html).
+  - Some basic QC steps from [QC vignette](quality_control.html).
   
 
 **2. Converting multiple DRUGseq plates**
@@ -717,7 +717,7 @@ plates <- c("VH02012942", "VH02012944", "VH02012956")
 results <- lapply(plates, function(plate) {
   select_robust_controls(
     mac_filtered,
-    combined_id = "CB_43_EP73_0",
+    samples = "CB_43_EP73_0",
     orig_ident  = plate,
     cpm_filter  = 1,
     min_samps   = 8,
