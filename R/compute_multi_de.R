@@ -58,7 +58,7 @@ compute_multi_de <- function(data = NULL,
     method <- if (is.null(method)) "edgeR" else method
     if (!method %in% c("Seurat_wilcox", "DESeq2", "edgeR",
                        "RUVg", "RUVs", "RUVr",
-                       "limma_voom")) {
+                       "limma_voom","limma_trend")) {
       stop("Your normalization method is not available.")
     }
     if (is.null(control_samples)) {
